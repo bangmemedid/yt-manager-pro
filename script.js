@@ -1,7 +1,7 @@
 /* =========================
     CONFIG (Sesuai Client ID Anda)
 ========================= */
-const CLIENT_ID = "262964938761-4e11cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
+const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 
 const STORE_KEY = "ytmpro_accounts_merge_v1";
@@ -218,3 +218,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   initGis();
   await refreshAllData();
 });
+
