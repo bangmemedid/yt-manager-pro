@@ -1,3 +1,51 @@
 <!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Manager Pro | bangmemed.id</title>
 
-<html lang="id"> <head> <meta charset="UTF-8"> <title>YouTube Manager Pro | bangmemed.id</title> <link rel="stylesheet" href="style.css"> <script src="https://accounts.google.com/gsi/client" async defer></script> <script src="https://apis.google.com/js/api.js" async defer></script> </head> <body> <div class="app"> <aside class="sidebar" style="background: #111; color: white; width: 250px; height: 100vh; position: fixed; padding: 20px;"> <h2>YouTube Manager Pro</h2> <button id="btnAddGmail" style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">+ TAMBAH GMAIL</button> </aside> <main style="margin-left: 270px; padding: 20px;"> <h1>Dashboard</h1> <div style="background: #222; padding: 20px; border-radius: 10px; color: white; margin-bottom: 20px;"> Total Subscribers: <span id="totalSubs" style="font-size: 24px; font-weight: bold;">0</span> </div> <table border="1" style="width: 100%; border-collapse: collapse; color: white; background: #333;"> <thead> <tr style="background: #444;"><th>Channel</th><th>Subs</th><th>Views</th><th>Status</th></tr> </thead> <tbody id="channelBody"> <tr><td colspan="4" style="text-align:center; padding: 20px;">Belum ada data. Klik + Tambah Gmail.</td></tr> </tbody> </table> </main> </div> <script src="script.js"></script> </body> </html>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer></script>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <script>
+    if (localStorage.getItem("owner_logged_in") !== "true") {
+      window.location.replace("login.html");
+    }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="side-title">YouTube Manager Pro</div>
+      <button class="btn" id="btnGoogleLogin">Login / Refresh</button>
+      <button class="btn danger" id="btnOwnerLogout">Logout</button>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1 class="page-title">Dashboard</h1>
+        <button class="btn primary" id="btnAddGmail">+ Tambah Gmail</button>
+      </header>
+
+      <section class="stats-wrapper">
+        <div class="stat-card">Total Subscribers: <span id="totalSubs">0</span></div>
+      </section>
+
+      <section class="panel">
+        <table class="channel-table">
+          <thead>
+            <tr><th>Channel</th><th>Subs</th><th>Views</th><th>Status</th></tr>
+          </thead>
+          <tbody id="channelBody">
+            <tr><td colspan="4">Menunggu data...</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
