@@ -1,3 +1,27 @@
+/* --- TAMBAHKAN KODE INI DI BAGIAN PALING ATAS --- */
+function showSection(sectionId) {
+  // Sembunyikan semua section
+  document.querySelectorAll('.content-section').forEach(section => {
+    section.style.display = 'none';
+  });
+  // Tampilkan section yang dipilih
+  document.getElementById('section-' + sectionId).style.display = 'block';
+  
+  // Update class active pada sidebar
+  document.querySelectorAll('.side-link').forEach(link => {
+    link.classList.remove('active');
+    if(link.textContent.toLowerCase().includes(sectionId)) {
+      link.classList.add('active');
+    }
+  });
+}
+
+/* --- PASTIKAN KONFIGURASI TETAP SEPERTI INI --- */
+const CLIENT_ID = "262964938761-4e11cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
+const API_KEY = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
+const STORE_KEY = "ytmpro_accounts_merge_v1";
+
+// ... (lanjutkan dengan sisa kode initGis dan refreshAllData Anda sebelumnya)
 /* =========================
     CONFIG (Sesuai Client ID Anda)
 ========================= */
@@ -218,4 +242,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   initGis();
   await refreshAllData();
 });
+
 
