@@ -5,29 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Manager Pro | bangmemed.id</title>
 
+  <!-- Anti cache (biar update file langsung kebaca di Vercel) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Main CSS -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- gapi -->
+  <!-- gapi (Google API) -->
   <script src="https://apis.google.com/js/api.js"></script>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- OWNER GUARD -->
+  <script>
+    // Guard ini aman ditaruh di <head>
+    // Kalau owner belum login → lempar ke login.html
+    if (localStorage.getItem("owner_logged_in") !== "true") {
+      window.location.replace("login.html");
+    }
+  </script>
 </head>
 
-<script>
-  if (localStorage.getItem("owner_logged_in") !== "true") {
-    window.location.href = "login.html";
-  }
-</script>
-
 <body>
+  <noscript>
+    <div style="padding:16px;background:#111827;color:#fff;font-family:Arial">
+      Aplikasi ini membutuhkan JavaScript. Silakan aktifkan JavaScript di browser.
+    </div>
+  </noscript>
+
   <div class="bg-glow"></div>
 
   <div class="app">
+    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="side-brand">
         <div class="logo">
@@ -53,6 +70,7 @@
         </div>
 
         <div class="side-actions">
+          <!-- PENTING: id harus sama supaya script.js nemu -->
           <button class="btn ghost" id="btnGoogleLogin" type="button">Login / Refresh Token</button>
           <button class="btn danger" id="btnOwnerLogout" type="button">Logout Owner</button>
           <button class="btn dangerOutline" id="btnLocalLogout" type="button">Logout Lokal (hapus akun)</button>
@@ -64,7 +82,9 @@
       </div>
     </aside>
 
+    <!-- MAIN -->
     <main class="main" id="top">
+      <!-- TOPBAR -->
       <header class="topbar">
         <div class="left">
           <h1 class="page-title">Dashboard</h1>
@@ -77,10 +97,12 @@
             <input class="search" id="searchInput" type="text" placeholder="Search channel..." />
           </div>
 
+          <!-- PENTING: id harus sama -->
           <button class="btn primary" id="btnAddGmail" type="button">+ Tambah Gmail</button>
         </div>
       </header>
 
+      <!-- STATS -->
       <section class="stats-wrapper">
         <div class="stat-card">
           <div class="label">Total Channel</div>
@@ -103,10 +125,11 @@
         <div class="stat-card highlight">
           <div class="label">Views 60 Menit</div>
           <div class="value" id="view60m">—</div>
-          <div class="muted">Catatan: realtime per-menit tidak tersedia di API publik</div>
+          <div class="muted">Catatan: realtime per-menit butuh Analytics API (tahap berikut)</div>
         </div>
       </section>
 
+      <!-- CHARTS -->
       <section class="grid-2" id="charts">
         <div class="panel">
           <div class="panel-head">
@@ -135,6 +158,7 @@
         </div>
       </section>
 
+      <!-- TABLE -->
       <section class="panel" id="channels">
         <div class="panel-head">
           <div>
@@ -168,6 +192,7 @@
         </div>
       </section>
 
+      <!-- FOOTER -->
       <footer class="footer">
         <div>© <span id="year"></span> YouTube Manager Pro — <b>bangmemed.id</b></div>
         <div class="muted">Premium UI • Multi Gmail • Merge Dashboard</div>
@@ -175,6 +200,10 @@
     </main>
   </div>
 
+  <!-- OPTIONAL TOAST placeholder (kalau nanti kamu mau notif cantik) -->
+  <div id="toast" style="display:none"></div>
+
+  <!-- Small JS -->
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
@@ -209,6 +238,7 @@
     })();
   </script>
 
+  <!-- APP LOGIC -->
   <script src="script.js"></script>
 </body>
 </html>
