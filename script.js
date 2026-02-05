@@ -61,5 +61,6 @@ function autoRefresh() {
   loadYouTubeData();
 }
 
-// Refresh tiap 60 detik
-setInterval(autoRefresh, 60000);
+// Refresh tiap 5 detik
+setInterval(autoRefresh, 5000);
+
