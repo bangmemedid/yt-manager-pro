@@ -19,6 +19,12 @@
   <!-- Chart.js (untuk chart UI, data bisa kamu isi belakangan / tahap berikutnya) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
+  
+<script>
+  if (localStorage.getItem("owner_logged_in") !== "true") {
+    window.location.href = "login.html";
+  }
+</script>
 
 <body>
   <!-- BACKGROUND GLOW -->
@@ -267,3 +273,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
