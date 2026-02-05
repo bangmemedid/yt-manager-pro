@@ -6,271 +6,162 @@
   <title>YouTube Manager Pro | bangmemed.id</title>
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Main CSS -->
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
 
   <!-- Google API -->
   <script src="https://apis.google.com/js/api.js"></script>
 
-  <!-- Chart.js (untuk chart UI, data bisa kamu isi belakangan / tahap berikutnya) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-  
+
+<body>
+
+<!-- 🔐 OWNER GUARD -->
 <script>
   if (localStorage.getItem("owner_logged_in") !== "true") {
     window.location.href = "login.html";
   }
 </script>
 
-<body>
-  <!-- BACKGROUND GLOW -->
-  <div class="bg-glow"></div>
+<div class="bg-glow"></div>
 
-  <div class="app">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="side-brand">
-        <div class="logo">
-          <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YT" />
-        </div>
-        <div class="side-title">
-          <div class="name">YouTube Manager Pro</div>
-          <div class="sub">bangmemed.id</div>
-        </div>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="side-brand">
+      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png">
+      <div>
+        <div class="name">YouTube Manager Pro</div>
+        <div class="sub">bangmemed.id</div>
+      </div>
+    </div>
+
+    <nav class="side-nav">
+      <a class="side-link active">Dashboard</a>
+      <a class="side-link">Analytics</a>
+      <a class="side-link">Channel List</a>
+    </nav>
+
+    <div class="side-footer">
+      <button class="btn ghost" id="refreshTokenBtn">Login / Refresh Token</button>
+      <button class="btn danger" id="logoutBtn">Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Pantau semua channel dalam satu dashboard</p>
       </div>
 
-      <nav class="side-nav">
-        <a class="side-link active" href="#">
-          <span class="dot"></span>
-          Dashboard
-        </a>
-        <a class="side-link" href="#charts">
-          <span class="dot"></span>
-          Analytics
-        </a>
-        <a class="side-link" href="#channels">
-          <span class="dot"></span>
-          Channel List
-        </a>
-        <a class="side-link" href="#help">
-          <span class="dot"></span>
-          Bantuan
-        </a>
-      </nav>
+      <button class="btn primary" id="addGmailBtn">+ Tambah Gmail</button>
+    </header>
 
-      <div class="side-footer">
-        <div class="hint">
-          Multi Gmail mode: <b>Merge</b><br/>
-          Token bisa expire ±1 jam.
-        </div>
-
-        <div class="side-actions">
-          <button class="btn ghost" id="loginBtn">Login / Refresh Token</button>
-          <button class="btn danger" id="logoutBtn" type="button">Logout Lokal</button>
-        </div>
-
-        <div class="side-note" id="help">
-          Jika muncul “Google belum memverifikasi aplikasi”, pastikan akun sudah masuk <b>Test Users</b> di Google Auth Platform.
-        </div>
+    <!-- STATS -->
+    <section class="stats-wrapper">
+      <div class="stat-card">
+        <p>Total Channel</p>
+        <h2 id="totalChannel">0</h2>
       </div>
-    </aside>
 
-    <!-- MAIN -->
-    <main class="main">
-      <!-- TOPBAR -->
-      <header class="topbar">
-        <div class="left">
-          <h1 class="page-title">Dashboard</h1>
-          <p class="page-sub">Pantau performa channel dari beberapa Gmail dalam 1 tampilan.</p>
-        </div>
+      <div class="stat-card">
+        <p>Total Subscribers</p>
+        <h2 id="totalSubs">0</h2>
+      </div>
 
-        <div class="right">
-          <div class="search-wrap">
-            <span class="search-ic">⌕</span>
-            <input class="search" type="text" placeholder="Search channel..." />
-          </div>
+      <div class="stat-card">
+        <p>Views 48 Jam</p>
+        <h2 id="view48h">0</h2>
+      </div>
 
-          <button class="btn primary" type="button">+ Tambah Gmail</button>
-        </div>
-      </header>
+      <div class="stat-card">
+        <p>Views Hari Ini</p>
+        <h2 id="viewToday">0</h2>
+      </div>
+    </section>
 
-      <!-- STATS -->
-      <section class="stats-wrapper">
-        <div class="stat-card">
-          <div class="label">Total Channel</div>
-          <div class="value" id="totalChannel">0</div>
-          <div class="muted">Akun</div>
-        </div>
+    <!-- CHART -->
+    <section class="panel">
+      <h3>Statistik 48 Jam</h3>
+      <canvas id="chart48h"></canvas>
+    </section>
 
-        <div class="stat-card">
-          <div class="label">Total Subscribers</div>
-          <div class="value" id="totalSubs">0</div>
-          <div class="muted">Gabungan semua akun</div>
-        </div>
+    <!-- TABLE -->
+    <section class="panel">
+      <h3>Daftar Channel</h3>
+      <table class="channel-table">
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th>Subs</th>
+            <th>Views</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="channelBody">
+          <tr><td colspan="4">Belum ada channel</td></tr>
+        </tbody>
+      </table>
+    </section>
 
-        <div class="stat-card">
-          <div class="label">Total Views (48h)</div>
-          <div class="value" id="view48h">0</div>
-          <div class="delta" id="view48hUp">0 ▲</div>
-        </div>
+  </main>
+</div>
 
-        <div class="stat-card highlight">
-          <div class="label">Views 60 Menit</div>
-          <div class="value" id="view60m">0</div>
-          <div class="muted">Realtime (Analytics)</div>
-        </div>
-      </section>
+<!-- 🔵 MODAL PILIH AKSES -->
+<div id="accessModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Hubungkan Gmail</h2>
 
-      <!-- CHARTS -->
-      <section class="grid-2" id="charts">
-        <div class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">Statistik 48 Jam</div>
-              <div class="panel-sub">Trend views per jam (gabungan akun)</div>
-            </div>
-            <div class="pill">48H</div>
-          </div>
-          <div class="panel-body">
-            <canvas id="chart48h" height="120"></canvas>
-          </div>
-        </div>
+    <label>
+      <input type="radio" name="access" value="analytics" checked>
+      Lihat Analytics Saja
+    </label>
 
-        <div class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-title">Statistik 60 Menit (Realtime)</div>
-              <div class="panel-sub">Views per menit (gabungan akun)</div>
-            </div>
-            <div class="pill">60M</div>
-          </div>
-          <div class="panel-body">
-            <canvas id="chart60m" height="120"></canvas>
-          </div>
-        </div>
-      </section>
+    <label>
+      <input type="radio" name="access" value="manage">
+      Kelola Channel (Upload + Analytics)
+    </label>
 
-      <!-- CHANNEL LIST -->
-      <section class="panel" id="channels">
-        <div class="panel-head">
-          <div>
-            <div class="panel-title">Daftar Channel</div>
-            <div class="panel-sub">List channel dari semua Gmail yang ditambahkan (merge)</div>
-          </div>
-          <div class="panel-actions">
-            <span class="tiny">
-              Jika data 0: pastikan scope <b>yt-analytics.readonly</b> sudah ditambahkan & login ulang.
-            </span>
-          </div>
-        </div>
-
-        <div class="table-wrap">
-          <table class="channel-table" id="channelTable">
-            <thead>
-              <tr>
-                <th style="min-width:120px">Revenue Est</th>
-                <th>Channel</th>
-                <th>Subs</th>
-                <th>Videos</th>
-                <th>Views</th>
-                <th style="min-width:220px">48 Jam</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="channelBody">
-              <tr>
-                <td colspan="7" class="empty">Belum ada data. Klik <b>+ Tambah Gmail</b> lalu izinkan akses.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- FOOTER -->
-      <footer class="footer">
-        <div>© <span id="year"></span> YouTube Manager Pro — <b>bangmemed.id</b></div>
-        <div class="muted">Build: Premium UI • Multi Gmail • Merge Dashboard</div>
-      </footer>
-    </main>
+    <div class="modal-actions">
+      <button class="btn ghost" id="cancelAccess">Batal</button>
+      <button class="btn primary" id="confirmAccess">Lanjutkan</button>
+    </div>
   </div>
+</div>
 
-  <!-- APP SCRIPTS -->
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
+<!-- JS LOGIC -->
+<script>
+  document.getElementById("logoutBtn").onclick = () => {
+    localStorage.clear();
+    location.href = "login.html";
+  };
 
-    // Logout lokal: hapus localStorage token (tidak logout google account browser)
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      try {
-        localStorage.removeItem("ytmpro_accounts_merge_v1");
-        location.reload();
-      } catch (e) {
-        alert("Gagal logout lokal: " + (e?.message || e));
-      }
-    });
+  const modal = document.getElementById("accessModal");
 
-    // Chart placeholder (biar canvas langsung terlihat premium).
-    // Data real akan kamu isi dari script.js tahap chart berikutnya.
-    (function initChartsPlaceholder(){
-      if (!window.Chart) return;
+  document.getElementById("addGmailBtn").onclick = () => {
+    modal.classList.remove("hidden");
+  };
 
-      const ctx48 = document.getElementById("chart48h");
-      const ctx60 = document.getElementById("chart60m");
+  document.getElementById("cancelAccess").onclick = () => {
+    modal.classList.add("hidden");
+  };
 
-      const labels48 = Array.from({length: 48}, (_, i) => `${i+1}`);
-      const labels60 = Array.from({length: 60}, (_, i) => `${i+1}`);
+  document.getElementById("confirmAccess").onclick = () => {
+    const access = document.querySelector('input[name="access"]:checked').value;
+    localStorage.setItem("yt_access_type", access);
+    modal.classList.add("hidden");
+    alert("Akses dipilih: " + access + "\n(next: Google OAuth)");
+  };
+</script>
 
-      const baseOpt = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: true }
-        },
-        scales: {
-          x: { grid: { display: false }, ticks: { display: false } },
-          y: { grid: { color: "rgba(255,255,255,.06)" }, ticks: { display: false } }
-        }
-      };
-
-      new Chart(ctx48, {
-        type: "line",
-        data: {
-          labels: labels48,
-          datasets: [{
-            label: "Views",
-            data: labels48.map(() => 0),
-            tension: 0.35,
-            borderWidth: 2,
-            pointRadius: 0,
-            fill: true
-          }]
-        },
-        options: baseOpt
-      });
-
-      new Chart(ctx60, {
-        type: "line",
-        data: {
-          labels: labels60,
-          datasets: [{
-            label: "Realtime",
-            data: labels60.map(() => 0),
-            tension: 0.35,
-            borderWidth: 2,
-            pointRadius: 0,
-            fill: true
-          }]
-        },
-        options: baseOpt
-      });
-    })();
-  </script>
-
-  <script src="script.js"></script>
 </body>
 </html>
-
