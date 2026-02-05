@@ -1,69 +1,85 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Owner Login | bangmemed.id</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body{margin:0;font-family:Poppins,sans-serif;background:radial-gradient(circle at top,#0f172a,#020617);color:#fff;height:100vh;display:flex;align-items:center;justify-content:center}
-    .card{background:rgba(255,255,255,.06);padding:32px;border-radius:14px;width:100%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);text-align:center}
+    body{
+      margin:0;
+      font-family:Poppins, sans-serif;
+      background:radial-gradient(circle at top,#0f172a,#020617);
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+    }
+    .card{
+      background:rgba(255,255,255,.06);
+      padding:32px;
+      border-radius:14px;
+      width:100%;
+      max-width:360px;
+      box-shadow:0 20px 50px rgba(0,0,0,.4);
+    }
     h1{margin:0 0 6px;font-size:22px}
     p{margin:0 0 20px;font-size:13px;opacity:.7}
-    input{width:100%;padding:12px;margin-bottom:12px;border-radius:10px;border:none;outline:none;box-sizing:border-box;background:rgba(255,255,255,0.9)}
-    button{width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#22d3ee);color:#000;font-weight:700;cursor:pointer;transition:0.3s}
-    button:hover{opacity:0.9;transform:scale(0.98)}
-    .err{margin-top:10px;color:#f87171;font-size:13px;display:none}
-    .hint{margin-top:14px;font-size:12px;opacity:.65;line-height:1.4}
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-bottom:12px;
+      border-radius:10px;
+      border:none;
+      outline:none;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:none;
+      background:linear-gradient(135deg,#3b82f6,#22d3ee);
+      font-weight:600;
+      cursor:pointer;
+    }
+
+    .err{
+      margin-top:10px;
+      color:#f87171;
+      font-size:13px;
+      display:none;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Owner Login</h1>
-    <p>YouTube Manager Pro • bangmemed.id</p>
 
-    <input id="username" placeholder="Username owner" autocomplete="username">
-    <input id="password" type="password" placeholder="Password" autocomplete="current-password">
-    <button id="btnLogin" type="button">Login</button>
+<div class="card">
+  <h1>Owner Login</h1>
+  <p>YouTube Manager Pro • bangmemed.id</p>
 
-    <div class="err" id="err">Username atau password salah</div>
-    <div class="hint">
-      Gunakan kredensial owner untuk masuk ke dashboard.
-    </div>
-  </div>
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+  <div class="err" id="err">Username / Password salah</div>
+</div>
 
 <script>
-  // Kredensial Anda
-  const OWNER_USER = "bangmemedid";
-  const OWNER_PASS = "pandi2310@";
+function login(){
+  const u = document.getElementById("user").value;
+  const p = document.getElementById("pass").value;
 
-  function doLogin(){
-    const u = document.getElementById("username").value.trim();
-    const p = document.getElementById("password").value;
-
-    if(u === OWNER_USER && p === OWNER_PASS){
-      // Simpan status login di browser
-      localStorage.setItem("owner_logged_in", "true");
-      // Redirect ke dashboard
-      window.location.href = "index.html";
-    } else {
-      const errDiv = document.getElementById("err");
-      errDiv.style.display = "block";
-      // Animasi getar sederhana jika salah
-      errDiv.style.animation = "shake 0.2s ease-in-out 0s 2";
-    }
+  if(u==="bangmemedid" && p==="pandi2310@"){
+    localStorage.setItem("owner_logged_in","true");
+    window.location.href="index.html";
+  }else{
+    document.getElementById("err").style.display="block";
   }
-
-  // Event Listeners
-  document.getElementById("btnLogin").addEventListener("click", doLogin);
-  document.addEventListener("keydown", (e) => { 
-    if(e.key === "Enter") doLogin(); 
-  });
+}
 </script>
+
 </body>
 </html>
