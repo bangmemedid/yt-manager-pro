@@ -1,271 +1,269 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>YouTube Manager Pro | bangmemed.id</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Manager Pro | bangmemed.id</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="style.css" />
 
-    <style>
-        :root {
-            --primary: #ff0000;
-            --dark: #1e1e26;
-            --bg: #f8f9fa;
-            --text: #333;
-        }
+  <!-- Google API -->
+  <script src="https://apis.google.com/js/api.js"></script>
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background-color: var(--bg); color: var(--text); }
-
-        /* HEADER */
-        .topbar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 5%; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky; top: 0; z-index: 100;
-        }
-        .brand { display: flex; align-items: center; gap: 12px; }
-        .brand img { width: 40px; }
-        .brand h2 { font-size: 1.2rem; color: var(--dark); }
-        .brand .sub { font-size: 0.8rem; color: #888; }
-
-        .actions { display: flex; gap: 10px; }
-        .search { padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
-        .btn { padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; transition: 0.3s; }
-        .primary { background: var(--primary); color: white; }
-        .login { background: #4285f4; color: white; }
-        .btn:hover { opacity: 0.8; }
-
-        /* STATS */
-        .stats-wrapper {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px; padding: 30px 5%;
-        }
-        .stat-card {
-            background: #fff; padding: 25px; border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;
-        }
-        .stat-card p { color: #777; font-size: 0.9rem; }
-        .stat-card h1 { font-size: 2rem; margin: 10px 0; color: var(--dark); }
-        .stat-card span { font-size: 0.8rem; font-weight: bold; color: #2ecc71; }
-
-        /* CHARTS & TABLES */
-        .section-container { padding: 0 5% 40px; }
-        .chart-box { background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
-        
-        .channel-table {
-            width: 100%; border-collapse: collapse; background: #fff; border-radius: 15px; overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-        .channel-table th { background: #eee; padding: 15px; text-align: left; font-size: 0.9rem; }
-        .channel-table td { padding: 15px; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
-        
-        .avatar { width: 35px; height: 35px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
-
-        #output { text-align: center; color: #e74c3c; font-weight: bold; }
-    </style>
+  <!-- Chart.js (untuk chart UI, data bisa kamu isi belakangan / tahap berikutnya) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 
 <body>
+  <!-- BACKGROUND GLOW -->
+  <div class="bg-glow"></div>
 
-    <header class="topbar">
-        <div class="brand">
-            <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube Icon">
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="logo">
+          <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YT" />
+        </div>
+        <div class="side-title">
+          <div class="name">YouTube Manager Pro</div>
+          <div class="sub">bangmemed.id</div>
+        </div>
+      </div>
+
+      <nav class="side-nav">
+        <a class="side-link active" href="#">
+          <span class="dot"></span>
+          Dashboard
+        </a>
+        <a class="side-link" href="#charts">
+          <span class="dot"></span>
+          Analytics
+        </a>
+        <a class="side-link" href="#channels">
+          <span class="dot"></span>
+          Channel List
+        </a>
+        <a class="side-link" href="#help">
+          <span class="dot"></span>
+          Bantuan
+        </a>
+      </nav>
+
+      <div class="side-footer">
+        <div class="hint">
+          Multi Gmail mode: <b>Merge</b><br/>
+          Token bisa expire ±1 jam.
+        </div>
+
+        <div class="side-actions">
+          <button class="btn ghost" id="loginBtn">Login / Refresh Token</button>
+          <button class="btn danger" id="logoutBtn" type="button">Logout Lokal</button>
+        </div>
+
+        <div class="side-note" id="help">
+          Jika muncul “Google belum memverifikasi aplikasi”, pastikan akun sudah masuk <b>Test Users</b> di Google Auth Platform.
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="left">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub">Pantau performa channel dari beberapa Gmail dalam 1 tampilan.</p>
+        </div>
+
+        <div class="right">
+          <div class="search-wrap">
+            <span class="search-ic">⌕</span>
+            <input class="search" type="text" placeholder="Search channel..." />
+          </div>
+
+          <button class="btn primary" type="button">+ Tambah Gmail</button>
+        </div>
+      </header>
+
+      <!-- STATS -->
+      <section class="stats-wrapper">
+        <div class="stat-card">
+          <div class="label">Total Channel</div>
+          <div class="value" id="totalChannel">0</div>
+          <div class="muted">Akun</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">Total Subscribers</div>
+          <div class="value" id="totalSubs">0</div>
+          <div class="muted">Gabungan semua akun</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">Total Views (48h)</div>
+          <div class="value" id="view48h">0</div>
+          <div class="delta" id="view48hUp">0 ▲</div>
+        </div>
+
+        <div class="stat-card highlight">
+          <div class="label">Views 60 Menit</div>
+          <div class="value" id="view60m">0</div>
+          <div class="muted">Realtime (Analytics)</div>
+        </div>
+      </section>
+
+      <!-- CHARTS -->
+      <section class="grid-2" id="charts">
+        <div class="panel">
+          <div class="panel-head">
             <div>
-                <h2>YouTube Manager Pro</h2>
-                <p class="sub">bangmemed.id</p>
+              <div class="panel-title">Statistik 48 Jam</div>
+              <div class="panel-sub">Trend views per jam (gabungan akun)</div>
             </div>
+            <div class="pill">48H</div>
+          </div>
+          <div class="panel-body">
+            <canvas id="chart48h" height="120"></canvas>
+          </div>
         </div>
 
-        <div class="actions">
-            <input type="text" placeholder="Cari channel..." class="search" />
-            <button class="btn login" id="loginBtn">Login Google</button>
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Statistik 60 Menit (Realtime)</div>
+              <div class="panel-sub">Views per menit (gabungan akun)</div>
+            </div>
+            <div class="pill">60M</div>
+          </div>
+          <div class="panel-body">
+            <canvas id="chart60m" height="120"></canvas>
+          </div>
         </div>
-    </header>
+      </section>
 
-    <div id="output"></div>
-
-    <section class="stats-wrapper">
-        <div class="stat-card">
-            <p>Total Channel</p>
-            <h1 id="totalChannel">0</h1>
-            <span>Aktif</span>
-        </div>
-        <div class="stat-card">
-            <p>Total Subscribers</p>
-            <h1 id="totalSubs">0</h1>
-        </div>
-        <div class="stat-card">
-            <p>Total Views (30 Hari)</p>
-            <h1 id="view48h">0</h1>
-            <span id="viewChange">+0% ▲</span>
-        </div>
-        <div class="stat-card">
-            <p>Status Akun</p>
-            <h1 id="accStatus">-</h1>
-        </div>
-    </section>
-
-    <section class="section-container">
-        <h2>Performa View (30 Hari Terakhir)</h2>
-        <div class="chart-box">
-            <canvas id="chartAnalytics" height="100"></canvas>
+      <!-- CHANNEL LIST -->
+      <section class="panel" id="channels">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Daftar Channel</div>
+            <div class="panel-sub">List channel dari semua Gmail yang ditambahkan (merge)</div>
+          </div>
+          <div class="panel-actions">
+            <span class="tiny">
+              Jika data 0: pastikan scope <b>yt-analytics.readonly</b> sudah ditambahkan & login ulang.
+            </span>
+          </div>
         </div>
 
-        <h2 style="margin-bottom: 15px;">Daftar Channel</h2>
-        <table class="channel-table">
+        <div class="table-wrap">
+          <table class="channel-table" id="channelTable">
             <thead>
-                <tr>
-                    <th>Channel</th>
-                    <th>Subscribers</th>
-                    <th>Total Videos</th>
-                    <th>Total Views</th>
-                    <th>Negara</th>
-                    <th>Status</th>
-                </tr>
+              <tr>
+                <th style="min-width:120px">Revenue Est</th>
+                <th>Channel</th>
+                <th>Subs</th>
+                <th>Videos</th>
+                <th>Views</th>
+                <th style="min-width:220px">48 Jam</th>
+                <th>Status</th>
+              </tr>
             </thead>
             <tbody id="channelBody">
-                <tr><td colspan="6" style="text-align:center;">Silahkan login untuk melihat data</td></tr>
+              <tr>
+                <td colspan="7" class="empty">Belum ada data. Klik <b>+ Tambah Gmail</b> lalu izinkan akses.</td>
+              </tr>
             </tbody>
-        </table>
-    </section>
+          </table>
+        </div>
+      </section>
 
-    <script>
-        // --- KONFIGURASI ---
-        const CLIENT_ID = 'PASTE_CLIENT_ID_DI_SINI'; 
-        const API_KEY = 'PASTE_API_KEY_DI_SINI';
-        const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly';
+      <!-- FOOTER -->
+      <footer class="footer">
+        <div>© <span id="year"></span> YouTube Manager Pro — <b>bangmemed.id</b></div>
+        <div class="muted">Build: Premium UI • Multi Gmail • Merge Dashboard</div>
+      </footer>
+    </main>
+  </div>
 
-        let tokenClient;
-        let chartInstance = null;
+  <!-- APP SCRIPTS -->
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-        // Inisialisasi API
-        function start() {
-            gapi.client.init({
-                apiKey: API_KEY,
-                discoveryDocs: [
-                    "https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest",
-                    "https://youtubeanalytics.googleapis.com/v1/discovery/resourcedescriptor"
-                ],
-            }).then(() => {
-                console.log("GAPI initialized");
-            });
+    // Logout lokal: hapus localStorage token (tidak logout google account browser)
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      try {
+        localStorage.removeItem("ytmpro_accounts_merge_v1");
+        location.reload();
+      } catch (e) {
+        alert("Gagal logout lokal: " + (e?.message || e));
+      }
+    });
+
+    // Chart placeholder (biar canvas langsung terlihat premium).
+    // Data real akan kamu isi dari script.js tahap chart berikutnya.
+    (function initChartsPlaceholder(){
+      if (!window.Chart) return;
+
+      const ctx48 = document.getElementById("chart48h");
+      const ctx60 = document.getElementById("chart60m");
+
+      const labels48 = Array.from({length: 48}, (_, i) => `${i+1}`);
+      const labels60 = Array.from({length: 60}, (_, i) => `${i+1}`);
+
+      const baseOpt = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { display: false } },
+          y: { grid: { color: "rgba(255,255,255,.06)" }, ticks: { display: false } }
         }
+      };
 
-        gapi.load('client', start);
+      new Chart(ctx48, {
+        type: "line",
+        data: {
+          labels: labels48,
+          datasets: [{
+            label: "Views",
+            data: labels48.map(() => 0),
+            tension: 0.35,
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true
+          }]
+        },
+        options: baseOpt
+      });
 
-        // OAuth2 Setup
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: SCOPES,
-            callback: (tokenResponse) => {
-                if (tokenResponse && tokenResponse.access_token) {
-                    fetchData();
-                    document.getElementById('loginBtn').innerText = "Terhubung";
-                }
-            },
-        });
+      new Chart(ctx60, {
+        type: "line",
+        data: {
+          labels: labels60,
+          datasets: [{
+            label: "Realtime",
+            data: labels60.map(() => 0),
+            tension: 0.35,
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true
+          }]
+        },
+        options: baseOpt
+      });
+    })();
+  </script>
 
-        document.getElementById('loginBtn').onclick = () => {
-            tokenClient.requestAccessToken();
-        };
-
-        // Ambil Data Utama
-        async function fetchData() {
-            try {
-                // 1. Ambil Metadata Channel
-                const channelRes = await gapi.client.youtube.channels.list({
-                    part: 'snippet,statistics,status',
-                    mine: true
-                });
-
-                const channel = channelRes.result.items[0];
-                renderChannelTable(channel);
-                updateStats(channel);
-
-                // 2. Ambil Data Analytics (30 Hari)
-                fetchAnalytics(channel.id);
-
-            } catch (err) {
-                document.getElementById('output').innerText = "Gagal mengambil data: " + err.result.error.message;
-            }
-        }
-
-        function updateStats(channel) {
-            document.getElementById('totalChannel').innerText = "1";
-            document.getElementById('totalSubs').innerText = Number(channel.statistics.subscriberCount).toLocaleString();
-            document.getElementById('accStatus').innerText = channel.status.privacyStatus.toUpperCase();
-        }
-
-        function renderChannelTable(channel) {
-            const tbody = document.getElementById('channelBody');
-            tbody.innerHTML = `
-                <tr>
-                    <td>
-                        <img src="${channel.snippet.thumbnails.default.url}" class="avatar">
-                        <strong>${channel.snippet.title}</strong>
-                    </td>
-                    <td>${Number(channel.statistics.subscriberCount).toLocaleString()}</td>
-                    <td>${channel.statistics.videoCount}</td>
-                    <td>${Number(channel.statistics.viewCount).toLocaleString()}</td>
-                    <td>${channel.snippet.country || 'ID'}</td>
-                    <td><span style="color:green; font-weight:bold;">AKTIF</span></td>
-                </tr>
-            `;
-        }
-
-        async function fetchAnalytics(channelId) {
-            const endDate = new Date().toISOString().split('T')[0];
-            const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-            const response = await gapi.client.youtubeAnalytics.reports.query({
-                ids: `channel==${channelId}`,
-                startDate: startDate,
-                endDate: endDate,
-                metrics: 'views',
-                dimensions: 'day'
-            });
-
-            const rows = response.result.rows;
-            const labels = rows.map(row => row[0]);
-            const dataViews = rows.map(row => row[1]);
-
-            // Update Total View 30 hari di Card
-            const total30d = dataViews.reduce((a, b) => a + b, 0);
-            document.getElementById('view48h').innerText = total30d.toLocaleString();
-
-            renderChart(labels, dataViews);
-        }
-
-        function renderChart(labels, data) {
-            const ctx = document.getElementById('chartAnalytics').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Views Harian',
-                        data: data,
-                        borderColor: '#ff0000',
-                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        }
-    </script>
+  <script src="script.js"></script>
 </body>
 </html>
