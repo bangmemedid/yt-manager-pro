@@ -11,8 +11,6 @@
   <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body>
-  <div class="bg-glow"></div>
-
   <div class="app">
     <aside class="sidebar">
       <div class="side-brand">
@@ -23,22 +21,14 @@
       </div>
 
       <nav class="side-nav">
-        <a class="side-link active" id="link-dashboard" href="javascript:void(0)" onclick="showSection('dashboard')">
-          <span class="dot"></span>Dashboard
-        </a>
-        <a class="side-link" id="link-analytics" href="javascript:void(0)" onclick="showSection('analytics')">
-          <span class="dot"></span>Analytics
-        </a>
-        <a class="side-link" id="link-channels" href="javascript:void(0)" onclick="showSection('channels')">
-          <span class="dot"></span>Channel List
-        </a>
+        <a class="side-link active" id="link-dashboard" href="javascript:void(0)" onclick="showSection('dashboard')">Dashboard</a>
+        <a class="side-link" id="link-analytics" href="javascript:void(0)" onclick="showSection('analytics')">Analytics</a>
+        <a class="side-link" id="link-channels" href="javascript:void(0)" onclick="showSection('channels')">Channel List</a>
       </nav>
 
       <div class="side-footer">
-        <div class="side-actions">
-          <button class="btn primary" id="btnAddGmail" style="width:100%; margin-bottom:10px">+ Tambah Gmail</button>
-          <button class="btn danger" id="btnOwnerLogout" style="width:100%">Logout Owner</button>
-        </div>
+        <button class="btn primary" id="btnAddGmail" style="width:100%; margin-bottom:10px">+ Tambah Gmail</button>
+        <button class="btn danger" id="btnOwnerLogout" style="width:100%">Logout Owner</button>
       </div>
     </aside>
 
@@ -46,10 +36,8 @@
       
       <div id="section-dashboard" class="content-section">
         <header class="topbar">
-          <div class="left">
-            <h1 class="page-title">Dashboard</h1>
-            <p class="page-sub">Pantau performa channel YouTube Anda.</p>
-          </div>
+          <h1 class="page-title">Dashboard</h1>
+          <p>Pantau performa channel Anda.</p>
         </header>
 
         <section class="stats-wrapper">
@@ -58,7 +46,7 @@
             <div class="value" id="totalChannel">0</div>
           </div>
           <div class="stat-card">
-            <div class="label">Total Subscribers</div>
+            <div class="label">Total Subs</div>
             <div class="value" id="totalSubs">0</div>
           </div>
           <div class="stat-card">
@@ -81,7 +69,7 @@
                 </tr>
               </thead>
               <tbody id="channelBody">
-                <tr><td colspan="6" class="empty">Menunggu data dari Google...</td></tr>
+                <tr><td colspan="6" class="empty">Menunggu data...</td></tr>
               </tbody>
             </table>
           </div>
@@ -90,9 +78,7 @@
 
       <div id="section-analytics" class="content-section" style="display:none">
         <header class="topbar"><h1 class="page-title">Analytics</h1></header>
-        <div class="panel">
-          <p style="padding: 20px; opacity: 0.7;">Detail statistik akan muncul di sini (Segera Hadir).</p>
-        </div>
+        <div class="panel"><p style="padding:20px;">Halaman statistik segera hadir.</p></div>
       </div>
 
     </main>
