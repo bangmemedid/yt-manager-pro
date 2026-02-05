@@ -1,26 +1,22 @@
-/* --- SISTEM NAVIGASI --- */
-function showSection(sectionId) {
-  document.querySelectorAll('.content-section').forEach(sec => {
-    sec.style.display = 'none';
-  });
-  const target = document.getElementById('section-' + sectionId);
-  if (target) target.style.display = 'block';
-  
-  document.querySelectorAll('.side-link').forEach(link => {
-    link.classList.remove('active');
-  });
-  const activeLink = document.getElementById('link-' + sectionId);
-  if (activeLink) activeLink.classList.add('active');
-}
-
-/* --- KONFIGURASI GOOGLE --- */
-const CLIENT_ID = "262964938761-4e11cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com"; //
+/* --- KONFIGURASI MASTER --- */
+const CLIENT_ID = "262964938761-4e11cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 const STORE_KEY = "ytmpro_accounts_merge_v1";
 
 let tokenClient;
 let gisInited = false;
 
+/* --- SISTEM NAVIGASI --- */
+function showSection(sectionId) {
+  document.querySelectorAll('.content-section').forEach(sec => sec.style.display = 'none');
+  const target = document.getElementById('section-' + sectionId);
+  if (target) target.style.display = 'block';
+  
+  document.querySelectorAll('.nav-item').forEach(link => link.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+/* --- LOGIKA GOOGLE & DATA --- */
 function initGis() {
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
@@ -43,10 +39,10 @@ async function initGapi() {
 
 async function refreshAllData() {
   const accounts = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
-  const tbody = document.getElementById("channelBody");
+  const container = document.getElementById("channelBody");
   if (!accounts || accounts.length === 0) return;
   
-  tbody.innerHTML = "";
+  container.innerHTML = "";
   let totalSubs = 0;
   let totalViews = 0;
 
@@ -61,37 +57,39 @@ async function refreshAllData() {
         totalSubs += subs;
         totalViews += views;
 
-        tbody.innerHTML += `
-          <tr>
-            <td>—</td>
-            <td>
-              <div style="display:flex;align-items:center;gap:10px">
-                <img src="${item.snippet.thumbnails.default.url}" style="width:30px;border-radius:50%">
-                <b>${item.snippet.title}</b>
+        container.innerHTML += `
+          <div class="channel-row">
+            <div class="col-info">
+              <img src="${item.snippet.thumbnails.default.url}" class="chan-img">
+              <div class="chan-meta">
+                <div class="main-name">${item.snippet.title}</div>
+                <div class="sub-name">@bangmemed.id</div>
               </div>
-            </td>
-            <td>${subs.toLocaleString()}</td>
-            <td>${item.statistics.videoCount}</td>
-            <td>${views.toLocaleString()}</td>
-            <td><span class="badge-ok" style="color:#10b981; font-weight:bold;">OK</span></td>
-          </tr>`;
+            </div>
+            <div class="col-metrics">
+              <span>${subs.toLocaleString()}</span>
+              <span>${item.statistics.videoCount}</span>
+              <span>${views.toLocaleString()}</span>
+              <span>${(views/24).toFixed(0)}</span>
+              <span class="status-badge">OK</span>
+            </div>
+          </div>`;
       }
     } catch (e) { console.error(e); }
   }
   
   document.getElementById("totalChannel").textContent = accounts.length;
   document.getElementById("totalSubs").textContent = totalSubs.toLocaleString();
-  document.getElementById("totalViews").textContent = totalViews.toLocaleString(); //
+  document.getElementById("totalViews").textContent = totalViews.toLocaleString();
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const btnAdd = document.getElementById("btnAddGmail");
-  if (btnAdd) {
-    btnAdd.onclick = () => {
+  const btn = document.getElementById("btnAddGmail");
+  if (btn) {
+    btn.onclick = () => {
       if (gisInited) tokenClient.requestAccessToken({ prompt: 'select_account' });
     };
   }
-  
   await initGapi();
   initGis();
   await refreshAllData();
