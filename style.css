@@ -150,3 +150,76 @@ body {
   width: 100% !important;
   height: 100% !important;
 }
+
+/* ===== ACCESS MODAL ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(2,6,23,.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255,255,255,.06);
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.6);
+  color: #fff;
+}
+
+.modal-card h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modal-sub {
+  font-size: 13px;
+  opacity: .7;
+  margin-bottom: 18px;
+}
+
+.access-option {
+  background: rgba(255,255,255,.05);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.access-option label {
+  display: flex;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.access-option input {
+  margin-top: 4px;
+}
+
+.access-option strong {
+  display: block;
+  font-size: 14px;
+}
+
+.access-option span {
+  font-size: 12px;
+  opacity: .7;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
