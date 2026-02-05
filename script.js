@@ -1,8 +1,8 @@
 // ===============================
 // CONFIG (ISI PUNYA KAMU)
 // ===============================
-const CLIENT_ID = "ISI_CLIENT_ID_KAMU.apps.googleusercontent.com";
-const API_KEY   = "ISI_API_KEY_KAMU";
+const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
+const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 
 // scope youtube + analytics (penting untuk grafik)
 const SCOPES =
@@ -328,3 +328,4 @@ function minToHHMM(minuteOfDay) {
 }
 
 window.onload = init;
+
