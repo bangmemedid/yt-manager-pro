@@ -1,76 +1,152 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Manager Pro | bangmemed.id</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://apis.google.com/js/api.js" async defer></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- gapi -->
+  <script src="https://apis.google.com/js/api.js"></script>
 </head>
-<body class="dark-theme">
+
+<script>
+  if (localStorage.getItem("owner_logged_in") !== "true") {
+    window.location.href = "login.html";
+  }
+</script>
+
+<body>
   <div class="bg-glow"></div>
-  <div class="app-container">
-    <header class="main-header">
-      <div class="brand">
-        <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" class="logo-img">
-        <span>bangmemed.id</span>
-      </div>
-      <div class="header-search">
-        <input type="text" id="searchInput" placeholder="Search channel...">
-      </div>
-      <div class="header-actions">
-        <div class="sync-info">Connected <span id="status-dot"></span></div>
-        <button class="btn primary" id="btnAddGmail">+ Tambah Gmail</button>
-      </div>
-    </header>
 
-    <div class="layout-body">
-      <aside class="sidebar-nav">
-        <nav>
-          <a href="javascript:void(0)" class="nav-item active" onclick="showSection('dashboard')">Dashboard</a>
-          <a href="javascript:void(0)" class="nav-item" onclick="showSection('analytics')">Analytics</a>
-          <a href="javascript:void(0)" class="nav-item" onclick="showSection('channels')">Channel List</a>
-        </nav>
-        <button class="btn-logout" id="btnOwnerLogout">Logout Owner</button>
-      </aside>
-
-      <main class="main-content">
-        <div id="section-dashboard" class="content-section">
-          <section class="stats-grid">
-            <div class="stat-card">
-              <span class="label">TOTAL CHANNEL</span>
-              <div class="value"><span id="totalChannel">0</span> <small>Akun</small></div>
-            </div>
-            <div class="stat-card">
-              <span class="label">TOTAL SUBSCRIBERS</span>
-              <div class="value" id="totalSubs">0</div>
-            </div>
-            <div class="stat-card">
-              <span class="label">TOTAL VIEWS (48H)</span>
-              <div class="value"><span id="totalViews">0</span> <small class="trend">▲ 21.735</small></div>
-            </div>
-            <div class="stat-card highlight">
-              <span class="label">VIEWS 60 MENIT</span>
-              <div class="value green" id="view60m">6.818</div>
-            </div>
-          </section>
-
-          <section class="data-panel">
-            <div class="panel-header">
-              <div class="col-chan">CHANNEL</div>
-              <div class="col-metrics">
-                <span>SUBS</span><span>VIDEOS</span><span>VIEWS</span><span>VIEWS 48H</span><span>STATUS</span>
-              </div>
-            </div>
-            <div id="channelBody" class="channel-list">
-              <div class="empty-msg">Menunggu data dari Google...</div>
-            </div>
-          </section>
+  <div class="app" id="top">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="logo">
+          <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YT" />
         </div>
-      </main>
-    </div>
+        <div class="side-title">
+          <div class="name">YouTube Manager Pro</div>
+          <div class="sub">bangmemed.id</div>
+        </div>
+      </div>
+
+      <nav class="side-nav">
+        <a class="side-link active" href="#top"><span class="dot"></span>Dashboard</a>
+        <a class="side-link" href="#channels"><span class="dot"></span>Channel List</a>
+        <a class="side-link" href="#help"><span class="dot"></span>Bantuan</a>
+      </nav>
+
+      <div class="side-footer" id="help">
+        <div class="hint">
+          Mode: <b>Multi Gmail (Merge)</b><br/>
+          Token bisa expire ±1 jam → klik <b>Tambah Gmail</b> lagi untuk refresh.
+        </div>
+
+        <div class="side-actions">
+          <button class="btn ghost" id="btnAddGmail" type="button">+ Tambah Gmail</button>
+          <button class="btn danger" id="btnOwnerLogout" type="button">Logout Owner</button>
+          <button class="btn dangerOutline" id="btnLocalLogout" type="button">Logout Lokal (hapus akun)</button>
+        </div>
+
+        <div class="side-note">
+          Jika muncul “Google belum memverifikasi aplikasi”, pastikan Gmail sudah masuk <b>Test Users</b> di Google Auth Platform.
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="topbar">
+        <div class="left">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub">Pantau performa channel dari beberapa Gmail dalam 1 tampilan.</p>
+        </div>
+
+        <div class="right">
+          <div class="search-wrap">
+            <span class="search-ic">⌕</span>
+            <input class="search" id="searchInput" type="text" placeholder="Search channel..." />
+          </div>
+
+          <button class="btn primary" id="btnAddGmailTop" type="button">+ Tambah Gmail</button>
+        </div>
+      </header>
+
+      <section class="stats-wrapper">
+        <div class="stat-card">
+          <div class="label">Total Channel</div>
+          <div class="value" id="totalChannel">0</div>
+          <div class="muted">Akun</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">Total Subscribers</div>
+          <div class="value" id="totalSubs">0</div>
+          <div class="muted">Gabungan semua akun</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">Total Views (All time)</div>
+          <div class="value" id="totalViews">0</div>
+          <div class="muted">Gabungan semua akun</div>
+        </div>
+
+        <div class="stat-card highlight">
+          <div class="label">Views 60 Menit</div>
+          <div class="value" id="view60m">—</div>
+          <div class="muted">Realtime per-menit tidak tersedia di API publik</div>
+        </div>
+      </section>
+
+      <section class="panel" id="channels">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Daftar Channel</div>
+            <div class="panel-sub">Merge dari semua Gmail yang ditambahkan</div>
+          </div>
+          <div class="panel-actions">
+            <span class="tiny" id="statusText">Status: siap.</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="channel-table" id="channelTable">
+            <thead>
+              <tr>
+                <th>Channel</th>
+                <th>Subs</th>
+                <th>Videos</th>
+                <th>Views</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="channelBody">
+              <tr>
+                <td colspan="5" class="empty">Belum ada data. Klik <b>Tambah Gmail</b> lalu izinkan akses.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div>© <span id="year"></span> YouTube Manager Pro — <b>bangmemed.id</b></div>
+        <div class="muted">Premium UI • Multi Gmail • Merge Dashboard</div>
+      </footer>
+    </main>
   </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+
   <script src="script.js"></script>
 </body>
 </html>
