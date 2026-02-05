@@ -1,72 +1,116 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Owner Login | bangmemed.id</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 
   <style>
-    body{
-      margin:0; font-family:Poppins,sans-serif; color:#fff;
-      background: radial-gradient(circle at top, #0f172a, #020617);
-      height:100vh; display:flex; align-items:center; justify-content:center;
+    /* Layout login pakai style.css + sedikit tambahan */
+    .login-wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      position:relative;
+      z-index:1;
     }
-    .card{
-      width:100%; max-width:380px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 16px;
-      padding: 28px;
-      box-shadow: 0 20px 70px rgba(0,0,0,.45);
-      backdrop-filter: blur(10px);
+    .login-card{
+      width:100%;
+      max-width:420px;
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius:18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.28);
+      padding:18px;
     }
-    h1{margin:0 0 6px; font-size:22px;}
-    p{margin:0 0 18px; font-size:13px; opacity:.75;}
-    input{
-      width:100%; padding:12px 12px; margin: 10px 0;
-      border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.25); color:#fff; outline:none;
+    .login-head{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:6px 6px 12px;
     }
-    button{
-      width:100%; padding:12px; border-radius: 12px; border:none;
-      background: linear-gradient(135deg,#3b82f6,#22d3ee);
-      font-weight: 700; cursor:pointer; margin-top: 10px;
+    .login-title{font-weight:800;font-size:20px;margin:0}
+    .login-sub{opacity:.7;font-size:12px;margin-top:4px}
+    .field{
+      width:100%;
+      padding:12px 12px;
+      margin:10px 0;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.25);
+      color:#fff;
+      outline:none;
+      font-family: inherit;
     }
-    .err{display:none; color:#f87171; font-size:13px; margin-top:10px}
-    .hint{font-size:12px; opacity:.6; margin-top:10px}
+    .err{
+      display:none;
+      color:#ffb4b4;
+      background: rgba(239,68,68,.12);
+      border:1px solid rgba(239,68,68,.25);
+      padding:10px 12px;
+      border-radius:14px;
+      margin-top:10px;
+      font-size:13px;
+    }
+    .hintbox{
+      margin-top:10px;
+      font-size:12px;
+      opacity:.7;
+      line-height:1.4;
+    }
   </style>
 </head>
+
 <body>
+  <div class="bg-glow"></div>
 
-  <div class="card">
-    <h1>Owner Login</h1>
-    <p>YouTube Manager Pro • bangmemed.id</p>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-head">
+        <div class="logo">
+          <img alt="yt" src="https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png">
+        </div>
+        <div>
+          <div class="login-title">Owner Login</div>
+          <div class="login-sub">YouTube Manager Pro • bangmemed.id</div>
+        </div>
+      </div>
 
-    <input id="user" placeholder="Username" autocomplete="username">
-    <input id="pass" type="password" placeholder="Password" autocomplete="current-password">
+      <input id="user" class="field" placeholder="Username" autocomplete="username">
+      <input id="pass" class="field" type="password" placeholder="Password" autocomplete="current-password">
 
-    <button id="btnLogin" type="button">Login</button>
-    <div class="err" id="err">Username / Password salah</div>
-    <div class="hint">Hint: username = bangmemedid</div>
+      <button id="btnLogin" class="btn primary" type="button">Login</button>
+
+      <div class="err" id="err">Username / Password salah</div>
+      <div class="hintbox">Hint: username = <b>bangmemedid</b></div>
+    </div>
   </div>
 
-<script>
-  const USER_OK = "bangmemedid";
-  const PASS_OK = "pandi2310@";
+  <script>
+    const USER_OK = "bangmemedid";
+    const PASS_OK = "pandi2310@";
 
-  document.getElementById("btnLogin").addEventListener("click", () => {
-    const u = document.getElementById("user").value.trim();
-    const p = document.getElementById("pass").value;
-
-    if (u === USER_OK && p === PASS_OK) {
-      localStorage.setItem("owner_logged_in", "true");
+    // kalau sudah login, langsung masuk
+    if (localStorage.getItem("owner_logged_in") === "true") {
       window.location.href = "index.html";
-    } else {
-      document.getElementById("err").style.display = "block";
     }
-  });
-</script>
 
+    document.getElementById("btnLogin").addEventListener("click", () => {
+      const u = document.getElementById("user").value.trim();
+      const p = document.getElementById("pass").value;
+
+      if (u === USER_OK && p === PASS_OK) {
+        localStorage.setItem("owner_logged_in", "true");
+        window.location.href = "index.html";
+      } else {
+        document.getElementById("err").style.display = "block";
+      }
+    });
+  </script>
 </body>
 </html>
