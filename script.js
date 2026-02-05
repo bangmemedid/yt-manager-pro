@@ -44,6 +44,7 @@ async function loadYouTubeData() {
       <td>${stats.subscriberCount}</td>
       <td>${stats.videoCount}</td>
       <td>${stats.viewCount}</td>
+      <td>$ ${estimasiRevenue(stats.viewCount)}</td>
       <td>—</td>
       <td class="status-ok">OK</td>
     </tr>
@@ -63,4 +64,5 @@ function autoRefresh() {
 
 // Refresh tiap 5 detik
 setInterval(autoRefresh, 5000);
+
 
