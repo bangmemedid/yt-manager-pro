@@ -4,7 +4,14 @@
 const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 
+/**
+ * Tambahkan openid/email/profile agar kita bisa ambil email via userinfo.
+ * (Kalau tidak butuh email, boleh hapus 3 scope ini dan hapus fungsi getUserEmail)
+ */
 const SCOPES = [
+  "openid",
+  "email",
+  "profile",
   "https://www.googleapis.com/auth/youtube.readonly",
   "https://www.googleapis.com/auth/yt-analytics.readonly"
 ].join(" ");
@@ -35,23 +42,42 @@ function formatNumber(n){
 }
 
 /* =========================
-   GOOGLE INIT
+   GOOGLE INIT (GIS + gapi client)
 ========================= */
-let gAuthInited = false;
+let gApiInited = false;
+let tokenClient = null;
 
 function initGapi(){
   return new Promise((resolve, reject) => {
-    gapi.load("client:auth2", async () => {
+    // Pastikan library ada
+    if(typeof gapi === "undefined"){
+      reject(new Error("gapi belum termuat. Pastikan ada <script src='https://apis.google.com/js/api.js'></script>"));
+      return;
+    }
+    if(typeof google === "undefined" || !google.accounts?.oauth2){
+      reject(new Error("Google Identity Services belum termuat. Pastikan ada <script src='https://accounts.google.com/gsi/client' async defer></script>"));
+      return;
+    }
+
+    gapi.load("client", async () => {
       try{
         await gapi.client.init({
           apiKey: API_KEY,
-          clientId: CLIENT_ID,
-          scope: SCOPES,
           discoveryDocs: [
             "https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"
           ]
         });
-        gAuthInited = true;
+        gApiInited = true;
+
+        // Buat token client sekali saja
+        if(!tokenClient){
+          tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: () => {} // akan di-set saat request token
+          });
+        }
+
         resolve();
       }catch(e){
         reject(e);
@@ -61,23 +87,49 @@ function initGapi(){
 }
 
 /* =========================
-   LOGIN GOOGLE (PILIH AKUN)
+   USERINFO (ambil email)
+========================= */
+async function getUserEmail(access_token){
+  // butuh scope: openid email profile
+  try{
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    const data = await res.json();
+    return data?.email || "(unknown)";
+  }catch{
+    return "(unknown)";
+  }
+}
+
+/* =========================
+   LOGIN GOOGLE (GIS) - PILIH AKUN
 ========================= */
 async function googleSignInSelectAccount(){
-  if(!gAuthInited) await initGapi();
+  if(!gApiInited) await initGapi();
 
-  const auth2 = gapi.auth2.getAuthInstance();
+  // request access token via GIS
+  const tokenResp = await new Promise((resolve, reject) => {
+    tokenClient.callback = (resp) => {
+      if(resp?.error) reject(resp);
+      else resolve(resp);
+    };
 
-  // paksa pilih akun + consent (untuk tambah gmail lain)
-  const user = await auth2.signIn({ prompt: "select_account consent" });
+    tokenClient.requestAccessToken({
+      prompt: "consent select_account"
+    });
+  });
 
-  const email = user.getBasicProfile().getEmail();
-  const authResp = user.getAuthResponse(true);
+  const access_token = tokenResp.access_token;
+  const expires_in = Number(tokenResp.expires_in || 3600);
+  const expires_at = Date.now() + expires_in * 1000;
+
+  const email = await getUserEmail(access_token);
 
   const payload = {
     email,
-    access_token: authResp.access_token,
-    expires_at: authResp.expires_at,
+    access_token,
+    expires_at,
     added_at: Date.now()
   };
 
@@ -95,6 +147,7 @@ async function googleSignInSelectAccount(){
    FETCH DATA PER ACCOUNT
 ========================= */
 async function fetchMyChannelUsingToken(access_token){
+  // set token untuk gapi client
   gapi.client.setToken({ access_token });
 
   const res = await gapi.client.youtube.channels.list({
@@ -171,7 +224,7 @@ async function refreshAllData(){
   }
 
   setStatus("Mengambil data channel...");
-  if(!gAuthInited) await initGapi();
+  if(!gApiInited) await initGapi();
 
   const rows = [];
   for(const acc of accounts){
@@ -253,8 +306,6 @@ function bindUI(){
 document.addEventListener("DOMContentLoaded", async ()=>{
   bindUI();
   try{
-    // ⚠️ Jangan auto-login google di sini.
-    // Kita cuma init gapi dulu, baru login saat tombol ditekan.
     await initGapi();
     await refreshAllData();
   }catch(e){
@@ -262,7 +313,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     alert(
       "Gagal init Google API:\n\n" +
       (e?.details || e?.message || JSON.stringify(e)) +
-      "\n\nBiasanya karena 'Authorized JavaScript origins' belum benar."
+      "\n\nPastikan:\n- Script GIS & gapi sudah ada di HTML\n- Authorized JavaScript origins benar\n- YouTube Data API v3 enabled"
     );
     setStatus("Gagal init Google API.");
   }
