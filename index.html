@@ -1,107 +1,271 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube Manager Pro | bangmemed.id</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Manager Pro | bangmemed.id</title>
 
-  <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- GOOGLE FONT -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- YouTube API (gapi) -->
-  <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        :root {
+            --primary: #ff0000;
+            --dark: #1e1e26;
+            --bg: #f8f9fa;
+            --text: #333;
+        }
 
-  <!-- Chart.js (untuk grafik 48 jam & 60 menit) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg); color: var(--text); }
+
+        /* HEADER */
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5%; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand img { width: 40px; }
+        .brand h2 { font-size: 1.2rem; color: var(--dark); }
+        .brand .sub { font-size: 0.8rem; color: #888; }
+
+        .actions { display: flex; gap: 10px; }
+        .search { padding: 8px 15px; border-radius: 20px; border: 1px solid #ddd; outline: none; }
+        .btn { padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; transition: 0.3s; }
+        .primary { background: var(--primary); color: white; }
+        .login { background: #4285f4; color: white; }
+        .btn:hover { opacity: 0.8; }
+
+        /* STATS */
+        .stats-wrapper {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px; padding: 30px 5%;
+        }
+        .stat-card {
+            background: #fff; padding: 25px; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;
+        }
+        .stat-card p { color: #777; font-size: 0.9rem; }
+        .stat-card h1 { font-size: 2rem; margin: 10px 0; color: var(--dark); }
+        .stat-card span { font-size: 0.8rem; font-weight: bold; color: #2ecc71; }
+
+        /* CHARTS & TABLES */
+        .section-container { padding: 0 5% 40px; }
+        .chart-box { background: #fff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        
+        .channel-table {
+            width: 100%; border-collapse: collapse; background: #fff; border-radius: 15px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .channel-table th { background: #eee; padding: 15px; text-align: left; font-size: 0.9rem; }
+        .channel-table td { padding: 15px; border-bottom: 1px solid #f1f1f1; font-size: 0.85rem; }
+        
+        .avatar { width: 35px; height: 35px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
+
+        #output { text-align: center; color: #e74c3c; font-weight: bold; }
+    </style>
 </head>
 
 <body>
 
-  <!-- HEADER -->
-  <header class="topbar">
-    <div class="brand">
-      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube Icon">
-      <div>
-        <h2>YouTube Manager Pro</h2>
-        <p class="sub">bangmemed.id</p>
-      </div>
-    </div>
+    <header class="topbar">
+        <div class="brand">
+            <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube Icon">
+            <div>
+                <h2>YouTube Manager Pro</h2>
+                <p class="sub">bangmemed.id</p>
+            </div>
+        </div>
 
-    <div class="actions">
-      <input type="text" placeholder="Search channel..." class="search" />
-      <button class="btn primary" id="addGmailBtn">+ Tambah Gmail</button>
-      <button class="btn login" id="loginBtn">Login</button>
-    </div>
-  </header>
+        <div class="actions">
+            <input type="text" placeholder="Cari channel..." class="search" />
+            <button class="btn login" id="loginBtn">Login Google</button>
+        </div>
+    </header>
 
-  <!-- OUTPUT MESSAGE -->
-  <div id="output" style="margin: 12px 0 0; padding: 0 22px; opacity: .85; font-family: Poppins, sans-serif;"></div>
+    <div id="output"></div>
 
-  <!-- STAT CARDS -->
-  <section class="stats-wrapper">
+    <section class="stats-wrapper">
+        <div class="stat-card">
+            <p>Total Channel</p>
+            <h1 id="totalChannel">0</h1>
+            <span>Aktif</span>
+        </div>
+        <div class="stat-card">
+            <p>Total Subscribers</p>
+            <h1 id="totalSubs">0</h1>
+        </div>
+        <div class="stat-card">
+            <p>Total Views (30 Hari)</p>
+            <h1 id="view48h">0</h1>
+            <span id="viewChange">+0% ▲</span>
+        </div>
+        <div class="stat-card">
+            <p>Status Akun</p>
+            <h1 id="accStatus">-</h1>
+        </div>
+    </section>
 
-    <div class="stat-card">
-      <p>Total Channel</p>
-      <h1 id="totalChannel">0</h1>
-      <span>Akun</span>
-    </div>
+    <section class="section-container">
+        <h2>Performa View (30 Hari Terakhir)</h2>
+        <div class="chart-box">
+            <canvas id="chartAnalytics" height="100"></canvas>
+        </div>
 
-    <div class="stat-card">
-      <p>Total Subscribers</p>
-      <h1 id="totalSubs">0</h1>
-    </div>
+        <h2 style="margin-bottom: 15px;">Daftar Channel</h2>
+        <table class="channel-table">
+            <thead>
+                <tr>
+                    <th>Channel</th>
+                    <th>Subscribers</th>
+                    <th>Total Videos</th>
+                    <th>Total Views</th>
+                    <th>Negara</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="channelBody">
+                <tr><td colspan="6" style="text-align:center;">Silahkan login untuk melihat data</td></tr>
+            </tbody>
+        </table>
+    </section>
 
-    <div class="stat-card">
-      <p>Total Views (48h)</p>
-      <h1 id="view48h">0</h1>
-      <span id="view48hUp">0 ▲</span>
-    </div>
+    <script>
+        // --- KONFIGURASI ---
+        const CLIENT_ID = 'PASTE_CLIENT_ID_DI_SINI'; 
+        const API_KEY = 'PASTE_API_KEY_DI_SINI';
+        const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly';
 
-    <div class="stat-card">
-      <p>Views 60 Menit</p>
-      <h1 id="view60m">0</h1>
-    </div>
+        let tokenClient;
+        let chartInstance = null;
 
-  </section>
+        // Inisialisasi API
+        function start() {
+            gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: [
+                    "https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest",
+                    "https://youtubeanalytics.googleapis.com/v1/discovery/resourcedescriptor"
+                ],
+            }).then(() => {
+                console.log("GAPI initialized");
+            });
+        }
 
-  <!-- CHARTS -->
-  <section class="channel-list">
-    <h2>Statistik 48 Jam</h2>
-    <div class="chart-box">
-      <canvas id="chart48h"></canvas>
-    </div>
+        gapi.load('client', start);
 
-    <h2 style="margin-top:18px;">Statistik 60 Menit (Realtime)</h2>
-    <div class="chart-box">
-      <canvas id="chart60m"></canvas>
-    </div>
-  </section>
+        // OAuth2 Setup
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: (tokenResponse) => {
+                if (tokenResponse && tokenResponse.access_token) {
+                    fetchData();
+                    document.getElementById('loginBtn').innerText = "Terhubung";
+                }
+            },
+        });
 
-  <!-- CHANNEL LIST -->
-  <section class="channel-list">
-    <h2>Daftar Channel</h2>
+        document.getElementById('loginBtn').onclick = () => {
+            tokenClient.requestAccessToken();
+        };
 
-    <table class="channel-table" id="channelTable">
-      <thead>
-        <tr>
-          <th>Revenue Est</th>
-          <th>Channel</th>
-          <th>Subs</th>
-          <th>Videos</th>
-          <th>Views</th>
-          <th>48 Jam</th>
-          <th>Status</th>
-        </tr>
-      </thead>
+        // Ambil Data Utama
+        async function fetchData() {
+            try {
+                // 1. Ambil Metadata Channel
+                const channelRes = await gapi.client.youtube.channels.list({
+                    part: 'snippet,statistics,status',
+                    mine: true
+                });
 
-      <tbody id="channelBody">
-        <!-- otomatis diisi JS -->
-      </tbody>
-    </table>
-  </section>
+                const channel = channelRes.result.items[0];
+                renderChannelTable(channel);
+                updateStats(channel);
 
-  <script src="script.js"></script>
+                // 2. Ambil Data Analytics (30 Hari)
+                fetchAnalytics(channel.id);
+
+            } catch (err) {
+                document.getElementById('output').innerText = "Gagal mengambil data: " + err.result.error.message;
+            }
+        }
+
+        function updateStats(channel) {
+            document.getElementById('totalChannel').innerText = "1";
+            document.getElementById('totalSubs').innerText = Number(channel.statistics.subscriberCount).toLocaleString();
+            document.getElementById('accStatus').innerText = channel.status.privacyStatus.toUpperCase();
+        }
+
+        function renderChannelTable(channel) {
+            const tbody = document.getElementById('channelBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td>
+                        <img src="${channel.snippet.thumbnails.default.url}" class="avatar">
+                        <strong>${channel.snippet.title}</strong>
+                    </td>
+                    <td>${Number(channel.statistics.subscriberCount).toLocaleString()}</td>
+                    <td>${channel.statistics.videoCount}</td>
+                    <td>${Number(channel.statistics.viewCount).toLocaleString()}</td>
+                    <td>${channel.snippet.country || 'ID'}</td>
+                    <td><span style="color:green; font-weight:bold;">AKTIF</span></td>
+                </tr>
+            `;
+        }
+
+        async function fetchAnalytics(channelId) {
+            const endDate = new Date().toISOString().split('T')[0];
+            const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+            const response = await gapi.client.youtubeAnalytics.reports.query({
+                ids: `channel==${channelId}`,
+                startDate: startDate,
+                endDate: endDate,
+                metrics: 'views',
+                dimensions: 'day'
+            });
+
+            const rows = response.result.rows;
+            const labels = rows.map(row => row[0]);
+            const dataViews = rows.map(row => row[1]);
+
+            // Update Total View 30 hari di Card
+            const total30d = dataViews.reduce((a, b) => a + b, 0);
+            document.getElementById('view48h').innerText = total30d.toLocaleString();
+
+            renderChart(labels, dataViews);
+        }
+
+        function renderChart(labels, data) {
+            const ctx = document.getElementById('chartAnalytics').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Views Harian',
+                        data: data,
+                        borderColor: '#ff0000',
+                        backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
