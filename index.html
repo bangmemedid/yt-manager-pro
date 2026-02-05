@@ -4,84 +4,103 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>YouTube Manager Pro | bangmemed.id</title>
-  
   <link rel="stylesheet" href="style.css">
   
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
-<body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="side-brand">
-        <div class="side-title">
-          <div class="name">YouTube Manager Pro</div>
-          <div class="sub">bangmemed.id</div>
+<body class="dark-theme">
+  <div class="bg-glow"></div>
+
+  <div class="app-container">
+    <header class="main-header">
+      <div class="brand-section">
+        <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" class="logo-img">
+        <div class="brand-text">
+          <span class="main-name">bangmemed.id</span>
+        </div>
+      </div>
+      
+      <div class="search-section">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Search channel...">
         </div>
       </div>
 
-      <nav class="side-nav">
-        <a class="side-link active" id="link-dashboard" href="javascript:void(0)" onclick="showSection('dashboard')">Dashboard</a>
-        <a class="side-link" id="link-analytics" href="javascript:void(0)" onclick="showSection('analytics')">Analytics</a>
-        <a class="side-link" id="link-channels" href="javascript:void(0)" onclick="showSection('channels')">Channel List</a>
-      </nav>
-
-      <div class="side-footer">
-        <button class="btn primary" id="btnAddGmail" style="width:100%; margin-bottom:10px">+ Tambah Gmail</button>
-        <button class="btn danger" id="btnOwnerLogout" style="width:100%">Logout Owner</button>
+      <div class="header-actions">
+        <div class="account-status">
+          <span class="status-dot"></span>
+          <span id="sync-status">Connected</span>
+        </div>
+        <button class="btn-gmail-plus" id="btnMiniAdd">
+          <span>Tambah Gmail</span>
+          <span class="plus-circle">+</span>
+        </button>
+        <button class="btn-primary-glow" id="btnAddGmail">+ Tambah Gmail</button>
       </div>
-    </aside>
+    </header>
 
-    <main class="main">
-      
-      <div id="section-dashboard" class="content-section">
-        <header class="topbar">
-          <h1 class="page-title">Dashboard</h1>
-          <p>Pantau performa channel Anda.</p>
-        </header>
+    <div class="layout-body">
+      <aside class="sidebar-nav">
+        <nav>
+          <a href="javascript:void(0)" class="nav-item active" onclick="showSection('dashboard')">
+            <span class="nav-dot"></span> Dashboard
+          </a>
+          <a href="javascript:void(0)" class="nav-item" onclick="showSection('analytics')">
+            <span class="nav-dot"></span> Analytics
+          </a>
+          <a href="javascript:void(0)" class="nav-item" onclick="showSection('channels')">
+            <span class="nav-dot"></span> Channel List
+          </a>
+        </nav>
+        <div class="sidebar-bottom">
+          <button class="btn-logout" id="btnOwnerLogout">Logout Owner</button>
+        </div>
+      </aside>
 
-        <section class="stats-wrapper">
-          <div class="stat-card">
-            <div class="label">Total Channel</div>
-            <div class="value" id="totalChannel">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Total Subs</div>
-            <div class="value" id="totalSubs">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="label">Total Views</div>
-            <div class="value" id="totalViews">0</div>
-          </div>
-        </section>
+      <main class="main-content">
+        <div id="section-dashboard" class="content-section">
+          <section class="stats-grid">
+            <div class="stat-card">
+              <span class="card-label">TOTAL CHANNEL</span>
+              <div class="card-value"><span id="totalChannel">0</span> <small>Akun</small></div>
+            </div>
+            <div class="stat-card">
+              <span class="card-label">TOTAL SUBSCRIBERS</span>
+              <div class="card-value" id="totalSubs">0</div>
+            </div>
+            <div class="stat-card">
+              <span class="card-label">TOTAL VIEWS (48H)</span>
+              <div class="card-value">
+                <span id="totalViews">0</span>
+                <small class="trend-up">▲ 21.735</small>
+              </div>
+            </div>
+            <div class="stat-card highlight">
+              <span class="card-label">VIEWS 60 MENIT</span>
+              <div class="card-value text-green" id="view60m">6.818</div>
+            </div>
+          </section>
 
-        <section class="panel">
-          <div class="table-wrap">
-            <table class="channel-table">
-              <thead>
-                <tr>
-                  <th>Revenue</th>
-                  <th>Channel</th>
-                  <th>Subs</th>
-                  <th>Videos</th>
-                  <th>Views</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="channelBody">
-                <tr><td colspan="6" class="empty">Menunggu data...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-
-      <div id="section-analytics" class="content-section" style="display:none">
-        <header class="topbar"><h1 class="page-title">Analytics</h1></header>
-        <div class="panel"><p style="padding:20px;">Halaman statistik segera hadir.</p></div>
-      </div>
-
-    </main>
+          <section class="data-panel">
+            <div class="panel-header">
+              <div class="col-chan">CHANNEL</div>
+              <div class="col-metrics">
+                <span>SUBS</span>
+                <span>VIDEOS</span>
+                <span>VIEWS</span>
+                <span>VIEWS 48 JAM</span>
+                <span>STATUS</span>
+              </div>
+            </div>
+            <div id="channelBody" class="channel-list">
+              <div class="empty-msg">Menunggu data dari Google...</div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
   </div>
 
   <script src="script.js"></script>
