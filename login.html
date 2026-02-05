@@ -5,57 +5,86 @@
   <title>Owner Login | bangmemed.id</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
   <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
     body {
       margin: 0;
-      font-family: Poppins, sans-serif;
-      background: radial-gradient(circle at top, #0f172a, #020617);
-      color: #fff;
       height: 100vh;
+      background: radial-gradient(circle at top, #0f172a, #020617);
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #fff;
     }
+
     .card {
-      background: rgba(255,255,255,.06);
-      padding: 32px;
-      border-radius: 14px;
       width: 100%;
-      max-width: 360px;
-      box-shadow: 0 20px 50px rgba(0,0,0,.4);
+      max-width: 380px;
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(14px);
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.5);
     }
+
     h1 {
       margin: 0 0 6px;
       font-size: 22px;
+      font-weight: 600;
     }
+
     p {
-      margin: 0 0 20px;
+      margin: 0 0 22px;
       font-size: 13px;
       opacity: .7;
     }
+
     input {
       width: 100%;
-      padding: 12px;
-      margin-bottom: 12px;
-      border-radius: 10px;
+      padding: 13px;
+      margin-bottom: 14px;
+      border-radius: 12px;
       border: none;
       outline: none;
+      background: rgba(255,255,255,.1);
+      color: #fff;
+      font-size: 14px;
     }
+
+    input::placeholder {
+      color: rgba(255,255,255,.5);
+    }
+
     button {
       width: 100%;
-      padding: 12px;
-      border-radius: 10px;
+      padding: 13px;
+      border-radius: 12px;
       border: none;
       background: linear-gradient(135deg,#3b82f6,#22d3ee);
-      color: #000;
+      color: #020617;
       font-weight: 600;
+      font-size: 15px;
       cursor: pointer;
+      transition: .2s;
     }
+
+    button:hover {
+      opacity: .9;
+    }
+
     .err {
-      margin-top: 10px;
+      margin-top: 12px;
       color: #f87171;
       font-size: 13px;
       display: none;
+      text-align: center;
     }
   </style>
 </head>
@@ -65,25 +94,32 @@
     <h1>Owner Login</h1>
     <p>YouTube Manager Pro • bangmemed.id</p>
 
-    <input id="email" placeholder="bangmemed.id@gmail.com">
-    <input id="pass" type="password" placeholder="pandi2310@">
+    <input id="username" placeholder="Username owner" autocomplete="off">
+    <input id="password" type="password" placeholder="Password">
 
-    <button onclick="login()">Login</button>
-    <div class="err" id="err">Email atau password salah</div>
+    <button onclick="loginOwner()">Login</button>
+    <div class="err" id="err">Username atau password salah</div>
   </div>
 
 <script>
-function login() {
-  const email = document.getElementById("email").value;
-  const pass  = document.getElementById("pass").value;
+  // === OWNER CREDENTIAL (LOCAL) ===
+  const OWNER_USERNAME = "bangmemedid";
+  const OWNER_PASSWORD = "pandi2310@";
 
-  if (email === "owner@bangmemed.id" && pass === "123456") {
-    localStorage.setItem("owner_logged_in", "true");
-    window.location.href = "index.html";
-  } else {
-    document.getElementById("err").style.display = "block";
+  function loginOwner() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    const err  = document.getElementById("err");
+
+    err.style.display = "none";
+
+    if (user === OWNER_USERNAME && pass === OWNER_PASSWORD) {
+      localStorage.setItem("owner_logged_in", "true");
+      window.location.href = "index.html";
+    } else {
+      err.style.display = "block";
+    }
   }
-}
 </script>
 
 </body>
