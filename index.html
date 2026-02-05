@@ -1,98 +1,85 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>YouTube Manager</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Manager Pro | bangmemed.id</title>
 
-<body>
-  <div class="app">
+  <link rel="stylesheet" href="style.css">
 
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo"></div>
-        <div class="brandText">
-          <div class="brandName" id="brandName">bangmemed.id</div>
-          <div class="brandSub">YouTube Manager</div>
-        </div>
-      </div>
+  <!-- GOOGLE FONT -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-      <div class="searchWrap">
-        <span class="searchIcon">⌕</span>
-        <input id="searchInput" class="searchInput" placeholder="Search channel..." />
-      </div>
-
-      <div class="actions">
-        <button id="addAccountBtn" class="btn btn-soft">
-          <span class="ico">✉</span>
-          Tambah Gmail
-          <span class="plus">+</span>
-        </button>
-        <button id="addAccountBtn2" class="btn btn-primary">
-          <span class="ico">＋</span>
-          Tambah Gmail
-        </button>
-      </div>
-    </header>
-
-    <section class="cards">
-      <div class="card">
-        <div class="cardLabel">TOTAL CHANNEL</div>
-        <div class="cardValue"><span id="totalChannel">0</span> <span class="cardUnit">Akun</span></div>
-      </div>
-
-      <div class="card">
-        <div class="cardLabel">TOTAL SUBSCRIBERS</div>
-        <div class="cardValue" id="totalSubs">0</div>
-      </div>
-
-      <div class="card">
-        <div class="cardLabel">TOTAL VIEWS (48H)</div>
-        <div class="cardValueRow">
-          <div class="cardValue" id="totalViews48">0</div>
-          <div class="delta" id="delta48">—</div>
-        </div>
-      </div>
-
-      <div class="card card-accent">
-        <div class="cardLabel">VIEWS 60 MENIT</div>
-        <div class="cardValue accent" id="totalViews60">0</div>
-      </div>
-    </section>
-
-    <section class="tableWrap">
-      <div class="tableHead">
-        <div class="th channel">CHANNEL</div>
-        <div class="th num">SUBS</div>
-        <div class="th num">VIDEOS</div>
-        <div class="th num">VIEWS</div>
-        <div class="th num">VIEWS</div>
-        <div class="th spark">VIEWS 48 JAM</div>
-        <div class="th status">STATUS</div>
-        <div class="th more">•••</div>
-      </div>
-
-      <div id="rows" class="rows"></div>
-    </section>
-
-    <footer class="footer">
-      <div class="hint">
-        Jika muncul “Access blocked / belum verifikasi”, pastikan email kamu sudah masuk sebagai <b>Test User</b> di Google Auth Platform.
-      </div>
-      <div class="mini">
-        <button id="loginBtn" class="btn btn-outline">Login / Refresh Token</button>
-        <button id="logoutBtn" class="btn btn-ghost">Logout</button>
-      </div>
-    </footer>
-  </div>
-
-  <!-- Google API Client -->
+  <!-- YouTube API -->
   <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
 
-  <!-- Google Identity Services (OAuth) -->
-  <script src="https://accounts.google.com/gsi/client"></script>
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="brand">
+      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png">
+      <div>
+        <h2>YouTube Manager Pro</h2>
+        <p class="sub">bangmemed.id</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <input type="text" placeholder="Search channel..." class="search">
+      <button class="btn primary">+ Tambah Gmail</button>
+      <button class="btn login" id="loginBtn">Login</button>
+    </div>
+  </header>
+
+  <!-- STAT CARDS -->
+  <section class="stats-wrapper">
+
+    <div class="stat-card">
+      <p>Total Channel</p>
+      <h1 id="totalChannel">0</h1>
+      <span>Akun</span>
+    </div>
+
+    <div class="stat-card">
+      <p>Total Subscribers</p>
+      <h1 id="totalSubs">0</h1>
+    </div>
+
+    <div class="stat-card">
+      <p>Total Views (48h)</p>
+      <h1 id="view48h">0</h1>
+      <span id="view48hUp">0 ▲</span>
+    </div>
+
+    <div class="stat-card">
+      <p>Views 60 Menit</p>
+      <h1 id="view60m">0</h1>
+    </div>
+
+  </section>
+
+  <!-- CHANNEL LIST -->
+  <section class="channel-list">
+    <h2>Daftar Channel</h2>
+
+    <table class="channel-table" id="channelTable">
+      <thead>
+        <tr>
+          <th>Channel</th>
+          <th>Subs</th>
+          <th>Videos</th>
+          <th>Views</th>
+          <th>48 Jam</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="channelBody">
+        <!-- otomatis diisi JS -->
+      </tbody>
+    </table>
+  </section>
 
   <script src="script.js"></script>
 </body>
