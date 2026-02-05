@@ -1,115 +1,145 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Manager Pro | bangmemed.id</title>
 
+  <!-- Font sesuai CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <!-- Proteksi: wajib login owner dulu -->
+  <!-- Proteksi: wajib login owner -->
   <script>
     if (localStorage.getItem("owner_logged_in") !== "true") {
       window.location.href = "login.html";
     }
   </script>
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-title">YouTube Manager Pro</div>
-      <div class="brand-sub">bangmemed.id</div>
-    </div>
+  <div class="bg-glow"></div>
 
-    <nav class="menu">
-      <a class="menu-item active" href="index.html">Dashboard</a>
-      <a class="menu-item" href="index.html#channel">Channel List</a>
-    </nav>
-
-    <div class="sidebar-actions">
-      <button id="btnAddGmail" class="btn btn-primary">+ Tambah Gmail</button>
-
-      <button id="btnOwnerLogout" class="btn btn-ghost">Logout Owner</button>
-      <button id="btnLocalLogout" class="btn btn-danger">Logout Lokal (hapus akun)</button>
-
-      <div class="sidebar-note">
-        Mode: Multi Gmail (Merge). Token bisa expire ±1 jam — klik Tambah Gmail lagi untuk refresh.
-      </div>
-    </div>
-  </aside>
-
-  <!-- Main -->
-  <main class="main">
-    <!-- Topbar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <h1 class="page-title">Dashboard</h1>
-        <div id="statusText" class="status">Status: Memuat...</div>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="logo">
+          <!-- Anda bisa ganti logo/icon di sini -->
+          <img alt="yt" src="https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png">
+        </div>
+        <div class="side-title">
+          <div class="name">YouTube Manager Pro</div>
+          <div class="sub">bangmemed.id</div>
+        </div>
       </div>
 
-      <div class="topbar-right">
-        <input id="searchInput" class="search" type="text" placeholder="Search channel..." />
-        <button id="btnAddGmailTop" class="btn btn-primary">+ Tambah Gmail</button>
+      <nav class="side-nav">
+        <a class="side-link active" href="index.html"><span class="dot"></span> Dashboard</a>
+        <a class="side-link" href="#channel"><span class="dot" style="opacity:.35"></span> Channel List</a>
+      </nav>
+
+      <div class="side-footer">
+        <div class="hint">
+          Mode: <b>Multi Gmail (Merge)</b><br/>
+          Token bisa expire ±1 jam — klik <b>Tambah Gmail</b> untuk refresh.
+        </div>
+
+        <div class="side-actions">
+          <button id="btnAddGmail" class="btn primary">+ Tambah Gmail</button>
+          <button id="btnOwnerLogout" class="btn ghost">Logout Owner</button>
+          <button id="btnLocalLogout" class="btn danger">Logout Lokal (hapus akun)</button>
+        </div>
+
+        <div class="side-note">
+          Jika muncul “Google belum memverifikasi aplikasi”, pastikan email sudah masuk <b>Test users</b> di OAuth consent screen.
+        </div>
       </div>
-    </header>
+    </aside>
 
-    <!-- Stats -->
-    <section class="cards">
-      <div class="card">
-        <div class="card-title">Total Channel</div>
-        <div class="card-value"><span id="totalChannel">0</span> <span class="card-unit">Akun</span></div>
+    <!-- MAIN -->
+    <main class="main">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <div class="page-sub">Pantau performa channel dari beberapa Gmail dalam 1 tampilan.</div>
+          <div id="statusText" class="page-sub" style="margin-top:8px;">Status: Memuat...</div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="search-wrap">
+            <div class="search-ic">🔎</div>
+            <input id="searchInput" class="search" placeholder="Search channel..." />
+          </div>
+          <button id="btnAddGmailTop" class="btn primary">+ Tambah Gmail</button>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="card-title">Total Subscribers</div>
-        <div class="card-value"><span id="totalSubs">0</span></div>
+      <!-- STATS -->
+      <div class="stats-wrapper">
+        <div class="stat-card">
+          <div class="label">Total Channel</div>
+          <div class="value"><span id="totalChannel">0</span></div>
+          <div class="muted">Akun</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">Total Subscribers</div>
+          <div class="value"><span id="totalSubs">0</span></div>
+          <div class="muted">Akumulasi semua channel</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">Total Views</div>
+          <div class="value"><span id="totalViews">0</span></div>
+          <div class="muted">Akumulasi semua channel</div>
+        </div>
+
+        <div class="stat-card highlight">
+          <div class="label">Views 60 Menit</div>
+          <div class="value"><span id="view60m">—</span></div>
+          <div class="muted">Realtime per-menit tidak tersedia di API publik</div>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="card-title">Total Views</div>
-        <div class="card-value"><span id="totalViews">0</span></div>
+      <!-- TABLE PANEL -->
+      <section id="channel" class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Daftar Channel</div>
+            <div class="panel-sub">Merge dari semua Gmail yang ditambahkan</div>
+          </div>
+          <div class="tiny">Status: data channel YouTube</div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="channel-table">
+            <thead>
+              <tr>
+                <th>Channel</th>
+                <th>Subs</th>
+                <th>Videos</th>
+                <th>Views</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="channelBody">
+              <tr>
+                <td colspan="5" class="empty">Belum ada data. Klik <b>Tambah Gmail</b> lalu izinkan akses.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="footer">
+        <div>© 2026 YouTube Manager Pro — bangmemed.id</div>
+        <div>Premium UI • Multi Gmail • Merge Dashboard</div>
       </div>
-
-      <div class="card">
-        <div class="card-title">Views 60 Menit</div>
-        <div class="card-value"><span id="view60m">—</span></div>
-        <div class="card-foot">Realtime per-menit tidak tersedia di API publik</div>
-      </div>
-    </section>
-
-    <!-- Table -->
-    <section id="channel" class="table-wrap">
-      <div class="table-head">
-        <div class="table-title">Daftar Channel</div>
-        <div class="table-sub">Merge dari semua Gmail yang ditambahkan</div>
-      </div>
-
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Channel</th>
-            <th>Subs</th>
-            <th>Videos</th>
-            <th>Views</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="channelBody">
-          <tr>
-            <td colspan="5" class="empty">
-              Belum ada data. Klik <b>Tambah Gmail</b> lalu izinkan akses.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <footer class="footer">
-      © 2026 YouTube Manager Pro — bangmemed.id
-    </footer>
-  </main>
+    </main>
+  </div>
 
   <!-- =========================
        GOOGLE LIBS (WAJIB)
