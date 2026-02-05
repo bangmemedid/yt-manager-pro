@@ -5,81 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>YouTube Manager Pro | bangmemed.id</title>
   <link rel="stylesheet" href="style.css">
-  
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
 </head>
 <body class="dark-theme">
   <div class="bg-glow"></div>
-
   <div class="app-container">
     <header class="main-header">
-      <div class="brand-section">
+      <div class="brand">
         <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" class="logo-img">
-        <div class="brand-text">
-          <span class="main-name">bangmemed.id</span>
-        </div>
+        <span>bangmemed.id</span>
       </div>
-      
-      <div class="search-section">
-        <div class="search-box">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="searchInput" placeholder="Search channel...">
-        </div>
+      <div class="header-search">
+        <input type="text" id="searchInput" placeholder="Search channel...">
       </div>
-
       <div class="header-actions">
-        <div class="account-status">
-          <span class="status-dot"></span>
-          <span id="sync-status">Connected</span>
-        </div>
-        <button class="btn-gmail-plus" id="btnMiniAdd">
-          <span>Tambah Gmail</span>
-          <span class="plus-circle">+</span>
-        </button>
-        <button class="btn-primary-glow" id="btnAddGmail">+ Tambah Gmail</button>
+        <div class="sync-info">Connected <span id="status-dot"></span></div>
+        <button class="btn secondary" id="btnAddMini">+ Tambah Gmail</button>
+        <button class="btn primary" id="btnAddGmail">+ Tambah Gmail</button>
       </div>
     </header>
 
     <div class="layout-body">
       <aside class="sidebar-nav">
         <nav>
-          <a href="javascript:void(0)" class="nav-item active" onclick="showSection('dashboard')">
-            <span class="nav-dot"></span> Dashboard
-          </a>
-          <a href="javascript:void(0)" class="nav-item" onclick="showSection('analytics')">
-            <span class="nav-dot"></span> Analytics
-          </a>
-          <a href="javascript:void(0)" class="nav-item" onclick="showSection('channels')">
-            <span class="nav-dot"></span> Channel List
-          </a>
+          <a href="#" class="nav-item active" onclick="showSection('dashboard')">Dashboard</a>
+          <a href="#" class="nav-item" onclick="showSection('analytics')">Analytics</a>
+          <a href="#" class="nav-item" onclick="showSection('channels')">Channel List</a>
         </nav>
-        <div class="sidebar-bottom">
-          <button class="btn-logout" id="btnOwnerLogout">Logout Owner</button>
-        </div>
+        <button class="btn-logout" id="btnOwnerLogout">Logout Owner</button>
       </aside>
 
       <main class="main-content">
         <div id="section-dashboard" class="content-section">
           <section class="stats-grid">
             <div class="stat-card">
-              <span class="card-label">TOTAL CHANNEL</span>
-              <div class="card-value"><span id="totalChannel">0</span> <small>Akun</small></div>
+              <span class="label">TOTAL CHANNEL</span>
+              <div class="value"><span id="totalChannel">0</span> <small>Akun</small></div>
             </div>
             <div class="stat-card">
-              <span class="card-label">TOTAL SUBSCRIBERS</span>
-              <div class="card-value" id="totalSubs">0</div>
+              <span class="label">TOTAL SUBSCRIBERS</span>
+              <div class="value" id="totalSubs">0</div>
             </div>
             <div class="stat-card">
-              <span class="card-label">TOTAL VIEWS (48H)</span>
-              <div class="card-value">
-                <span id="totalViews">0</span>
-                <small class="trend-up">▲ 21.735</small>
-              </div>
+              <span class="label">TOTAL VIEWS (48H)</span>
+              <div class="value"><span id="totalViews">0</span> <small class="trend">▲ 21.735</small></div>
             </div>
             <div class="stat-card highlight">
-              <span class="card-label">VIEWS 60 MENIT</span>
-              <div class="card-value text-green" id="view60m">6.818</div>
+              <span class="label">VIEWS 60 MENIT</span>
+              <div class="value green" id="view60m">6.818</div>
             </div>
           </section>
 
@@ -87,11 +61,7 @@
             <div class="panel-header">
               <div class="col-chan">CHANNEL</div>
               <div class="col-metrics">
-                <span>SUBS</span>
-                <span>VIDEOS</span>
-                <span>VIEWS</span>
-                <span>VIEWS 48 JAM</span>
-                <span>STATUS</span>
+                <span>SUBS</span><span>VIDEOS</span><span>VIEWS</span><span>VIEWS 48H</span><span>STATUS</span>
               </div>
             </div>
             <div id="channelBody" class="channel-list">
@@ -102,7 +72,6 @@
       </main>
     </div>
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
