@@ -1,167 +1,35 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>YouTube Manager Pro | bangmemed.id</title>
-
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- Google API -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <script src="https://apis.google.com/js/api.js"></script>
-
-  <!-- Chart -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-
-<!-- 🔐 OWNER GUARD -->
 <script>
-  if (localStorage.getItem("owner_logged_in") !== "true") {
-    window.location.href = "login.html";
+  if(localStorage.getItem("owner_logged_in")!=="true"){
+    location.href="login.html";
   }
 </script>
 
-<div class="bg-glow"></div>
+<h1>Dashboard bangmemed.id</h1>
 
-<div class="app">
+<button id="addGmailBtn">+ Tambah Gmail</button>
+<button onclick="logout()">Logout</button>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="side-brand">
-      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png">
-      <div>
-        <div class="name">YouTube Manager Pro</div>
-        <div class="sub">bangmemed.id</div>
-      </div>
-    </div>
-
-    <nav class="side-nav">
-      <a class="side-link active">Dashboard</a>
-      <a class="side-link">Analytics</a>
-      <a class="side-link">Channel List</a>
-    </nav>
-
-    <div class="side-footer">
-      <button class="btn ghost" id="refreshTokenBtn">Login / Refresh Token</button>
-      <button class="btn danger" id="logoutBtn">Logout</button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-
-    <!-- TOPBAR -->
-    <header class="topbar">
-      <div>
-        <h1>Dashboard</h1>
-        <p>Pantau semua channel dalam satu dashboard</p>
-      </div>
-
-      <button class="btn primary" id="addGmailBtn">+ Tambah Gmail</button>
-    </header>
-
-    <!-- STATS -->
-    <section class="stats-wrapper">
-      <div class="stat-card">
-        <p>Total Channel</p>
-        <h2 id="totalChannel">0</h2>
-      </div>
-
-      <div class="stat-card">
-        <p>Total Subscribers</p>
-        <h2 id="totalSubs">0</h2>
-      </div>
-
-      <div class="stat-card">
-        <p>Views 48 Jam</p>
-        <h2 id="view48h">0</h2>
-      </div>
-
-      <div class="stat-card">
-        <p>Views Hari Ini</p>
-        <h2 id="viewToday">0</h2>
-      </div>
-    </section>
-
-    <!-- CHART -->
-    <section class="panel">
-      <h3>Statistik 48 Jam</h3>
-      <canvas id="chart48h"></canvas>
-    </section>
-
-    <!-- TABLE -->
-    <section class="panel">
-      <h3>Daftar Channel</h3>
-      <table class="channel-table">
-        <thead>
-          <tr>
-            <th>Channel</th>
-            <th>Subs</th>
-            <th>Views</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="channelBody">
-          <tr><td colspan="4">Belum ada channel</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-  </main>
-</div>
-
-<!-- 🔵 MODAL PILIH AKSES -->
 <div id="accessModal" class="modal hidden">
-  <div class="modal-card">
-    <h2>Hubungkan Gmail</h2>
-
-    <label>
-      <input type="radio" name="access" value="analytics" checked>
-      Lihat Analytics Saja
-    </label>
-
-    <label>
-      <input type="radio" name="access" value="manage">
-      Kelola Channel (Upload + Analytics)
-    </label>
-
-    <div class="modal-actions">
-      <button class="btn ghost" id="cancelAccess">Batal</button>
-      <button class="btn primary" id="confirmAccess">Lanjutkan</button>
-    </div>
+  <div class="modal-box">
+    <h3>Pilih Akses Gmail</h3>
+    <label><input type="radio" name="access" value="analytics" checked> Analytics saja</label><br>
+    <label><input type="radio" name="access" value="manage"> Kelola Channel</label><br><br>
+    <button id="confirmAccess">Lanjutkan</button>
+    <button onclick="closeModal()">Batal</button>
   </div>
 </div>
 
-<!-- JS LOGIC -->
-<script>
-  document.getElementById("logoutBtn").onclick = () => {
-    localStorage.clear();
-    location.href = "login.html";
-  };
-
-  const modal = document.getElementById("accessModal");
-
-  document.getElementById("addGmailBtn").onclick = () => {
-    modal.classList.remove("hidden");
-  };
-
-  document.getElementById("cancelAccess").onclick = () => {
-    modal.classList.add("hidden");
-  };
-
-  document.getElementById("confirmAccess").onclick = () => {
-    const access = document.querySelector('input[name="access"]:checked').value;
-    localStorage.setItem("yt_access_type", access);
-    modal.classList.add("hidden");
-    alert("Akses dipilih: " + access + "\n(next: Google OAuth)");
-  };
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
