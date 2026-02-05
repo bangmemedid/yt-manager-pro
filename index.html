@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Manager Pro | bangmemed.id</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 
   <!-- GOOGLE FONT -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- YouTube API -->
+  <!-- YouTube API (gapi) -->
   <script src="https://apis.google.com/js/api.js"></script>
+
+  <!-- Chart.js (untuk grafik 48 jam & 60 menit) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
   <!-- HEADER -->
   <header class="topbar">
     <div class="brand">
-      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png">
+      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YouTube Icon">
       <div>
         <h2>YouTube Manager Pro</h2>
         <p class="sub">bangmemed.id</p>
@@ -26,11 +30,14 @@
     </div>
 
     <div class="actions">
-      <input type="text" placeholder="Search channel..." class="search">
-      <button class="btn primary">+ Tambah Gmail</button>
+      <input type="text" placeholder="Search channel..." class="search" />
+      <button class="btn primary" id="addGmailBtn">+ Tambah Gmail</button>
       <button class="btn login" id="loginBtn">Login</button>
     </div>
   </header>
+
+  <!-- OUTPUT MESSAGE -->
+  <div id="output" style="margin: 12px 0 0; padding: 0 22px; opacity: .85; font-family: Poppins, sans-serif;"></div>
 
   <!-- STAT CARDS -->
   <section class="stats-wrapper">
@@ -59,6 +66,19 @@
 
   </section>
 
+  <!-- CHARTS -->
+  <section class="channel-list">
+    <h2>Statistik 48 Jam</h2>
+    <div class="chart-box">
+      <canvas id="chart48h"></canvas>
+    </div>
+
+    <h2 style="margin-top:18px;">Statistik 60 Menit (Realtime)</h2>
+    <div class="chart-box">
+      <canvas id="chart60m"></canvas>
+    </div>
+  </section>
+
   <!-- CHANNEL LIST -->
   <section class="channel-list">
     <h2>Daftar Channel</h2>
@@ -85,4 +105,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
