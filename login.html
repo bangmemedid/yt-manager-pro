@@ -1,68 +1,34 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Owner Login | bangmemed.id</title>
-
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- CSS -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="login.css">
 </head>
 <body>
+  <div class="login-card">
+    <h1>YouTube Manager Pro</h1>
+    <p>Owner Access · bangmemed.id</p>
 
-  <div class="login-wrapper">
-    <div class="login-card">
+    <input id="email" type="email" placeholder="owner@bangmemed.id">
+    <input id="pass" type="password" placeholder="password">
 
-      <div class="brand">
-        <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="logo">
-        <h1>YouTube Manager Pro</h1>
-        <p>Owner Access · bangmemed.id</p>
-      </div>
-
-      <form id="loginForm">
-        <div class="field">
-          <label>Email Owner</label>
-          <input type="email" id="email" placeholder="owner@bangmemed.id" required>
-        </div>
-
-        <div class="field">
-          <label>Password</label>
-          <input type="password" id="password" placeholder="••••••••" required>
-        </div>
-
-        <button type="submit" class="btn-login">Login Owner</button>
-      </form>
-
-      <div class="note">
-        Akses terbatas. Hanya untuk pemilik sistem.
-      </div>
-
-    </div>
+    <button onclick="login()">Login Owner</button>
   </div>
 
-  <script>
-    // ===== DEV MODE LOGIN (sementara) =====
-    // NANTI DIGANTI BACKEND
-    const OWNER_EMAIL = "owner@bangmemed.id";
-    const OWNER_PASSWORD = "123456";
-
-    document.getElementById("loginForm").addEventListener("submit", function(e){
-      e.preventDefault();
-
-      const email = document.getElementById("email").value;
-      const pass  = document.getElementById("password").value;
-
-      if(email === OWNER_EMAIL && pass === OWNER_PASSWORD){
-        localStorage.setItem("owner_logged_in", "true");
-        window.location.href = "index.html";
-      } else {
-        alert("Email atau password salah.");
-      }
-    });
-  </script>
-
+<script>
+  function login(){
+    if(
+      document.getElementById("email").value === "owner@bangmemed.id" &&
+      document.getElementById("pass").value === "123456"
+    ){
+      localStorage.setItem("owner_logged_in","true");
+      location.href="index.html";
+    } else {
+      alert("Login salah");
+    }
+  }
+</script>
 </body>
 </html>
