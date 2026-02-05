@@ -3,32 +3,88 @@
 <head>
   <meta charset="UTF-8">
   <title>Owner Login | bangmemed.id</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="login.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Poppins, sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: rgba(255,255,255,.06);
+      padding: 32px;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.4);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+    }
+    p {
+      margin: 0 0 20px;
+      font-size: 13px;
+      opacity: .7;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg,#3b82f6,#22d3ee);
+      color: #000;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .err {
+      margin-top: 10px;
+      color: #f87171;
+      font-size: 13px;
+      display: none;
+    }
+  </style>
 </head>
 <body>
-  <div class="login-card">
-    <h1>YouTube Manager Pro</h1>
-    <p>Owner Access · bangmemed.id</p>
 
-    <input id="email" type="email" placeholder="owner@bangmemed.id">
-    <input id="pass" type="password" placeholder="password">
+  <div class="card">
+    <h1>Owner Login</h1>
+    <p>YouTube Manager Pro • bangmemed.id</p>
 
-    <button onclick="login()">Login Owner</button>
+    <input id="email" placeholder="Email owner">
+    <input id="pass" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+    <div class="err" id="err">Email atau password salah</div>
   </div>
 
 <script>
-  function login(){
-    if(
-      document.getElementById("email").value === "owner@bangmemed.id" &&
-      document.getElementById("pass").value === "123456"
-    ){
-      localStorage.setItem("owner_logged_in","true");
-      location.href="index.html";
-    } else {
-      alert("Login salah");
-    }
+function login() {
+  const email = document.getElementById("email").value;
+  const pass  = document.getElementById("pass").value;
+
+  if (email === "owner@bangmemed.id" && pass === "123456") {
+    localStorage.setItem("owner_logged_in", "true");
+    window.location.href = "index.html";
+  } else {
+    document.getElementById("err").style.display = "block";
   }
+}
 </script>
+
 </body>
 </html>
