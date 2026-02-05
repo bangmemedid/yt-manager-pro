@@ -1,5 +1,5 @@
 /* --- KONFIGURASI MASTER --- */
-const CLIENT_ID = "262964938761-4e11cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
+const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 
 let tokenClient;
@@ -104,3 +104,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   initGis();
   await refreshAllData();
 });
+
