@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YouTube Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="app">
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div class="brandText">
+          <div class="brandName" id="brandName">bangmemed.id</div>
+          <div class="brandSub">YouTube Manager</div>
+        </div>
+      </div>
+
+      <div class="searchWrap">
+        <span class="searchIcon">⌕</span>
+        <input id="searchInput" class="searchInput" placeholder="Search channel..." />
+      </div>
+
+      <div class="actions">
+        <button id="addAccountBtn" class="btn btn-soft">
+          <span class="ico">✉</span>
+          Tambah Gmail
+          <span class="plus">+</span>
+        </button>
+        <button id="addAccountBtn2" class="btn btn-primary">
+          <span class="ico">＋</span>
+          Tambah Gmail
+        </button>
+      </div>
+    </header>
+
+    <section class="cards">
+      <div class="card">
+        <div class="cardLabel">TOTAL CHANNEL</div>
+        <div class="cardValue"><span id="totalChannel">0</span> <span class="cardUnit">Akun</span></div>
+      </div>
+
+      <div class="card">
+        <div class="cardLabel">TOTAL SUBSCRIBERS</div>
+        <div class="cardValue" id="totalSubs">0</div>
+      </div>
+
+      <div class="card">
+        <div class="cardLabel">TOTAL VIEWS (48H)</div>
+        <div class="cardValueRow">
+          <div class="cardValue" id="totalViews48">0</div>
+          <div class="delta" id="delta48">—</div>
+        </div>
+      </div>
+
+      <div class="card card-accent">
+        <div class="cardLabel">VIEWS 60 MENIT</div>
+        <div class="cardValue accent" id="totalViews60">0</div>
+      </div>
+    </section>
+
+    <section class="tableWrap">
+      <div class="tableHead">
+        <div class="th channel">CHANNEL</div>
+        <div class="th num">SUBS</div>
+        <div class="th num">VIDEOS</div>
+        <div class="th num">VIEWS</div>
+        <div class="th num">VIEWS</div>
+        <div class="th spark">VIEWS 48 JAM</div>
+        <div class="th status">STATUS</div>
+        <div class="th more">•••</div>
+      </div>
+
+      <div id="rows" class="rows"></div>
+    </section>
+
+    <footer class="footer">
+      <div class="hint">
+        Jika muncul “Access blocked / belum verifikasi”, pastikan email kamu sudah masuk sebagai <b>Test User</b> di Google Auth Platform.
+      </div>
+      <div class="mini">
+        <button id="loginBtn" class="btn btn-outline">Login / Refresh Token</button>
+        <button id="logoutBtn" class="btn btn-ghost">Logout</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Google API Client -->
+  <script src="https://apis.google.com/js/api.js"></script>
+
+  <!-- Google Identity Services (OAuth) -->
+  <script src="https://accounts.google.com/gsi/client"></script>
+
+  <script src="script.js"></script>
+</body>
+</html>
