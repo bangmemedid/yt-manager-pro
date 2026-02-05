@@ -1,35 +1,214 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Manager Pro | bangmemed.id</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- gapi -->
   <script src="https://apis.google.com/js/api.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 
-<body>
 <script>
-  if(localStorage.getItem("owner_logged_in")!=="true"){
-    location.href="login.html";
+  if (localStorage.getItem("owner_logged_in") !== "true") {
+    window.location.href = "login.html";
   }
 </script>
 
-<h1>Dashboard bangmemed.id</h1>
+<body>
+  <div class="bg-glow"></div>
 
-<button id="addGmailBtn">+ Tambah Gmail</button>
-<button onclick="logout()">Logout</button>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <div class="logo">
+          <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YT" />
+        </div>
+        <div class="side-title">
+          <div class="name">YouTube Manager Pro</div>
+          <div class="sub">bangmemed.id</div>
+        </div>
+      </div>
 
-<div id="accessModal" class="modal hidden">
-  <div class="modal-box">
-    <h3>Pilih Akses Gmail</h3>
-    <label><input type="radio" name="access" value="analytics" checked> Analytics saja</label><br>
-    <label><input type="radio" name="access" value="manage"> Kelola Channel</label><br><br>
-    <button id="confirmAccess">Lanjutkan</button>
-    <button onclick="closeModal()">Batal</button>
+      <nav class="side-nav">
+        <a class="side-link active" href="#top"><span class="dot"></span>Dashboard</a>
+        <a class="side-link" href="#charts"><span class="dot"></span>Analytics</a>
+        <a class="side-link" href="#channels"><span class="dot"></span>Channel List</a>
+        <a class="side-link" href="#help"><span class="dot"></span>Bantuan</a>
+      </nav>
+
+      <div class="side-footer" id="help">
+        <div class="hint">
+          Multi Gmail mode: <b>Merge</b><br/>
+          Token bisa expire ±1 jam → klik refresh.
+        </div>
+
+        <div class="side-actions">
+          <button class="btn ghost" id="btnGoogleLogin" type="button">Login / Refresh Token</button>
+          <button class="btn danger" id="btnOwnerLogout" type="button">Logout Owner</button>
+          <button class="btn dangerOutline" id="btnLocalLogout" type="button">Logout Lokal (hapus akun)</button>
+        </div>
+
+        <div class="side-note">
+          Jika muncul “Google belum memverifikasi aplikasi”, pastikan Gmail sudah masuk <b>Test Users</b> di Google Auth Platform.
+        </div>
+      </div>
+    </aside>
+
+    <main class="main" id="top">
+      <header class="topbar">
+        <div class="left">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-sub">Pantau performa channel dari beberapa Gmail dalam 1 tampilan.</p>
+        </div>
+
+        <div class="right">
+          <div class="search-wrap">
+            <span class="search-ic">⌕</span>
+            <input class="search" id="searchInput" type="text" placeholder="Search channel..." />
+          </div>
+
+          <button class="btn primary" id="btnAddGmail" type="button">+ Tambah Gmail</button>
+        </div>
+      </header>
+
+      <section class="stats-wrapper">
+        <div class="stat-card">
+          <div class="label">Total Channel</div>
+          <div class="value" id="totalChannel">0</div>
+          <div class="muted">Akun</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">Total Subscribers</div>
+          <div class="value" id="totalSubs">0</div>
+          <div class="muted">Gabungan semua akun</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="label">Total Views (All time)</div>
+          <div class="value" id="view48h">0</div>
+          <div class="delta" id="view48hUp">—</div>
+        </div>
+
+        <div class="stat-card highlight">
+          <div class="label">Views 60 Menit</div>
+          <div class="value" id="view60m">—</div>
+          <div class="muted">Catatan: realtime per-menit tidak tersedia di API publik</div>
+        </div>
+      </section>
+
+      <section class="grid-2" id="charts">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Statistik 48 Jam</div>
+              <div class="panel-sub">Placeholder (nanti diisi Analytics API)</div>
+            </div>
+            <div class="pill">48H</div>
+          </div>
+          <div class="panel-body">
+            <canvas id="chart48h" height="120"></canvas>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Statistik 60 Menit</div>
+              <div class="panel-sub">Placeholder</div>
+            </div>
+            <div class="pill">60M</div>
+          </div>
+          <div class="panel-body">
+            <canvas id="chart60m" height="120"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="channels">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Daftar Channel</div>
+            <div class="panel-sub">Merge dari semua Gmail yang ditambahkan</div>
+          </div>
+          <div class="panel-actions">
+            <span class="tiny" id="statusText">Status: siap.</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="channel-table" id="channelTable">
+            <thead>
+              <tr>
+                <th style="min-width:120px">Revenue Est</th>
+                <th>Channel</th>
+                <th>Subs</th>
+                <th>Videos</th>
+                <th>Views</th>
+                <th style="min-width:220px">48 Jam</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="channelBody">
+              <tr>
+                <td colspan="7" class="empty">Belum ada data. Klik <b>+ Tambah Gmail</b> lalu izinkan akses.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div>© <span id="year"></span> YouTube Manager Pro — <b>bangmemed.id</b></div>
+        <div class="muted">Premium UI • Multi Gmail • Merge Dashboard</div>
+      </footer>
+    </main>
   </div>
-</div>
 
-<script src="script.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Chart placeholder biar canvas terlihat
+    (function initChartsPlaceholder(){
+      if (!window.Chart) return;
+
+      const labels48 = Array.from({length: 48}, (_, i) => `${i+1}`);
+      const labels60 = Array.from({length: 60}, (_, i) => `${i+1}`);
+
+      const baseOpt = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { display: false } },
+          y: { grid: { color: "rgba(255,255,255,.06)" }, ticks: { display: false } }
+        }
+      };
+
+      new Chart(document.getElementById("chart48h"), {
+        type: "line",
+        data: { labels: labels48, datasets: [{ data: labels48.map(()=>0), tension: .35, borderWidth: 2, pointRadius: 0, fill: true }] },
+        options: baseOpt
+      });
+
+      new Chart(document.getElementById("chart60m"), {
+        type: "line",
+        data: { labels: labels60, datasets: [{ data: labels60.map(()=>0), tension: .35, borderWidth: 2, pointRadius: 0, fill: true }] },
+        options: baseOpt
+      });
+    })();
+  </script>
+
+  <script src="script.js"></script>
 </body>
 </html>
