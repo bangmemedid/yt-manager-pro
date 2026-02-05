@@ -1,58 +1,86 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Kebijakan Privasi - bangmemed.id</title>
-  <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 16px;line-height:1.6}
-    h1,h2{line-height:1.2}
-    code{background:#f3f3f3;padding:2px 6px;border-radius:6px}
-    .muted{color:#666}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Manager Pro | bangmemed.id</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- GOOGLE FONT -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- YouTube API -->
+  <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
-  <h1>Kebijakan Privasi</h1>
-  <p class="muted">Terakhir diperbarui: 05 Feb 2026</p>
 
-  <p>
-    Aplikasi <b>bangmemed.id - YouTube Manager Pro</b> digunakan untuk membantu pengguna melihat ringkasan statistik
-    channel YouTube dan mengelola data terkait melalui YouTube API dan Google OAuth.
-  </p>
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="brand">
+      <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png">
+      <div>
+        <h2>YouTube Manager Pro</h2>
+        <p class="sub">bangmemed.id</p>
+      </div>
+    </div>
 
-  <h2>Data yang Dikumpulkan</h2>
-  <ul>
-    <li>Informasi akun Google dasar (mis. email/identitas) melalui Google OAuth.</li>
-    <li>Data YouTube yang diizinkan oleh pengguna (mis. statistik channel, daftar channel, metrik penayangan).</li>
-  </ul>
+    <div class="actions">
+      <input type="text" placeholder="Search channel..." class="search">
+      <button class="btn primary">+ Tambah Gmail</button>
+      <button class="btn login" id="loginBtn">Login</button>
+    </div>
+  </header>
 
-  <h2>Penggunaan Data</h2>
-  <ul>
-    <li>Menampilkan dashboard statistik dan daftar channel yang terhubung.</li>
-    <li>Mengelola sesi login (token OAuth) agar aplikasi dapat mengakses data sesuai izin pengguna.</li>
-  </ul>
+  <!-- STAT CARDS -->
+  <section class="stats-wrapper">
 
-  <h2>Penyimpanan & Keamanan</h2>
-  <p>
-    Token OAuth digunakan untuk mengakses API atas nama pengguna. Kami berupaya menjaga keamanan token dan data
-    dengan praktik keamanan yang wajar. Jangan membagikan akses akun Anda kepada pihak lain.
-  </p>
+    <div class="stat-card">
+      <p>Total Channel</p>
+      <h1 id="totalChannel">0</h1>
+      <span>Akun</span>
+    </div>
 
-  <h2>Berbagi Data</h2>
-  <p>
-    Kami tidak menjual data pengguna. Data hanya digunakan untuk fungsi aplikasi dan tidak dibagikan ke pihak ketiga,
-    kecuali diwajibkan oleh hukum.
-  </p>
+    <div class="stat-card">
+      <p>Total Subscribers</p>
+      <h1 id="totalSubs">0</h1>
+    </div>
 
-  <h2>Penghapusan Akses</h2>
-  <p>
-    Anda dapat mencabut akses aplikasi kapan saja melalui pengaturan Google Account:
-    <code>myaccount.google.com/permissions</code>.
-  </p>
+    <div class="stat-card">
+      <p>Total Views (48h)</p>
+      <h1 id="view48h">0</h1>
+      <span id="view48hUp">0 ▲</span>
+    </div>
 
-  <h2>Kontak</h2>
-  <p>
-    Jika ada pertanyaan tentang kebijakan privasi ini, hubungi: <b>bangmemed.id@gmail.com</b>
-  </p>
+    <div class="stat-card">
+      <p>Views 60 Menit</p>
+      <h1 id="view60m">0</h1>
+    </div>
+
+  </section>
+
+  <!-- CHANNEL LIST -->
+  <section class="channel-list">
+    <h2>Daftar Channel</h2>
+
+    <table class="channel-table" id="channelTable">
+      <thead>
+        <tr>
+          <th>Channel</th>
+          <th>Subs</th>
+          <th>Videos</th>
+          <th>Views</th>
+          <th>48 Jam</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody id="channelBody">
+        <!-- otomatis diisi JS -->
+      </tbody>
+    </table>
+  </section>
+
+  <script src="script.js"></script>
 </body>
 </html>
