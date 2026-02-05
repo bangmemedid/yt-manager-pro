@@ -51,3 +51,15 @@ async function loadYouTubeData() {
 }
 
 window.onload = init;
+
+
+// ===============================
+// AUTO REFRESH DATA
+// ===============================
+function autoRefresh() {
+  console.log("Auto refresh jalan...");
+  loadYouTubeData();
+}
+
+// Refresh tiap 60 detik
+setInterval(autoRefresh, 60000);
