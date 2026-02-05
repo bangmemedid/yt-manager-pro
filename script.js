@@ -1,5 +1,4 @@
-/* --- CONFIG MASTER --- */
-// Pastikan ID ini tidak berubah sedikitpun
+/* --- KONFIGURASI MASTER --- */
 const CLIENT_ID = "262964938761-4e11cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 const STORE_KEY = "ytmpro_accounts_merge_v1";
@@ -7,7 +6,15 @@ const STORE_KEY = "ytmpro_accounts_merge_v1";
 let tokenClient;
 let gisInited = false;
 
-/* --- FUNGSI LOGIN --- */
+/* --- LOGIKA NAVIGASI --- */
+function showSection(sectionId) {
+  document.querySelectorAll('.content-section').forEach(sec => sec.style.display = 'none');
+  const target = document.getElementById('section-' + sectionId);
+  if (target) target.style.display = 'block';
+  document.querySelectorAll('.nav-item').forEach(link => link.classList.remove('active'));
+}
+
+/* --- LOGIKA GOOGLE & YOUTUBE --- */
 function initGis() {
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
@@ -28,7 +35,6 @@ async function initGapi() {
   await gapi.client.init({ apiKey: API_KEY, discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"] });
 }
 
-/* --- TAMPILKAN DATA --- */
 async function refreshAllData() {
   const accounts = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
   const container = document.getElementById("channelBody");
@@ -67,21 +73,17 @@ async function refreshAllData() {
             </div>
           </div>`;
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Gagal mengambil data YouTube:", e); }
   }
   document.getElementById("totalChannel").textContent = accounts.length;
   document.getElementById("totalSubs").textContent = totalSubs.toLocaleString();
   document.getElementById("totalViews").textContent = totalViews.toLocaleString();
 }
 
-/* --- BOOTSTRAP --- */
 document.addEventListener("DOMContentLoaded", async () => {
-  const btn = document.getElementById("btnAddGmail");
-  if (btn) {
-    btn.onclick = () => {
-      if (gisInited) tokenClient.requestAccessToken({ prompt: 'select_account' });
-    };
-  }
+  document.getElementById("btnAddGmail").onclick = () => {
+    if (gisInited) tokenClient.requestAccessToken({ prompt: 'select_account' });
+  };
   await initGapi();
   initGis();
   await refreshAllData();
