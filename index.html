@@ -1,157 +1,69 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>YouTube Manager Pro | bangmemed.id</title>
-
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="style.css" />
-
+  <link rel="stylesheet" href="style.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js" async defer></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-  <script>
-    if (localStorage.getItem("owner_logged_in") !== "true") {
-      window.location.replace("login.html");
-    }
-  </script>
 </head>
-
 <body>
-  <noscript>
-    <div style="padding:16px;background:#111827;color:#fff;font-family:Arial">
-      Aplikasi ini membutuhkan JavaScript.
-    </div>
-  </noscript>
-
-  <div class="bg-glow"></div>
-
   <div class="app">
     <aside class="sidebar">
       <div class="side-brand">
-        <div class="logo">
-          <img src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png" alt="YT" />
-        </div>
         <div class="side-title">
           <div class="name">YouTube Manager Pro</div>
           <div class="sub">bangmemed.id</div>
         </div>
       </div>
-
       <nav class="side-nav">
-        <a class="side-link active" href="#top"><span class="dot"></span>Dashboard</a>
-        <a class="side-link" href="#charts"><span class="dot"></span>Analytics</a>
-        <a class="side-link" href="#channels"><span class="dot"></span>Channel List</a>
-        <a class="side-link" href="#help"><span class="dot"></span>Bantuan</a>
+        <a class="side-link active" href="javascript:void(0)" onclick="showSection('dashboard')">Dashboard</a>
+        <a class="side-link" href="javascript:void(0)" onclick="showSection('analytics')">Analytics</a>
+        <a class="side-link" href="javascript:void(0)" onclick="showSection('channels')">Channel List</a>
       </nav>
-
-      <div class="side-footer" id="help">
-        <div class="hint">
-          Multi Gmail mode: <b>Merge</b><br/>
-          Token bisa expire ±1 jam.
-        </div>
-
-        <div class="side-actions">
-          <div id="g_id_signin"></div> 
-          
-          <button class="btn danger" id="btnOwnerLogout" type="button" style="margin-top:10px">Logout Owner</button>
-          <button class="btn dangerOutline" id="btnLocalLogout" type="button">Logout Lokal (hapus akun)</button>
-        </div>
+      <div class="side-footer">
+        <button class="btn primary" id="btnAddGmail" style="width:100%; margin-bottom:10px">+ Tambah Gmail</button>
+        <button class="btn danger" id="btnOwnerLogout" style="width:100%">Logout Owner</button>
       </div>
     </aside>
 
-    <main class="main" id="top">
-      <header class="topbar">
-        <div class="left">
+    <main class="main">
+      <div id="section-dashboard" class="content-section">
+        <header class="topbar">
           <h1 class="page-title">Dashboard</h1>
-          <p class="page-sub">Pantau performa channel YouTube Anda.</p>
-        </div>
-        <div class="right">
-          <div class="search-wrap">
-            <span class="search-ic">⌕</span>
-            <input class="search" id="searchInput" type="text" placeholder="Search channel..." />
+        </header>
+        <section class="stats-wrapper">
+          <div class="stat-card">
+            <div class="label">Total Subscribers</div>
+            <div class="value" id="totalSubs">0</div>
           </div>
-          <button class="btn primary" id="btnAddGmail" type="button">+ Tambah Gmail</button>
-        </div>
-      </header>
-
-      <section class="stats-wrapper">
-        <div class="stat-card">
-          <div class="label">Total Channel</div>
-          <div class="value" id="totalChannel">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Total Subscribers</div>
-          <div class="value" id="totalSubs">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Total Views</div>
-          <div class="value" id="view48h">0</div>
-        </div>
-      </section>
-
-      <section class="panel" id="channels">
-        <div class="table-wrap">
-          <table class="channel-table" id="channelTable">
+          <div class="stat-card">
+            <div class="label">Total Views</div>
+            <div class="value" id="totalViews">0</div>
+          </div>
+        </section>
+        <section class="panel">
+          <table class="channel-table">
             <thead>
-              <tr>
-                <th>Revenue</th>
-                <th>Channel</th>
-                <th>Subs</th>
-                <th>Videos</th>
-                <th>Views</th>
-                <th>Status</th>
-              </tr>
+              <tr><th>Channel</th><th>Subs</th><th>Views</th><th>Status</th></tr>
             </thead>
-            <tbody id="channelBody">
-              <tr>
-                <td colspan="6" class="empty">Menunggu data dari Google...</td>
-              </tr>
-            </tbody>
+            <tbody id="channelBody"></tbody>
           </table>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <footer class="footer">
-        <div>© <span id="year"></span> YouTube Manager Pro — <b>bangmemed.id</b></div>
-      </footer>
+      <div id="section-analytics" class="content-section" style="display:none">
+        <header class="topbar"><h1 class="page-title">Analytics</h1></header>
+        <div class="panel"><p>Fitur Analytics sedang dalam pengembangan.</p></div>
+      </div>
+
+      <div id="section-channels" class="content-section" style="display:none">
+        <header class="topbar"><h1 class="page-title">Channel List</h1></header>
+        <div class="panel" id="fullChannelList"></div>
+      </div>
     </main>
   </div>
-
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-    
-    // Inisialisasi Google Identity Services secara otomatis saat halaman dibuka
-    window.onload = function () {
-      if (typeof google !== 'undefined') {
-        google.accounts.id.initialize({
-          client_id: "262964938761-4e11cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com",
-          callback: handleCredentialResponse
-        });
-        google.accounts.id.renderButton(
-          document.getElementById("g_id_signin"),
-          { theme: "outline", size: "large", text: "signin_with" }
-        );
-      }
-    };
-
-    function handleCredentialResponse(response) {
-      console.log("Login sukses, token didapat.");
-      // Panggil fungsi di script.js Anda untuk memproses token ini
-      if (window.startDashboard) window.startDashboard(response.credential);
-    }
-  </script>
-
   <script src="script.js"></script>
 </body>
 </html>
