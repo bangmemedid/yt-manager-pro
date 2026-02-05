@@ -1,12 +1,11 @@
-/* --- CONFIG MASTER --- */
+/* --- KONFIGURASI MASTER --- */
 const CLIENT_ID = "262964938761-4e11cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
-const STORE_KEY = "ytmpro_accounts_merge_v1";
 
 let tokenClient;
 let gisInited = false;
 
-/* --- NAVIGASI --- */
+/* --- SISTEM NAVIGASI --- */
 function showSection(sectionId) {
   document.querySelectorAll('.content-section').forEach(sec => sec.style.display = 'none');
   const target = document.getElementById('section-' + sectionId);
@@ -14,25 +13,35 @@ function showSection(sectionId) {
   document.querySelectorAll('.nav-item').forEach(link => link.classList.remove('active'));
 }
 
-/* --- LOGIKA GOOGLE --- */
+/* --- LOGIKA GOOGLE & DATA --- */
 function initGis() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: "https://www.googleapis.com/auth/youtube.readonly",
-    callback: async (resp) => {
-      if (resp.error) return;
-      const accounts = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
-      accounts.push({ access_token: resp.access_token, expires_at: Date.now() + (resp.expires_in * 1000) });
-      localStorage.setItem(STORE_KEY, JSON.stringify(accounts));
-      await refreshAllData();
-    },
-  });
-  gisInited = true;
+  try {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: "https://www.googleapis.com/auth/youtube.readonly",
+      callback: async (resp) => {
+        if (resp.error) return;
+        const accounts = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
+        accounts.push({ 
+          access_token: resp.access_token, 
+          expires_at: Date.now() + (resp.expires_in * 1000) 
+        });
+        localStorage.setItem(STORE_KEY, JSON.stringify(accounts));
+        await refreshAllData();
+      },
+    });
+    gisInited = true;
+  } catch (err) {
+    console.error("Gagal inisialisasi GIS:", err);
+  }
 }
 
 async function initGapi() {
   await new Promise(resolve => gapi.load('client', resolve));
-  await gapi.client.init({ apiKey: API_KEY, discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"] });
+  await gapi.client.init({ 
+    apiKey: API_KEY, 
+    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"] 
+  });
 }
 
 async function refreshAllData() {
@@ -47,7 +56,10 @@ async function refreshAllData() {
   for (const acc of accounts) {
     try {
       gapi.client.setToken({ access_token: acc.access_token });
-      const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
+      const res = await gapi.client.youtube.channels.list({ 
+        part: "snippet,statistics", 
+        mine: true 
+      });
       const item = res.result.items[0];
       if (item) {
         const subs = Number(item.statistics.subscriberCount);
@@ -69,11 +81,11 @@ async function refreshAllData() {
               <span>${item.statistics.videoCount}</span>
               <span>${views.toLocaleString()}</span>
               <span>${(views/24).toFixed(0)}</span>
-              <span style="color:#10b981;">OK</span>
+              <span style="color:#10b981; border:1px solid #10b981; padding:2px 8px; border-radius:4px;">OK</span>
             </div>
           </div>`;
       }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Error Fetch YouTube:", e); }
   }
   document.getElementById("totalChannel").textContent = accounts.length;
   document.getElementById("totalSubs").textContent = totalSubs.toLocaleString();
@@ -82,7 +94,11 @@ async function refreshAllData() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btnAddGmail").onclick = () => {
-    if (gisInited) tokenClient.requestAccessToken({ prompt: 'select_account' });
+    if (gisInited) {
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
+    } else {
+      alert("Library Google belum siap, silakan refresh.");
+    }
   };
   await initGapi();
   initGis();
