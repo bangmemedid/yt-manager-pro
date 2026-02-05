@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>YouTube Manager Pro | bangmemed.id</title>
 
-  <!-- CSS utama -->
   <link rel="stylesheet" href="style.css" />
-
-  <!-- (opsional) favicon -->
-  <link rel="icon" href="favicon.ico" />
 </head>
 
 <body>
+  <!-- Proteksi: wajib login owner dulu -->
+  <script>
+    if (localStorage.getItem("owner_logged_in") !== "true") {
+      window.location.href = "login.html";
+    }
+  </script>
+
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">
@@ -22,7 +25,6 @@
 
     <nav class="menu">
       <a class="menu-item active" href="index.html">Dashboard</a>
-      <a class="menu-item" href="analytics.html" style="display:none;">Analytics</a>
       <a class="menu-item" href="index.html#channel">Channel List</a>
     </nav>
 
@@ -66,7 +68,7 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Total Views (48H)</div>
+        <div class="card-title">Total Views</div>
         <div class="card-value"><span id="totalViews">0</span></div>
       </div>
 
@@ -95,7 +97,11 @@
           </tr>
         </thead>
         <tbody id="channelBody">
-          <tr><td colspan="5" class="empty">Belum ada data. Klik <b>Tambah Gmail</b> lalu izinkan akses.</td></tr>
+          <tr>
+            <td colspan="5" class="empty">
+              Belum ada data. Klik <b>Tambah Gmail</b> lalu izinkan akses.
+            </td>
+          </tr>
         </tbody>
       </table>
     </section>
