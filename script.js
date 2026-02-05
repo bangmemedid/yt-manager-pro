@@ -1,4 +1,5 @@
-/* --- KONFIGURASI MASTER --- */
+/* --- CONFIG MASTER --- */
+// Pastikan ID ini tidak berubah sedikitpun
 const CLIENT_ID = "262964938761-4e11cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 const STORE_KEY = "ytmpro_accounts_merge_v1";
@@ -6,17 +7,7 @@ const STORE_KEY = "ytmpro_accounts_merge_v1";
 let tokenClient;
 let gisInited = false;
 
-/* --- SISTEM NAVIGASI --- */
-function showSection(sectionId) {
-  document.querySelectorAll('.content-section').forEach(sec => sec.style.display = 'none');
-  const target = document.getElementById('section-' + sectionId);
-  if (target) target.style.display = 'block';
-  
-  document.querySelectorAll('.nav-item').forEach(link => link.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-}
-
-/* --- LOGIKA GOOGLE & DATA --- */
+/* --- FUNGSI LOGIN --- */
 function initGis() {
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
@@ -37,6 +28,7 @@ async function initGapi() {
   await gapi.client.init({ apiKey: API_KEY, discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"] });
 }
 
+/* --- TAMPILKAN DATA --- */
 async function refreshAllData() {
   const accounts = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
   const container = document.getElementById("channelBody");
@@ -62,27 +54,27 @@ async function refreshAllData() {
             <div class="col-info">
               <img src="${item.snippet.thumbnails.default.url}" class="chan-img">
               <div class="chan-meta">
-                <div class="main-name">${item.snippet.title}</div>
-                <div class="sub-name">@bangmemed.id</div>
+                <div class="name">${item.snippet.title}</div>
+                <div class="sub">@bangmemed.id</div>
               </div>
             </div>
-            <div class="col-metrics">
+            <div class="col-data">
               <span>${subs.toLocaleString()}</span>
               <span>${item.statistics.videoCount}</span>
               <span>${views.toLocaleString()}</span>
               <span>${(views/24).toFixed(0)}</span>
-              <span class="status-badge">OK</span>
+              <span class="status-ok">OK</span>
             </div>
           </div>`;
       }
     } catch (e) { console.error(e); }
   }
-  
   document.getElementById("totalChannel").textContent = accounts.length;
   document.getElementById("totalSubs").textContent = totalSubs.toLocaleString();
   document.getElementById("totalViews").textContent = totalViews.toLocaleString();
 }
 
+/* --- BOOTSTRAP --- */
 document.addEventListener("DOMContentLoaded", async () => {
   const btn = document.getElementById("btnAddGmail");
   if (btn) {
