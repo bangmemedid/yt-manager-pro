@@ -28,130 +28,111 @@
     <aside class="sidebar">
       <div class="side-brand">
         <div class="logo">
-          <img alt="YouTube Logo" src="https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png">
+          <img alt="yt" src="https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png">
         </div>
         <div class="side-title">
-          <div class="name">YT Manager Pro</div>
+          <div class="name">YouTube Manager Pro</div>
           <div class="sub">bangmemed.id</div>
         </div>
       </div>
 
       <nav class="side-nav">
-        <a class="side-link active" href="index.html" id="navDashboard">
-          <i class="fas fa-chart-pie"></i> Dashboard
-        </a>
-        <a class="side-link" href="#channel" id="navChannels">
-          <i class="fas fa-list"></i> Channel List
-        </a>
-        <a class="side-link" href="privacy.html">
-          <i class="fas fa-user-shield"></i> Privacy Policy
-        </a>
-        <a class="side-link" href="terms.html">
-          <i class="fas fa-file-alt"></i> Terms of Service
-        </a>
+        <a class="side-link active" href="index.html"><span class="dot"></span> Dashboard</a>
+        <a class="side-link" href="#channel"><span class="dot" style="opacity:.35"></span> Channel List</a>
       </nav>
 
       <div class="side-footer">
         <div class="hint">
-          <i class="fas fa-info-circle"></i> Mode: <b>Multi Gmail (Merge)</b><br/>
-          <small>Token berlaku ±1 jam. Klik <b>Refresh</b> jika data tidak muncul.</small>
+          Mode: <b>Multi Gmail (Merge)</b><br/>
+          Token bisa expire ±1 jam — klik <b>Tambah Gmail</b> untuk refresh.
         </div>
 
         <div class="side-actions">
-          <button id="btnAddGmail" class="btn primary">
-            <i class="fas fa-plus"></i> Tambah Gmail
-          </button>
+          <button id="btnAddGmail" class="btn primary">+ Tambah Gmail</button>
           <button id="btnRefreshData" class="btn success" style="margin-top:8px; width:100%;">
             <i class="fas fa-sync-alt"></i> Refresh Data
           </button>
-          <button id="btnOwnerLogout" class="btn ghost">
-            <i class="fas fa-sign-out-alt"></i> Logout Owner
-          </button>
-          <button id="btnLocalLogout" class="btn danger">
-            <i class="fas fa-trash-alt"></i> Hapus Semua Akun
-          </button>
+          <button id="btnOwnerLogout" class="btn ghost">Logout Owner</button>
+          <button id="btnLocalLogout" class="btn danger">Logout Lokal (hapus akun)</button>
         </div>
 
         <div class="side-note">
-          <i class="fas fa-exclamation-triangle"></i> Pastikan email sudah terdaftar di <b>Test Users</b> Google Cloud Console.
+          Jika muncul “Google belum memverifikasi aplikasi”, pastikan email sudah masuk <b>Test users</b> di OAuth consent screen.
         </div>
       </div>
     </aside>
 
     <main class="main">
       <div class="topbar">
-        <div class="topbar-left">
+        <div>
           <h1 class="page-title">Dashboard</h1>
-          <div class="page-sub">Pantau performa channel dari berbagai akun dalam satu layar.</div>
-          <div id="statusIndicator" class="status-badge">
-            <span class="status-dot"></span> <span id="statusText">Menghubungkan ke API...</span>
+          <div class="page-sub">Pantau performa channel dari beberapa Gmail dalam 1 tampilan.</div>
+          <div id="statusIndicator" class="status-badge" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+             <span class="status-dot" style="width:10px; height:10px; background:#ef4444; border-radius:50%; display:inline-block;"></span>
+             <div id="statusText" class="page-sub" style="margin-top:0;">Status: Memuat...</div>
           </div>
         </div>
 
-        <div class="topbar-right">
+        <div style="display:flex;align-items:center;gap:10px;">
           <div class="search-wrap">
-            <i class="fas fa-search search-ic"></i>
-            <input id="searchInput" class="search" placeholder="Cari nama channel..." />
+            <div class="search-ic">🔎</div>
+            <input id="searchInput" class="search" placeholder="Search channel..." />
           </div>
-          <button id="btnAddGmailTop" class="btn primary">
-            <i class="fas fa-plus"></i> Tambah Gmail
-          </button>
+          <button id="btnAddGmailTop" class="btn primary">+ Tambah Gmail</button>
         </div>
       </div>
 
       <div class="stats-wrapper">
         <div class="stat-card">
           <div class="label">Total Channel</div>
-          <div class="value" id="totalChannel">0</div>
-          <div class="muted">Koneksi Aktif</div>
+          <div class="value"><span id="totalChannel">0</span></div>
+          <div class="muted">Akun</div>
         </div>
 
         <div class="stat-card">
           <div class="label">Total Subscribers</div>
-          <div class="value" id="totalSubs">0</div>
-          <div class="muted">Akumulasi Real-time</div>
+          <div class="value"><span id="totalSubs">0</span></div>
+          <div class="muted">Akumulasi semua channel</div>
         </div>
 
         <div class="stat-card">
           <div class="label">Total Views</div>
-          <div class="value" id="totalViews">0</div>
-          <div class="muted">Total Penayangan</div>
+          <div class="value"><span id="totalViews">0</span></div>
+          <div class="muted">Akumulasi semua channel</div>
         </div>
 
         <div class="stat-card highlight">
-          <div class="label">Status Koneksi</div>
-          <div class="value" id="connectionStatus" style="font-size: 1.2rem;">Checking...</div>
-          <div class="muted" id="lastUpdated">Belum diperbarui</div>
+          <div class="label">Views 60 Menit</div>
+          <div class="value"><span id="view60m">—</span></div>
+          <div class="muted">Update: <span id="lastUpdate">N/A</span></div>
         </div>
       </div>
 
       <section id="channel" class="panel">
         <div class="panel-head">
           <div>
-            <div class="panel-title">Daftar Channel Terhubung</div>
-            <div class="panel-sub">Data gabungan dari seluruh akun Gmail yang Anda otorisasi</div>
+            <div class="panel-title">Daftar Channel</div>
+            <div class="panel-sub">Merge dari semua Gmail yang ditambahkan</div>
           </div>
-          <div class="panel-actions">
-             <button id="btnExportData" class="btn-sm"><i class="fas fa-download"></i> Export</button>
-          </div>
+          <button id="btnExportData" class="btn success" style="font-size: 12px; padding: 5px 15px;">
+            <i class="fas fa-file-excel"></i> Export Excel
+          </button>
         </div>
 
         <div class="table-wrap">
           <table class="channel-table">
             <thead>
               <tr>
-                <th>Detail Channel</th>
-                <th>Subscribers</th>
-                <th>Total Videos</th>
-                <th>Total Views</th>
-                <th>Action</th>
+                <th>Channel</th>
+                <th>Subs</th>
+                <th>Videos</th>
+                <th>Views</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody id="channelBody">
               <tr>
-                <td colspan="5" class="empty">
-                  <i class="fas fa-spinner fa-spin"></i> Memuat data channel...
-                </td>
+                <td colspan="5" class="empty">Belum ada data. Klik <b>Tambah Gmail</b> lalu izinkan akses.</td>
               </tr>
             </tbody>
           </table>
@@ -159,18 +140,22 @@
       </section>
 
       <div class="footer">
-        <div>© 2026 <b>YouTube Manager Pro</b> — bangmemed.id</div>
-        <div class="footer-links">
-          <span>Premium v2.0</span> • <span>Multi-Token System</span>
-        </div>
+        <div>© 2026 YouTube Manager Pro — bangmemed.id</div>
+        <div>Premium UI • Multi Gmail • Merge Dashboard</div>
       </div>
     </main>
   </div>
 
+  <div id="detailModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+    <div class="modal-content" style="background: #0f172a; border:1px solid rgba(255,255,255,0.1); width:90%; max-width:500px; border-radius:24px; padding:25px; position:relative;">
+      <button onclick="closeModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+      <div id="modalBodyContent"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-
   <script src="https://apis.google.com/js/api.js"></script>
-
   <script src="script.js" defer></script>
 </body>
 </html>
