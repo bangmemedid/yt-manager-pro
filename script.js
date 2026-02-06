@@ -5,8 +5,9 @@ const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleuser
 const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 
 /**
- * Tambahkan openid/email/profile agar kita bisa ambil email via userinfo.
- * (Kalau tidak butuh email, boleh hapus 3 scope ini dan hapus fungsi getUserEmail)
+ * Scope sudah OK untuk Analytics:
+ * - youtube.readonly (Data API v3)
+ * - yt-analytics.readonly (Analytics API v2)
  */
 const SCOPES = [
   "openid",
@@ -41,6 +42,10 @@ function formatNumber(n){
   return x.toLocaleString("id-ID");
 }
 
+function safeText(el, txt){
+  if(el) el.textContent = txt;
+}
+
 /* =========================
    GOOGLE INIT (GIS + gapi client)
 ========================= */
@@ -49,7 +54,6 @@ let tokenClient = null;
 
 function initGapi(){
   return new Promise((resolve, reject) => {
-    // Pastikan library ada
     if(typeof gapi === "undefined"){
       reject(new Error("gapi belum termuat. Pastikan ada <script src='https://apis.google.com/js/api.js'></script>"));
       return;
@@ -69,12 +73,11 @@ function initGapi(){
         });
         gApiInited = true;
 
-        // Buat token client sekali saja
         if(!tokenClient){
           tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID,
             scope: SCOPES,
-            callback: () => {} // akan di-set saat request token
+            callback: () => {}
           });
         }
 
@@ -90,7 +93,6 @@ function initGapi(){
    USERINFO (ambil email)
 ========================= */
 async function getUserEmail(access_token){
-  // butuh scope: openid email profile
   try{
     const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
       headers: { Authorization: `Bearer ${access_token}` }
@@ -108,7 +110,6 @@ async function getUserEmail(access_token){
 async function googleSignInSelectAccount(){
   if(!gApiInited) await initGapi();
 
-  // request access token via GIS
   const tokenResp = await new Promise((resolve, reject) => {
     tokenClient.callback = (resp) => {
       if(resp?.error) reject(resp);
@@ -144,10 +145,9 @@ async function googleSignInSelectAccount(){
 }
 
 /* =========================
-   FETCH DATA PER ACCOUNT
+   FETCH DATA PER ACCOUNT (YouTube Data API v3)
 ========================= */
 async function fetchMyChannelUsingToken(access_token){
-  // set token untuk gapi client
   gapi.client.setToken({ access_token });
 
   const res = await gapi.client.youtube.channels.list({
@@ -170,49 +170,239 @@ async function fetchMyChannelUsingToken(access_token){
 }
 
 /* =========================
+   ANALYTICS LAYER (YouTube Analytics API v2)
+   - Subscriber growth last 28 days (gained/lost/net)
+   - Views last 2 available days (proxy "48 hours")
+========================= */
+function formatDateYYYYMMDD_UTC(d){
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function daysAgoUTC(n){
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - n);
+  return d;
+}
+
+async function ytAnalyticsQuery(access_token, params){
+  const base = "https://youtubeanalytics.googleapis.com/v2/reports";
+  const qs = new URLSearchParams(params);
+
+  const res = await fetch(`${base}?${qs.toString()}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+      Accept: "application/json",
+    }
+  });
+
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(`YT Analytics error ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+async function getSubscriberGrowth28d(access_token){
+  const startDate = formatDateYYYYMMDD_UTC(daysAgoUTC(28));
+  const endDate = formatDateYYYYMMDD_UTC(new Date());
+
+  const data = await ytAnalyticsQuery(access_token, {
+    ids: "channel==MINE",
+    startDate,
+    endDate,
+    metrics: "subscribersGained,subscribersLost",
+    dimensions: "day",
+    sort: "day"
+  });
+
+  const rows = data?.rows || []; // [day, gained, lost]
+  let gained = 0, lost = 0;
+
+  for(const r of rows){
+    gained += Number(r[1] || 0);
+    lost   += Number(r[2] || 0);
+  }
+
+  return { gained, lost, net: gained - lost };
+}
+
+async function getViewsLast2AvailableDays(access_token){
+  // buffer 3 hari supaya kalau data hari ini belum ada, tetap dapat 2 baris terakhir
+  const startDate = formatDateYYYYMMDD_UTC(daysAgoUTC(3));
+  const endDate = formatDateYYYYMMDD_UTC(new Date());
+
+  const data = await ytAnalyticsQuery(access_token, {
+    ids: "channel==MINE",
+    startDate,
+    endDate,
+    metrics: "views",
+    dimensions: "day",
+    sort: "day"
+  });
+
+  const rows = data?.rows || []; // [day, views]
+  const last2 = rows.slice(-2);
+  const total = last2.reduce((s, r) => s + Number(r[1] || 0), 0);
+
+  return { total, days: last2.map(r => ({ day: r[0], views: Number(r[1] || 0) })) };
+}
+
+/* =========================
+   UI INJECTION (tanpa edit index.html/style.css)
+========================= */
+function injectAnalyticsCSS(){
+  if(document.getElementById("ytmpro-analytics-style")) return;
+
+  const css = `
+    tr.analytics-row td{
+      padding: 12px 14px;
+      background: rgba(255,255,255,.03);
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .ytmpro-analytics-wrap{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 820px){
+      .ytmpro-analytics-wrap{ grid-template-columns: 1fr; }
+    }
+    .ytmpro-analytics-card{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(0,0,0,.18);
+    }
+    .ytmpro-analytics-card h4{
+      margin: 0 0 8px;
+      font-size: 13px;
+      opacity: .9;
+      letter-spacing: .2px;
+    }
+    .ytmpro-analytics-metrics{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .ytmpro-analytics-chip{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      font-size: 12px;
+    }
+    .ytmpro-analytics-chip b{ font-weight: 800; }
+    .ytmpro-analytics-mini{
+      font-size: 12px;
+      opacity: .85;
+      margin-top: 6px;
+    }
+  `;
+
+  const style = document.createElement("style");
+  style.id = "ytmpro-analytics-style";
+  style.textContent = css;
+  document.head.appendChild(style);
+}
+
+/* =========================
    RENDER
 ========================= */
 function renderTable(rows){
   const tbody = $("channelBody");
   if(!tbody) return;
 
+  injectAnalyticsCSS();
+
   if(!rows.length){
     tbody.innerHTML = `<tr><td colspan="5" class="empty">Belum ada data. Klik <b>Tambah Gmail</b> lalu izinkan akses.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = rows.map(r => `
-    <tr>
-      <td>
-        <div style="display:flex;align-items:center;gap:10px">
-          ${r.thumb ? `<img src="${r.thumb}" style="width:34px;height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.12)" />` : ""}
-          <div>
-            <div style="font-weight:800">${r.title}</div>
-            <div style="font-size:12px;opacity:.7">${r.email}</div>
+  tbody.innerHTML = rows.map(r => {
+    const sub = r.analytics?.subs28;
+    const v2d = r.analytics?.views2d;
+
+    const subsText = sub
+      ? `Gained <b>${formatNumber(sub.gained)}</b> • Lost <b>${formatNumber(sub.lost)}</b> • Net <b>${formatNumber(sub.net)}</b>`
+      : `—`;
+
+    const viewsText = v2d
+      ? `<b>${formatNumber(v2d.total)}</b> views`
+      : `—`;
+
+    const viewsDaysText = v2d?.days?.length
+      ? v2d.days.map(d => `${d.day}: <b>${formatNumber(d.views)}</b>`).join(" • ")
+      : "";
+
+    const analyticsHtml = `
+      <div class="ytmpro-analytics-wrap">
+        <div class="ytmpro-analytics-card">
+          <h4>Subscriber Growth (Last 28 Days)</h4>
+          <div class="ytmpro-analytics-metrics">
+            <span class="ytmpro-analytics-chip">Gained: <b>${sub ? formatNumber(sub.gained) : "—"}</b></span>
+            <span class="ytmpro-analytics-chip">Lost: <b>${sub ? formatNumber(sub.lost) : "—"}</b></span>
+            <span class="ytmpro-analytics-chip">Net: <b>${sub ? formatNumber(sub.net) : "—"}</b></span>
           </div>
+          <div class="ytmpro-analytics-mini">${subsText}</div>
         </div>
-      </td>
-      <td>${formatNumber(r.subs)}</td>
-      <td>${formatNumber(r.videos)}</td>
-      <td>${formatNumber(r.views)}</td>
-      <td><span class="badge-ok">OK</span></td>
-    </tr>
-  `).join("");
+
+        <div class="ytmpro-analytics-card">
+          <h4>Views (Last 2 Available Days)</h4>
+          <div class="ytmpro-analytics-metrics">
+            <span class="ytmpro-analytics-chip">Total: ${v2d ? `<b>${formatNumber(v2d.total)}</b>` : "<b>—</b>"}</span>
+          </div>
+          <div class="ytmpro-analytics-mini">${viewsDaysText || "—"}</div>
+        </div>
+      </div>
+    `;
+
+    return `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            ${r.thumb ? `<img src="${r.thumb}" style="width:34px;height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.12)" />` : ""}
+            <div>
+              <div style="font-weight:800">${r.title}</div>
+              <div style="font-size:12px;opacity:.7">${r.email}</div>
+            </div>
+          </div>
+        </td>
+        <td>${formatNumber(r.subs)}</td>
+        <td>${formatNumber(r.videos)}</td>
+        <td>${formatNumber(r.views)}</td>
+        <td><span class="badge-ok">OK</span></td>
+      </tr>
+
+      <tr class="analytics-row">
+        <td colspan="5">
+          ${analyticsHtml}
+        </td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function renderStats(rows){
-  $("totalChannel").textContent = formatNumber(rows.length);
+  safeText($("totalChannel"), formatNumber(rows.length));
 
   const totalSubs = rows.reduce((a,b)=>a + (b.subs||0), 0);
-  $("totalSubs").textContent = formatNumber(totalSubs);
+  safeText($("totalSubs"), formatNumber(totalSubs));
 
   const totalViews = rows.reduce((a,b)=>a + (b.views||0), 0);
-  $("totalViews").textContent = formatNumber(totalViews);
+  safeText($("totalViews"), formatNumber(totalViews));
 
   // realtime 60m: tidak tersedia di API publik
-  $("view60m").textContent = "—";
+  safeText($("view60m"), "—");
 }
 
+/* =========================
+   MAIN REFRESH
+========================= */
 async function refreshAllData(){
   const accounts = loadAccounts();
 
@@ -229,14 +419,38 @@ async function refreshAllData(){
   const rows = [];
   for(const acc of accounts){
     try{
-      // token expired
       if(acc.expires_at && Date.now() > acc.expires_at - 60_000){
         setStatus(`Token expired: ${acc.email}. Klik Tambah Gmail untuk refresh.`);
         continue;
       }
 
       const channel = await fetchMyChannelUsingToken(acc.access_token);
-      if(channel) rows.push({ ...channel, email: acc.email });
+      if(!channel) continue;
+
+      // === Analytics calls (2 request) ===
+      setStatus(`Ambil analytics: ${acc.email} ...`);
+
+      let subs28 = null;
+      let views2d = null;
+
+      try{
+        subs28 = await getSubscriberGrowth28d(acc.access_token);
+      }catch(e){
+        console.warn("subs28 analytics failed:", acc.email, e);
+      }
+
+      try{
+        views2d = await getViewsLast2AvailableDays(acc.access_token);
+      }catch(e){
+        console.warn("views2d analytics failed:", acc.email, e);
+      }
+
+      rows.push({
+        ...channel,
+        email: acc.email,
+        analytics: { subs28, views2d }
+      });
+
     }catch(e){
       console.error("fetch failed", acc.email, e);
       setStatus(`Gagal ambil data: ${acc.email} (coba login lagi)`);
@@ -245,7 +459,7 @@ async function refreshAllData(){
 
   renderTable(rows);
   renderStats(rows);
-  setStatus("Selesai. Data sudah tampil (merge).");
+  setStatus("Selesai. Data channel + analytics sudah tampil (merge).");
 }
 
 /* =========================
@@ -258,7 +472,7 @@ function bindUI(){
   const btnLocalLogout = $("btnLocalLogout");
   const search = $("searchInput");
 
-  const onAdd = async ()=>{
+  const onAdd = async ()=> {
     try{
       setStatus("Membuka Google login...");
       await googleSignInSelectAccount();
@@ -274,14 +488,14 @@ function bindUI(){
   if(btnAddTop) btnAddTop.addEventListener("click", onAdd);
 
   if(btnOwnerLogout){
-    btnOwnerLogout.addEventListener("click", ()=>{
+    btnOwnerLogout.addEventListener("click", ()=> {
       localStorage.removeItem("owner_logged_in");
       window.location.href = "login.html";
     });
   }
 
   if(btnLocalLogout){
-    btnLocalLogout.addEventListener("click", ()=>{
+    btnLocalLogout.addEventListener("click", ()=> {
       localStorage.removeItem(STORE_KEY);
       setStatus("Akun terhapus. Silakan tambah Gmail lagi.");
       refreshAllData();
@@ -289,10 +503,10 @@ function bindUI(){
   }
 
   if(search){
-    search.addEventListener("input", ()=>{
+    search.addEventListener("input", ()=> {
       const q = search.value.trim().toLowerCase();
       const rows = Array.from(document.querySelectorAll("#channelBody tr"));
-      rows.forEach(tr=>{
+      rows.forEach(tr => {
         const text = tr.innerText.toLowerCase();
         tr.style.display = text.includes(q) ? "" : "none";
       });
@@ -303,7 +517,7 @@ function bindUI(){
 /* =========================
    BOOT
 ========================= */
-document.addEventListener("DOMContentLoaded", async ()=>{
+document.addEventListener("DOMContentLoaded", async ()=> {
   bindUI();
   try{
     await initGapi();
@@ -313,7 +527,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     alert(
       "Gagal init Google API:\n\n" +
       (e?.details || e?.message || JSON.stringify(e)) +
-      "\n\nPastikan:\n- Script GIS & gapi sudah ada di HTML\n- Authorized JavaScript origins benar\n- YouTube Data API v3 enabled"
+      "\n\nPastikan:\n- Script GIS & gapi sudah ada di HTML\n- Authorized JavaScript origins benar\n- YouTube Data API v3 enabled\n- YouTube Analytics API enabled\n- Scope yt-analytics.readonly sudah di-consent"
     );
     setStatus("Gagal init Google API.");
   }
