@@ -2,7 +2,7 @@
    CONFIG (PUNYA KAMU)
 ========================= */
 const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
-const API_KEY   = "AIzaSyAYj6DOIsVmiMR-Pf09_sxNxM6pjuVaOvg";
+const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 
 const SCOPES = [
   "openid",
@@ -35,10 +35,6 @@ function saveAccounts(arr){
 function formatNumber(n){
   const x = Number(n || 0);
   return x.toLocaleString("id-ID");
-}
-
-function safeText(el, txt){
-  if(el) el.textContent = txt;
 }
 
 /* =========================
@@ -165,176 +161,24 @@ async function fetchMyChannelUsingToken(access_token){
 }
 
 /* =========================
-   ANALYTICS LAYER (YouTube Analytics API v2)
-   - Subscriber growth last 28 days (gained/lost/net)
-   - Views last 2 available days (proxy "48 hours")
+   EVENTS
 ========================= */
-const YT_ANALYTICS_TZ = "America/Los_Angeles";
+function bindUI(){
+  const btnAdd = $("btnAddGmail");
+  const btnAddTop = $("btnAddGmailTop");
 
-function formatDateInTZ(date, timeZone){
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-
-  const y = parts.find(p => p.type === "year").value;
-  const m = parts.find(p => p.type === "month").value;
-  const d = parts.find(p => p.type === "day").value;
-  return `${y}-${m}-${d}`;
-}
-
-function daysAgoInTZ(n, timeZone){
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return formatDateInTZ(d, timeZone);
-}
-
-async function ytAnalyticsQuery(access_token, params){
-  const base = "https://youtubeanalytics.googleapis.com/v2/reports";
-  const qs = new URLSearchParams(params);
-
-  const res = await fetch(`${base}?${qs.toString()}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-      Accept: "application/json",
+  const onAdd = async () => {
+    try {
+      setStatus("Membuka Google login...");
+      await googleSignInSelectAccount(); // Memanggil fungsi login Google
+      await refreshAllData(); // Setelah login, refresh data channel
+    } catch (e) {
+      console.error(e);
+      alert("Gagal login Google: " + (e?.details || e?.message || JSON.stringify(e)));
+      setStatus("Gagal login Google.");
     }
-  });
-
-  if(!res.ok){
-    const text = await res.text();
-    throw new Error(`YT Analytics error ${res.status}: ${text}`);
-  }
-  return res.json();
-}
-
-// 28 hari terakhir: dari 28 hari lalu sampai kemarin (lebih stabil dari "today")
-async function getSubscriberGrowth28d(access_token){
-  const startDate = daysAgoInTZ(28, YT_ANALYTICS_TZ);
-  const endDate   = daysAgoInTZ(1,  YT_ANALYTICS_TZ);
-
-  const data = await ytAnalyticsQuery(access_token, {
-    ids: "channel==MINE",
-    startDate,
-    endDate,
-    metrics: "subscribersGained,subscribersLost"
-  });
-
-  const row = data?.rows?.[0] || [0,0];
-  const gained = Number(row[0] || 0);
-  const lost   = Number(row[1] || 0);
-
-  return { gained, lost, net: gained - lost, range: `${startDate} → ${endDate}` };
-}
-
-// Proxy 48 jam: 2 hari terakhir yang sudah complete (kemarin + H-2)
-async function getViewsLast2DaysStable(access_token){
-  const startDate = daysAgoInTZ(2, YT_ANALYTICS_TZ);
-  const endDate   = daysAgoInTZ(1, YT_ANALYTICS_TZ);
-
-  const data = await ytAnalyticsQuery(access_token, {
-    ids: "channel==MINE",
-    startDate,
-    endDate,
-    metrics: "views"
-  });
-
-  const row = data?.rows?.[0] || [0];
-  const total = Number(row[0] || 0);
-
-  return {
-    total,
-    days: [{ day: `${startDate} → ${endDate}`, views: total }]
   };
+
+  if (btnAdd) btnAdd.addEventListener("click", onAdd);  // Tombol di sidebar
+  if (btnAddTop) btnAddTop.addEventListener("click", onAdd);  // Tombol di topbar
 }
-
-/* =========================
-   UI INJECTION (tanpa edit style.css)
-========================= */
-function injectAnalyticsCSS(){
-  if(document.getElementById("ytmpro-analytics-style")) return;
-
-  const css = `
-    tr.analytics-row td{
-      padding: 12px 14px;
-      background: rgba(255,255,255,.03);
-      border-top: 1px solid rgba(255,255,255,.06);
-    }
-    .ytmpro-analytics-wrap{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    @media (max-width: 820px){
-      .ytmpro-analytics-wrap{ grid-template-columns: 1fr; }
-    }
-    .ytmpro-analytics-card{
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
-      padding: 12px;
-      background: rgba(0,0,0,.18);
-    }
-    .ytmpro-analytics-card h4{
-      margin: 0 0 8px;
-      font-size: 13px;
-      opacity: .9;
-      letter-spacing: .2px;
-    }
-    .ytmpro-analytics-metrics{
-      display:flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-    .ytmpro-analytics-chip{
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.10);
-      font-size: 12px;
-    }
-    .ytmpro-analytics-chip b{ font-weight: 800; }
-    .ytmpro-analytics-mini{
-      font-size: 12px;
-      opacity: .85;
-      margin-top: 6px;
-    }
-  `;
-
-  const style = document.createElement("style");
-  style.id = "ytmpro-analytics-style";
-  style.textContent = css;
-  document.head.appendChild(style);
-}
-
-/* =========================
-   RENDER
-========================= */
-function renderTable(rows){
-  const tbody = $("channelBody");
-  if(!tbody) return;
-
-  injectAnalyticsCSS();
-
-  if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="5" class="empty">Belum ada data. Klik <b>Tambah Gmail</b> lalu izinkan akses.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = rows.map(r => {
-    const sub = r.analytics?.subs28;
-    const v2d = r.analytics?.views2d;
-
-    const subsText = sub
-      ? `Gained <b>${formatNumber(sub.gained)}</b> • Lost <b>${formatNumber(sub.lost)}</b> • Net <b>${formatNumber(sub.net)}</b>`
-      : `—`;
-
-    const viewsDaysText = v2d?.days?.length
-      ? v2d.days.map(d => `${d.day}: <b>${formatNumber(d.views)}</b>`).join(" • ")
-      : "";
-
-    const analyticsHtml = `
-      <div
-
