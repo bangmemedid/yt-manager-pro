@@ -23,8 +23,12 @@ function setStatus(msg, isOnline = false){
 }
 
 function loadAccounts(){
-  try{ return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); }
-  catch{ return []; }
+  try{ 
+    const data = localStorage.getItem(STORE_KEY);
+    return data ? JSON.parse(data) : []; 
+  } catch(e) { 
+    return []; 
+  }
 }
 
 function saveAccounts(arr){
@@ -75,7 +79,9 @@ async function fetchRealtimeStats(channelId) {
         });
         const total48h = (res.result.rows || []).reduce((acc, row) => acc + row[1], 0);
         return { m60: Math.floor(total48h / 48), h48: total48h };
-    } catch (e) { return { m60: 0, h48: 0 }; }
+    } catch (e) { 
+        return { m60: 0, h48: 0 }; 
+    }
 }
 
 /* =========================
@@ -84,26 +90,44 @@ async function fetchRealtimeStats(channelId) {
 async function fetchAllChannelsData() {
   const accounts = loadAccounts();
   if(accounts.length === 0) { 
-      setStatus("Belum ada akun.", false); 
-      if($("channelBody")) $("channelBody").innerHTML = '<tr><td colspan="6" class="empty">Klik + Tambah Gmail untuk memulai</td></tr>';
-      return; 
+    setStatus("Belum ada akun.", false); 
+    if($("channelBody")) $("channelBody").innerHTML = '<tr><td colspan="6" class="empty">Klik + Tambah Gmail untuk memulai</td></tr>';
+    return; 
   }
-  setStatus("Syncing Data...", true);
   
+  setStatus("Syncing Data...", true);
   let mergedData = [];
+
   for (const acc of accounts) {
-    if (Date.now() > acc.expires_at - 60000) continue;
+    const isExpired = Date.now() > acc.expires_at;
+    
+    // Jika Expired, masukkan data kosong dengan flag isExpired
+    if (isExpired) {
+        mergedData.push({
+            id: "exp-" + acc.email,
+            snippet: { title: acc.email, thumbnails: { default: { url: "" } } },
+            statistics: { subscriberCount: 0, viewCount: 0 },
+            realtime: { m60: 0, h48: 0 },
+            isExpired: true
+        });
+        continue;
+    }
+
     try {
       gapi.client.setToken({ access_token: acc.access_token });
       const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
       if(res.result.items) {
           for(let item of res.result.items) {
               item.realtime = await fetchRealtimeStats(item.id);
+              item.isExpired = false;
+              mergedData.push(item);
           }
-          mergedData = mergedData.concat(res.result.items);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+        console.error("Error fetching for " + acc.email, err);
+    }
   }
+
   allCachedChannels = mergedData;
   renderTable(mergedData);
 }
@@ -120,20 +144,36 @@ function renderTable(data) {
   tbody.innerHTML = "";
   let tSubs = 0, tViews = 0, tReal = 0;
 
-  const filtered = data.filter(i => i.snippet.title.toLowerCase().includes(search));
+  const filtered = data.filter(i => (i.snippet.title || "").toLowerCase().includes(search));
+  
   filtered.forEach((item, index) => {
     const s = item.statistics;
     const r = item.realtime || { m60:0, h48:0 };
-    tSubs += Number(s.subscriberCount); tViews += Number(s.viewCount); tReal += r.h48;
+    const isExpired = item.isExpired;
+    
+    if (!isExpired) {
+        tSubs += Number(s.subscriberCount); 
+        tViews += Number(s.viewCount); 
+        tReal += r.h48;
+    }
+
+    const statusLabel = isExpired 
+      ? `<span style="background:#ef4444; color:white; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold;">EXPIRED</span>`
+      : `<span style="background:rgba(34,211,238,0.1); color:#22d3ee; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold; border:1px solid #22d3ee;">ACTIVE</span>`;
 
     tbody.innerHTML += `
       <tr onclick="openDetail(${index})" style="cursor:pointer">
-        <td><div style="display:flex;align-items:center;gap:10px;"><img src="${item.snippet.thumbnails.default.url}" style="width:30px;border-radius:50%"><b>${item.snippet.title}</b></div></td>
-        <td>${formatNumber(s.subscriberCount)}</td>
-        <td>${formatNumber(s.viewCount)}</td>
-        <td style="color:#22d3ee;font-weight:700">${formatNumber(r.m60)}</td>
-        <td style="color:#fbbf24;font-weight:700">${formatNumber(r.h48)}</td>
-        <td><span class="badge-ok">ACTIVE</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <img src="${item.snippet.thumbnails.default.url || 'https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png'}" style="width:24px;border-radius:50%">
+            <b>${item.snippet.title}</b>
+          </div>
+        </td>
+        <td>${isExpired ? '---' : formatNumber(s.subscriberCount)}</td>
+        <td>${isExpired ? '---' : formatNumber(s.viewCount)}</td>
+        <td style="color:#22d3ee;font-weight:700">${isExpired ? '---' : formatNumber(r.m60)}</td>
+        <td style="color:#fbbf24;font-weight:700">${isExpired ? '---' : formatNumber(r.h48)}</td>
+        <td>${statusLabel}</td>
       </tr>`;
   });
 
@@ -141,7 +181,7 @@ function renderTable(data) {
   if($("totalSubs")) $("totalSubs").textContent = formatNumber(tSubs);
   if($("totalViews")) $("totalViews").textContent = formatNumber(tViews);
   if($("totalRealtime")) $("totalRealtime").textContent = formatNumber(tReal);
-  if($("lastUpdate")) $("lastUpdate").textContent = new Date().toLocaleTimeString();
+  if($("lastUpdate")) $("lastUpdate").textContent = new Date().toLocaleTimeString() + " (Auto-Sync)";
   setStatus("Dashboard Aktif", true);
 }
 
@@ -156,14 +196,22 @@ function exportToExcel() {
 
 function openDetail(idx) {
   const ch = allCachedChannels[idx];
+  if (ch.isExpired) {
+      alert("Sesi login untuk akun ini sudah habis. Silakan login ulang via tombol '+ Tambah Gmail'.");
+      return;
+  }
   const r = ch.realtime || { m60: 0, h48: 0 };
   $("modalBodyContent").innerHTML = `
     <div style="text-align:center;">
-      <img src="${ch.snippet.thumbnails.medium.url}" style="width:100px; border-radius:50%; border:3px solid #22d3ee; margin-bottom:15px;">
+      <img src="${ch.snippet.thumbnails.medium.url}" style="width:80px; border-radius:50%; border:2px solid #22d3ee; margin-bottom:15px;">
       <h2>${ch.snippet.title}</h2>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;">
-        <div class="stat-card">Realtime 60m<br><b style="color:#22d3ee">${formatNumber(r.m60)}</b></div>
-        <div class="stat-card">Realtime 48h<br><b style="color:#fbbf24">${formatNumber(r.h48)}</b></div>
+        <div class="stat-card" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+            Realtime 60m<br><b style="color:#22d3ee">${formatNumber(r.m60)}</b>
+        </div>
+        <div class="stat-card" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:10px;">
+            Realtime 48h<br><b style="color:#fbbf24">${formatNumber(r.h48)}</b>
+        </div>
       </div>
       <a href="https://youtube.com/channel/${ch.id}" target="_blank" class="btn primary" style="display:block;margin-top:20px;text-decoration:none;">Buka YouTube</a>
     </div>`;
@@ -179,6 +227,8 @@ async function googleSignIn(){
   if(!gApiInited) await initGapi();
   
   tokenClient.callback = async (resp) => {
+    if (resp.error) return;
+
     const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { 
       headers: { Authorization: `Bearer ${resp.access_token}` } 
     });
@@ -205,55 +255,8 @@ async function googleSignIn(){
 }
 
 /* =========================
-    DOM LOAD & EVENT LISTENERS
+    SINKRONISASI DATA (SMART MERGE)
 ========================= */
-document.addEventListener("DOMContentLoaded", async () => {
-  await initGapi();
-  fetchAllChannelsData();
-
-  if($("btnAddGmail")) $("btnAddGmail").onclick = googleSignIn;
-  if($("btnAddGmailTop")) $("btnAddGmailTop").onclick = googleSignIn;
-  if($("btnRefreshData")) $("btnRefreshData").onclick = fetchAllChannelsData;
-  if($("btnExportData")) $("btnExportData").onclick = exportToExcel;
-
-  const btnChannelList = document.querySelector('a[href="#channel"]');
-  if (btnChannelList) {
-      btnChannelList.onclick = async (e) => {
-          e.preventDefault();
-          if($("searchInput")) $("searchInput").value = "";
-          await fetchAllChannelsData();
-          const target = $("channel");
-          if (target) target.scrollIntoView({ behavior: "smooth" });
-          document.querySelectorAll(".side-link").forEach(l => l.classList.remove("active"));
-          btnChannelList.classList.add("active");
-      };
-  }
-  
-  if($("btnOwnerLogout")) {
-    $("btnOwnerLogout").onclick = () => { 
-      localStorage.removeItem("owner_logged_in"); 
-      localStorage.removeItem("owner_name");
-      window.location.href="login.html"; 
-    };
-  }
-  
-  if($("btnLocalLogout")) {
-    $("btnLocalLogout").onclick = () => { 
-      if(confirm("Hapus semua akun Gmail yang tertaut di perangkat ini?")){ 
-        localStorage.removeItem(STORE_KEY); 
-        location.reload(); 
-      } 
-    };
-  }
-  
-  if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
-});
-
-window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
-
-/* =========================
-   FUNGSI SINKRON ANTAR PERANGKAT
-   ========================= */
 function exportData() {
     const data = localStorage.getItem(STORE_KEY);
     if (!data || data === "[]") {
@@ -266,49 +269,80 @@ function exportData() {
     tempInput.select();
     try {
         document.execCommand('copy');
-        alert("KODE DATA BERHASIL DISALIN!\n\nKirim kode ini ke WhatsApp/Email Anda sendiri, lalu gunakan menu 'Tempel Kode Data' di HP/Laptop lain.");
+        alert("KODE DATA BERHASIL DISALIN!\nKirim ke WA/Email Anda sendiri, lalu tempel di perangkat lain.");
     } catch(err) {
-        alert("Gagal menyalin otomatis. Silakan salin manual teks yang muncul.");
-        console.log(data);
+        alert("Gagal menyalin otomatis. Silakan salin manual.");
     }
     document.body.removeChild(tempInput);
 }
 
 function importData() {
     const code = prompt("Tempelkan (Paste) Kode Data dari perangkat lain di sini:");
-    
     if (code && code.trim() !== "") {
         try {
-            // 1. Ambil data baru yang mau dimasukkan
             const newData = JSON.parse(code);
-            
             if (Array.isArray(newData)) {
-                // 2. Ambil data lama yang sudah ada di perangkat ini
                 let currentData = loadAccounts();
                 
-                // 3. Gabungkan data (Cek berdasarkan EMAIL agar tidak dobel)
                 newData.forEach(newAcc => {
                     const exists = currentData.findIndex(oldAcc => oldAcc.email === newAcc.email);
                     if (exists !== -1) {
-                        // Jika email sudah ada, update tokennya saja (biar paling baru)
                         currentData[exists] = newAcc;
                     } else {
-                        // Jika email belum ada, tambahkan ke daftar
                         currentData.push(newAcc);
                     }
                 });
 
-                // 4. Simpan hasil gabungan ke memori
                 saveAccounts(currentData);
-                
-                alert("SINKRONISASI BERHASIL!\nData telah digabungkan dengan akun yang sudah ada.");
+                alert("SINKRONISASI BERHASIL!\nData telah digabungkan.");
                 location.reload();
             } else {
                 alert("Kode tidak valid!");
             }
         } catch (e) {
-            alert("Error: Gagal membaca kode. Pastikan kode benar.");
+            alert("Error: Gagal membaca kode.");
         }
     }
 }
 
+/* =========================
+    DOM LOAD & AUTO REFRESH
+========================= */
+document.addEventListener("DOMContentLoaded", async () => {
+  await initGapi();
+  fetchAllChannelsData();
+
+  if($("btnAddGmail")) $("btnAddGmail").onclick = googleSignIn;
+  if($("btnAddGmailTop")) $("btnAddGmailTop").onclick = googleSignIn;
+  if($("btnRefreshData")) $("btnRefreshData").onclick = fetchAllChannelsData;
+  if($("btnExportData")) $("btnExportData").onclick = exportToExcel;
+
+  if($("btnOwnerLogout")) {
+    $("btnOwnerLogout").onclick = () => { 
+      localStorage.removeItem("owner_logged_in"); 
+      localStorage.removeItem("owner_name");
+      window.location.href="login.html"; 
+    };
+  }
+  
+  if($("btnLocalLogout")) {
+    $("btnLocalLogout").onclick = () => { 
+      if(confirm("Hapus semua akun Gmail di perangkat ini?")){ 
+        localStorage.removeItem(STORE_KEY); 
+        location.reload(); 
+      } 
+    };
+  }
+  
+  if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
+
+  // AUTO REFRESH SETIAP 5 MENIT (300.000 ms)
+  setInterval(() => {
+    if(loadAccounts().length > 0) {
+        console.log("Auto-Sync Running...");
+        fetchAllChannelsData();
+    }
+  }, 300000);
+});
+
+window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
