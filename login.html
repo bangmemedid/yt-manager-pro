@@ -168,16 +168,22 @@
   </div>
 
   <script>
-    /* =========================
-       DATABASE OWNER (PEMBELI)
-       Tambahkan akun pembeli baru di dalam daftar [ ] ini
-       ========================= */
+    /* ============================================================
+        DATABASE PEMBELI (WHITELIST)
+        Tambahkan atau edit data pembeli di bawah ini.
+        Format: { user: "ID_LOGIN", pass: "PASSWORD", name: "NAMA_TAMPILAN" }
+       ============================================================ */
     const daftarOwner = [
       { user: "bangmemedid", pass: "pandi2310@", name: "Bang Memed" },
       { user: "testergoogle", pass: "verifikasi123", name: "Google Reviewer" },
       { user: "pembeli1", pass: "pro2026", name: "Client Premium" }
+      // Untuk tambah pembeli baru, copy baris di atas dan ganti isinya.
     ];
 
+    /* ============================================================
+        LOGIKA LOGIN (JANGAN DIUBAH KECUALI AHLI)
+       ============================================================ */
+    
     // Proteksi: Jika sudah login owner, langsung masuk ke dashboard
     if (localStorage.getItem("owner_logged_in") === "true") {
       window.location.href = "dashboard.html";
@@ -198,7 +204,7 @@
         
         window.location.href = "dashboard.html";
       } else {
-        // Jika salah, tampilkan error dan jalankan animasi shake
+        // Tampilkan pesan error dan jalankan animasi shake
         errEl.style.display = "block";
         errEl.style.animation = 'none';
         errEl.offsetHeight; 
