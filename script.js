@@ -253,3 +253,46 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
 
+/* =========================
+   FUNGSI SINKRON ANTAR PERANGKAT
+   ========================= */
+
+// Fungsi untuk mengambil data dan menyalinnya sebagai teks
+function exportData() {
+    const data = localStorage.getItem(STORE_KEY);
+    if (!data || data === "[]") {
+        alert("Belum ada akun YouTube yang bisa disalin.");
+        return;
+    }
+    
+    // Proses salin teks otomatis
+    const tempInput = document.createElement("textarea");
+    tempInput.value = data;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    
+    alert("KODE DATA BERHASIL DISALIN!\n\nSilakan kirim kode ini ke WhatsApp/Email Anda sendiri, lalu gunakan menu 'Tempel Kode Data' di perangkat lain.");
+}
+
+// Fungsi untuk menerima kode teks dari perangkat lain
+function importData() {
+    const code = prompt("Tempelkan (Paste) Kode Data dari perangkat Anda yang lain di sini:");
+    
+    if (code && code.trim() !== "") {
+        try {
+            // Validasi data
+            const parsed = JSON.parse(code);
+            if (Array.isArray(parsed)) {
+                localStorage.setItem(STORE_KEY, code);
+                alert("SINKRONISASI SUKSES!\nHalaman akan dimuat ulang untuk menampilkan akun.");
+                location.reload();
+            } else {
+                alert("Kode tidak valid! Pastikan Anda menyalin semua teks tanpa terpotong.");
+            }
+        } catch (e) {
+            alert("Error: Kode gagal dibaca. Pastikan kode yang Anda tempel sudah benar.");
+        }
+    }
+}
