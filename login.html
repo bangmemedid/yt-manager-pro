@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="style.css" />
 
   <style>
-    /* Custom Login Styling yang Terintegrasi dengan style.css */
+    /* Custom Login Styling */
     .login-wrap {
       min-height: 100vh;
       display: flex;
@@ -96,6 +96,9 @@
       padding: 14px;
       font-size: 15px;
       justify-content: center;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .err {
@@ -159,18 +162,25 @@
       </div>
 
       <div class="hintbox">
-        Hanya akun owner (bangmemedid) yang diizinkan mengelola Multi-Gmail Token.
+        Hanya akun member resmi yang diizinkan mengelola Multi-Gmail Dashboard.
       </div>
     </div>
   </div>
 
   <script>
-    const USER_OK = "bangmemedid";
-    const PASS_OK = "pandi2310@";
+    /* =========================
+       DATABASE OWNER (PEMBELI)
+       Tambahkan akun pembeli baru di dalam daftar [ ] ini
+       ========================= */
+    const daftarOwner = [
+      { user: "bangmemedid", pass: "pandi2310@", name: "Bang Memed" },
+      { user: "testergoogle", pass: "verifikasi123", name: "Google Reviewer" },
+      { user: "pembeli1", pass: "pro2026", name: "Client Premium" }
+    ];
 
-    // Proteksi: Jika sudah login, lempar ke dashboard
+    // Proteksi: Jika sudah login owner, langsung masuk ke dashboard
     if (localStorage.getItem("owner_logged_in") === "true") {
-      window.location.href = "index.html";
+      window.location.href = "dashboard.html";
     }
 
     const loginAction = () => {
@@ -178,22 +188,28 @@
       const p = document.getElementById("pass").value;
       const errEl = document.getElementById("err");
 
-      if (u === USER_OK && p === PASS_OK) {
+      // Cari user di database manual
+      const found = daftarOwner.find(account => account.user === u && account.pass === p);
+
+      if (found) {
+        // Simpan sesi login dan Nama Owner
         localStorage.setItem("owner_logged_in", "true");
-        window.location.href = "index.html";
+        localStorage.setItem("owner_name", found.name);
+        
+        window.location.href = "dashboard.html";
       } else {
+        // Jika salah, tampilkan error dan jalankan animasi shake
         errEl.style.display = "block";
-        // Reset animasi shake jika salah lagi
         errEl.style.animation = 'none';
         errEl.offsetHeight; 
         errEl.style.animation = null;
       }
     };
 
-    // Klik tombol
+    // Event click tombol
     document.getElementById("btnLogin").addEventListener("click", loginAction);
 
-    // Support tombol Enter
+    // Support tombol Enter pada keyboard
     document.addEventListener("keypress", (e) => {
       if (e.key === "Enter") loginAction();
     });
