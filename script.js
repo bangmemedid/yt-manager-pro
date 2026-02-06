@@ -252,66 +252,69 @@ async function getViewsLast2DaysStable(access_token){
 }
 
 /* =========================
-   UI INJECTION (tanpa edit style.css)
+   CHART FUNCTION (NEW)
 ========================= */
-function injectAnalyticsCSS(){
-  if(document.getElementById("ytmpro-analytics-style")) return;
+// Fungsi untuk menggambar chart Views (Last 48 Hours)
+function createViewsChart(viewsData) {
+  const ctx = document.getElementById('viewsChart').getContext('2d');
+  const viewsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Channel 1', 'Channel 2', 'Channel 3'], // Ganti sesuai dengan jumlah channel Anda
+      datasets: [{
+        label: 'Views in Last 48 Hours',
+        data: viewsData,
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+}
 
-  const css = `
-    tr.analytics-row td{
-      padding: 12px 14px;
-      background: rgba(255,255,255,.03);
-      border-top: 1px solid rgba(255,255,255,.06);
+// Fungsi untuk menggambar chart Subscriber Growth (Last 28 Days)
+function createGrowthChart(growthData) {
+  const ctx = document.getElementById('growthChart').getContext('2d');
+  const growthChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Day 1', 'Day 2', 'Day 3'], // Ganti sesuai periode
+      datasets: [{
+        label: 'Subscriber Growth',
+        data: growthData,
+        fill: false,
+        borderColor: 'rgba(54, 162, 235, 1)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
     }
-    .ytmpro-analytics-wrap{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    @media (max-width: 820px){
-      .ytmpro-analytics-wrap{ grid-template-columns: 1fr; }
-    }
-    .ytmpro-analytics-card{
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
-      padding: 12px;
-      background: rgba(0,0,0,.18);
-    }
-    .ytmpro-analytics-card h4{
-      margin: 0 0 8px;
-      font-size: 13px;
-      opacity: .9;
-      letter-spacing: .2px;
-    }
-    .ytmpro-analytics-metrics{
-      display:flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
-    .ytmpro-analytics-chip{
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.10);
-      font-size: 12px;
-    }
-    .ytmpro-analytics-chip b{ font-weight: 800; }
-    .ytmpro-analytics-mini{
-      font-size: 12px;
-      opacity: .85;
-      margin-top: 6px;
-    }
-  `;
+  });
+}
 
-  const style = document.createElement("style");
-  style.id = "ytmpro-analytics-style";
-  style.textContent = css;
-  document.head.appendChild(style);
+// Fungsi untuk memperbarui chart saat data analytics diperoleh
+async function refreshCharts(rows) {
+  const viewsData = rows.map(row => row.analytics?.views2d?.total || 0);
+  const growthData = rows.map(row => row.analytics?.subs28?.net || 0);
+
+  createViewsChart(viewsData); // Panggil fungsi createViewsChart dengan data views
+  createGrowthChart(growthData); // Panggil fungsi createGrowthChart dengan data growth
 }
 
 /* =========================
-   RENDER
+   RENDER FUNCTION
 ========================= */
 function renderTable(rows){
   const tbody = $("channelBody");
@@ -525,8 +528,4 @@ document.addEventListener("DOMContentLoaded", async ()=> {
     alert(
       "Gagal init Google API:\n\n" +
       (e?.details || e?.message || JSON.stringify(e)) +
-      "\n\nPastikan:\n- index.html memuat GIS & gapi script (urutan benar)\n- Authorized JavaScript origins benar\n- YouTube Data API v3 enabled\n- YouTube Analytics API enabled\n- Scope yt-analytics.readonly sudah di-consent"
-    );
-    setStatus("Gagal init Google API.");
-  }
-});
+      "\n\nPastikan:\n- index.html memuat GIS & gapi script (urutan benar)\n- Authorized JavaScript origins benar\n- YouTube Data API v
