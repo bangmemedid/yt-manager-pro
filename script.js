@@ -211,6 +211,7 @@ async function ytAnalyticsQuery(access_token, params){
 /* =========================
    CHART FUNCTION (NEW)
 ========================= */
+// Fungsi untuk menggambar chart Views (Last 48 Hours)
 function createViewsChart(viewsData) {
   const ctx = document.getElementById('viewsChart').getContext('2d');
   const viewsChart = new Chart(ctx, {
@@ -235,6 +236,7 @@ function createViewsChart(viewsData) {
   });
 }
 
+// Fungsi untuk menggambar chart Subscriber Growth (Last 28 Days)
 function createGrowthChart(growthData) {
   const ctx = document.getElementById('growthChart').getContext('2d');
   const growthChart = new Chart(ctx, {
