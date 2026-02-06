@@ -83,7 +83,11 @@ async function fetchRealtimeStats(channelId) {
 ========================= */
 async function fetchAllChannelsData() {
   const accounts = loadAccounts();
-  if(accounts.length === 0) { setStatus("Belum ada akun.", false); return; }
+  if(accounts.length === 0) { 
+      setStatus("Belum ada akun.", false); 
+      if($("channelBody")) $("channelBody").innerHTML = '<tr><td colspan="6" class="empty">Klik + Tambah Gmail untuk memulai</td></tr>';
+      return; 
+  }
   setStatus("Syncing Data...", true);
   
   let mergedData = [];
@@ -109,9 +113,9 @@ async function fetchAllChannelsData() {
 ========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
+  if (!tbody) return;
   const searchInput = $("searchInput");
   const search = searchInput ? searchInput.value.toLowerCase() : "";
-  if (!tbody) return;
   
   tbody.innerHTML = "";
   let tSubs = 0, tViews = 0, tReal = 0;
@@ -169,7 +173,7 @@ function openDetail(idx) {
 function closeModal() { $("detailModal").style.display = "none"; }
 
 /* =========================
-    GOOGLE AUTH (GIS)
+    GOOGLE AUTH (OFFLINE ACCESS)
 ========================= */
 async function googleSignIn(){
   if(!gApiInited) await initGapi();
@@ -201,7 +205,7 @@ async function googleSignIn(){
 }
 
 /* =========================
-    DOM LOAD & SMART NAVIGATION
+    DOM LOAD & EVENT LISTENERS
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
@@ -235,7 +239,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   if($("btnLocalLogout")) {
     $("btnLocalLogout").onclick = () => { 
-      if(confirm("Hapus semua akun Gmail yang tertaut?")){ 
+      if(confirm("Hapus semua akun Gmail yang tertaut di perangkat ini?")){ 
         localStorage.removeItem(STORE_KEY); 
         location.reload(); 
       } 
@@ -250,7 +254,6 @@ window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
 /* =========================
    FUNGSI SINKRON ANTAR PERANGKAT
    ========================= */
-
 function exportData() {
     const data = localStorage.getItem(STORE_KEY);
     if (!data || data === "[]") {
@@ -261,9 +264,14 @@ function exportData() {
     tempInput.value = data;
     document.body.appendChild(tempInput);
     tempInput.select();
-    document.execCommand("copy");
+    try {
+        document.execCommand('copy');
+        alert("KODE DATA BERHASIL DISALIN!\n\nKirim kode ini ke WhatsApp/Email Anda sendiri, lalu gunakan menu 'Tempel Kode Data' di HP/Laptop lain.");
+    } catch(err) {
+        alert("Gagal menyalin otomatis. Silakan salin manual teks yang muncul.");
+        console.log(data);
+    }
     document.body.removeChild(tempInput);
-    alert("KODE DATA BERHASIL DISALIN!\n\nSilakan kirim kode ini ke WhatsApp/Email Anda sendiri.");
 }
 
 function importData() {
@@ -273,13 +281,13 @@ function importData() {
             const parsed = JSON.parse(code);
             if (Array.isArray(parsed)) {
                 localStorage.setItem(STORE_KEY, code);
-                alert("SINKRONISASI SUKSES!");
+                alert("SINKRONISASI SUKSES!\nHalaman akan dimuat ulang.");
                 location.reload();
             } else {
-                alert("Kode tidak valid!");
+                alert("Kode tidak valid! Pastikan Anda menyalin semua teks.");
             }
         } catch (e) {
-            alert("Error: Kode gagal dibaca.");
+            alert("Error: Kode gagal dibaca. Pastikan kode benar.");
         }
     }
 }
