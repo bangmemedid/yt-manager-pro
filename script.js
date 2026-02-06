@@ -166,9 +166,6 @@ async function fetchMyChannelUsingToken(access_token){
 
 /* =========================
    ANALYTICS LAYER (YouTube Analytics API v2)
-   Fix mismatch Studio:
-   - Pakai timezone America/Los_Angeles
-   - Query TOTAL (tanpa dimensions=day) agar tidak sering 0
 ========================= */
 const YT_ANALYTICS_TZ = "America/Los_Angeles";
 
@@ -211,50 +208,9 @@ async function ytAnalyticsQuery(access_token, params){
   return res.json();
 }
 
-// 28 hari terakhir: dari 28 hari lalu sampai kemarin (lebih stabil dari "today")
-async function getSubscriberGrowth28d(access_token){
-  const startDate = daysAgoInTZ(28, YT_ANALYTICS_TZ);
-  const endDate   = daysAgoInTZ(1,  YT_ANALYTICS_TZ);
-
-  const data = await ytAnalyticsQuery(access_token, {
-    ids: "channel==MINE",
-    startDate,
-    endDate,
-    metrics: "subscribersGained,subscribersLost"
-  });
-
-  const row = data?.rows?.[0] || [0,0];
-  const gained = Number(row[0] || 0);
-  const lost   = Number(row[1] || 0);
-
-  return { gained, lost, net: gained - lost, range: `${startDate} → ${endDate}` };
-}
-
-// Proxy 48 jam: 2 hari terakhir yang sudah complete (kemarin + H-2)
-async function getViewsLast2DaysStable(access_token){
-  const startDate = daysAgoInTZ(2, YT_ANALYTICS_TZ);
-  const endDate   = daysAgoInTZ(1, YT_ANALYTICS_TZ);
-
-  const data = await ytAnalyticsQuery(access_token, {
-    ids: "channel==MINE",
-    startDate,
-    endDate,
-    metrics: "views"
-  });
-
-  const row = data?.rows?.[0] || [0];
-  const total = Number(row[0] || 0);
-
-  return {
-    total,
-    days: [{ day: `${startDate} → ${endDate}`, views: total }]
-  };
-}
-
 /* =========================
    CHART FUNCTION (NEW)
 ========================= */
-// Fungsi untuk menggambar chart Views (Last 48 Hours)
 function createViewsChart(viewsData) {
   const ctx = document.getElementById('viewsChart').getContext('2d');
   const viewsChart = new Chart(ctx, {
@@ -279,7 +235,6 @@ function createViewsChart(viewsData) {
   });
 }
 
-// Fungsi untuk menggambar chart Subscriber Growth (Last 28 Days)
 function createGrowthChart(growthData) {
   const ctx = document.getElementById('growthChart').getContext('2d');
   const growthChart = new Chart(ctx, {
@@ -304,13 +259,15 @@ function createGrowthChart(growthData) {
   });
 }
 
-// Fungsi untuk memperbarui chart saat data analytics diperoleh
+/* =========================
+   CHARTS UPDATE
+========================= */
 async function refreshCharts(rows) {
   const viewsData = rows.map(row => row.analytics?.views2d?.total || 0);
   const growthData = rows.map(row => row.analytics?.subs28?.net || 0);
 
-  createViewsChart(viewsData); // Panggil fungsi createViewsChart dengan data views
-  createGrowthChart(growthData); // Panggil fungsi createGrowthChart dengan data growth
+  createViewsChart(viewsData); 
+  createGrowthChart(growthData); 
 }
 
 /* =========================
@@ -363,7 +320,7 @@ function renderTable(rows){
       </div>
     `;
 
-    return ` 
+    return `
       <tr>
         <td>
           <div style="display:flex;align-items:center;gap:10px">
