@@ -197,3 +197,20 @@ body{
   .sidebar{display:none;}
   .search{width:180px}
 }
+
+/* Styling untuk Chart.js */
+#viewsChart, #growthChart {
+  margin: 0 auto;
+  max-width: 90%;  /* Membuat chart responsif di perangkat yang lebih kecil */
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);  /* Memberikan latar belakang yang halus */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);  /* Memberikan sedikit bayangan pada chart */
+}
+
+/* Untuk ukuran yang lebih kecil di perangkat mobile */
+@media (max-width: 768px) {
+  #viewsChart, #growthChart {
+    max-width: 100%;  /* Menyesuaikan ukuran chart untuk perangkat lebih kecil */
+    height: 200px;
+  }
+}
