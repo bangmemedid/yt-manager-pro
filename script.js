@@ -1,3 +1,6 @@
+/* =========================
+   CONFIG & GLOBAL VARIABLES
+========================= */
 const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 const SCOPES    = "openid email profile https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly";
@@ -9,6 +12,9 @@ let allCachedChannels = [];
 
 const $ = (id) => document.getElementById(id);
 
+/* =========================
+   HELPERS
+========================= */
 function setStatus(msg, isOnline = false){
   const el = $("statusText");
   const dot = document.querySelector(".status-dot");
@@ -29,6 +35,9 @@ function formatNumber(n){
   return Number(n || 0).toLocaleString("id-ID");
 }
 
+/* =========================
+   GOOGLE INIT (GAPI & ANALYTICS)
+========================= */
 function initGapi(){
   return new Promise((resolve) => {
     gapi.load("client", async () => {
@@ -50,6 +59,9 @@ function initGapi(){
   });
 }
 
+/* =========================
+   REALTIME ANALYTICS ENGINE
+========================= */
 async function fetchRealtimeStats(channelId) {
     try {
         const end = new Date().toISOString().split('T')[0];
@@ -66,6 +78,9 @@ async function fetchRealtimeStats(channelId) {
     } catch (e) { return { m60: 0, h48: 0 }; }
 }
 
+/* =========================
+   CORE DATA FETCHING
+========================= */
 async function fetchAllChannelsData() {
   const accounts = loadAccounts();
   if(accounts.length === 0) { setStatus("Belum ada akun.", false); return; }
@@ -89,9 +104,13 @@ async function fetchAllChannelsData() {
   renderTable(mergedData);
 }
 
+/* =========================
+   UI RENDERING
+========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
-  const search = $("searchInput").value.toLowerCase();
+  const searchInput = $("searchInput");
+  const search = searchInput ? searchInput.value.toLowerCase() : "";
   tbody.innerHTML = "";
   let tSubs = 0, tViews = 0, tReal = 0;
 
@@ -120,6 +139,9 @@ function renderTable(data) {
   setStatus("Dashboard Aktif", true);
 }
 
+/* =========================
+   FEATURES: EXPORT & MODAL
+========================= */
 function exportToExcel() {
   const table = document.querySelector(".channel-table");
   const wb = XLSX.utils.table_to_book(table, { sheet: "YT_Pro_Report" });
@@ -144,6 +166,9 @@ function openDetail(idx) {
 
 function closeModal() { $("detailModal").style.display = "none"; }
 
+/* =========================
+   GOOGLE AUTH (GIS)
+========================= */
 async function googleSignIn(){
   if(!gApiInited) await initGapi();
   tokenClient.callback = async (resp) => {
@@ -159,15 +184,47 @@ async function googleSignIn(){
   tokenClient.requestAccessToken({ prompt: "consent select_account" });
 }
 
+/* =========================
+   DOM LOAD & SMART NAVIGATION
+========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
   fetchAllChannelsData();
+
+  // Tombol Tambah & Refresh
   $("btnAddGmail").onclick = googleSignIn;
   if($("btnAddGmailTop")) $("btnAddGmailTop").onclick = googleSignIn;
   $("btnRefreshData").onclick = fetchAllChannelsData;
   $("btnExportData").onclick = exportToExcel;
+
+  // SMART ACTION: Channel List Button
+  const btnChannelList = document.querySelector('a[href="#channel"]');
+  if (btnChannelList) {
+      btnChannelList.onclick = async (e) => {
+          e.preventDefault();
+          
+          // 1. Reset filter pencarian agar semua channel muncul
+          if($("searchInput")) $("searchInput").value = "";
+          
+          // 2. Refresh data terbaru dari API
+          await fetchAllChannelsData();
+          
+          // 3. Scroll halus ke tabel
+          const target = $("channel");
+          if (target) target.scrollIntoView({ behavior: "smooth" });
+          
+          // 4. Update status UI active
+          document.querySelectorAll(".side-link").forEach(l => l.classList.remove("active"));
+          btnChannelList.classList.add("active");
+      };
+  }
+  
+  // Logout & Cleanup
   $("btnOwnerLogout").onclick = () => { localStorage.removeItem("owner_logged_in"); window.location.href="login.html"; };
   $("btnLocalLogout").onclick = () => { if(confirm("Hapus akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
+  
+  // Search Action
   $("searchInput").oninput = () => renderTable(allCachedChannels);
 });
+
 window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
