@@ -275,19 +275,40 @@ function exportData() {
 }
 
 function importData() {
-    const code = prompt("Tempelkan (Paste) Kode Data dari perangkat Anda yang lain di sini:");
+    const code = prompt("Tempelkan (Paste) Kode Data dari perangkat lain di sini:");
+    
     if (code && code.trim() !== "") {
         try {
-            const parsed = JSON.parse(code);
-            if (Array.isArray(parsed)) {
-                localStorage.setItem(STORE_KEY, code);
-                alert("SINKRONISASI SUKSES!\nHalaman akan dimuat ulang.");
+            // 1. Ambil data baru yang mau dimasukkan
+            const newData = JSON.parse(code);
+            
+            if (Array.isArray(newData)) {
+                // 2. Ambil data lama yang sudah ada di perangkat ini
+                let currentData = loadAccounts();
+                
+                // 3. Gabungkan data (Cek berdasarkan EMAIL agar tidak dobel)
+                newData.forEach(newAcc => {
+                    const exists = currentData.findIndex(oldAcc => oldAcc.email === newAcc.email);
+                    if (exists !== -1) {
+                        // Jika email sudah ada, update tokennya saja (biar paling baru)
+                        currentData[exists] = newAcc;
+                    } else {
+                        // Jika email belum ada, tambahkan ke daftar
+                        currentData.push(newAcc);
+                    }
+                });
+
+                // 4. Simpan hasil gabungan ke memori
+                saveAccounts(currentData);
+                
+                alert("SINKRONISASI BERHASIL!\nData telah digabungkan dengan akun yang sudah ada.");
                 location.reload();
             } else {
-                alert("Kode tidak valid! Pastikan Anda menyalin semua teks.");
+                alert("Kode tidak valid!");
             }
         } catch (e) {
-            alert("Error: Kode gagal dibaca. Pastikan kode benar.");
+            alert("Error: Gagal membaca kode. Pastikan kode benar.");
         }
     }
 }
+
