@@ -16,6 +16,9 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="style.css" />
+
+  <!-- 4) Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <!-- Proteksi: wajib login owner -->
@@ -136,6 +139,27 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- Grafik Views dan Subscriber Growth -->
+      <section id="charts" class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Analytics Charts</div>
+            <div class="panel-sub">Visualisasi performa channel YouTube</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <!-- Views Chart -->
+          <div style="margin-bottom: 20px;">
+            <canvas id="viewsChart" width="400" height="200"></canvas>
+          </div>
+          <!-- Subscriber Growth Chart -->
+          <div>
+            <canvas id="growthChart" width="400" height="200"></canvas>
+          </div>
         </div>
       </section>
 
