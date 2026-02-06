@@ -456,6 +456,7 @@ async function refreshAllData(){
 
   renderTable(rows);
   renderStats(rows);
+  refreshCharts(rows); // Panggil refreshCharts untuk memperbarui chart
   setStatus("Selesai. Data channel + analytics sudah tampil (merge).");
 }
 
