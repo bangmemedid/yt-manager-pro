@@ -1,5 +1,5 @@
 /* =========================
-   CONFIG & GLOBAL VARIABLES
+    CONFIG & GLOBAL VARIABLES
 ========================= */
 const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
@@ -13,7 +13,7 @@ let allCachedChannels = [];
 const $ = (id) => document.getElementById(id);
 
 /* =========================
-   HELPERS
+    HELPERS
 ========================= */
 function setStatus(msg, isOnline = false){
   const el = $("statusText");
@@ -36,7 +36,7 @@ function formatNumber(n){
 }
 
 /* =========================
-   GOOGLE INIT (GAPI & ANALYTICS)
+    GOOGLE INIT (GAPI & ANALYTICS)
 ========================= */
 function initGapi(){
   return new Promise((resolve) => {
@@ -60,7 +60,7 @@ function initGapi(){
 }
 
 /* =========================
-   REALTIME ANALYTICS ENGINE
+    REALTIME ANALYTICS ENGINE
 ========================= */
 async function fetchRealtimeStats(channelId) {
     try {
@@ -79,7 +79,7 @@ async function fetchRealtimeStats(channelId) {
 }
 
 /* =========================
-   CORE DATA FETCHING
+    CORE DATA FETCHING
 ========================= */
 async function fetchAllChannelsData() {
   const accounts = loadAccounts();
@@ -105,7 +105,7 @@ async function fetchAllChannelsData() {
 }
 
 /* =========================
-   UI RENDERING
+    UI RENDERING
 ========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
@@ -140,7 +140,7 @@ function renderTable(data) {
 }
 
 /* =========================
-   FEATURES: EXPORT & MODAL
+    FEATURES: EXPORT & MODAL
 ========================= */
 function exportToExcel() {
   const table = document.querySelector(".channel-table");
@@ -167,13 +167,20 @@ function openDetail(idx) {
 function closeModal() { $("detailModal").style.display = "none"; }
 
 /* =========================
-   GOOGLE AUTH (GIS)
+    GOOGLE AUTH (GIS)
 ========================= */
 async function googleSignIn(){
   if(!gApiInited) await initGapi();
   tokenClient.callback = async (resp) => {
     const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${resp.access_token}` } });
     const data = await res.json();
+    
+    // --- PENGECEKAN WHITELIST (TAMBAHAN) ---
+    if (window.checkAccess) {
+      if (!window.checkAccess(data.email)) return; 
+    }
+    // --- AKHIR PENGECEKAN ---
+
     let accounts = loadAccounts();
     const payload = { email: data.email, access_token: resp.access_token, expires_at: Date.now() + (resp.expires_in * 1000) };
     const idx = accounts.findIndex(a => a.email === data.email);
@@ -185,7 +192,7 @@ async function googleSignIn(){
 }
 
 /* =========================
-   DOM LOAD & SMART NAVIGATION
+    DOM LOAD & SMART NAVIGATION
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
