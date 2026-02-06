@@ -107,8 +107,12 @@ async function googleSignInSelectAccount(){
 
   const tokenResp = await new Promise((resolve, reject) => {
     tokenClient.callback = (resp) => {
-      if(resp?.error) reject(resp);
-      else resolve(resp);
+      if(resp?.error) {
+        console.error("Login failed:", resp.error); // Log error untuk debugging
+        reject(resp);
+      } else {
+        resolve(resp);
+      }
     };
 
     tokenClient.requestAccessToken({
@@ -116,11 +120,21 @@ async function googleSignInSelectAccount(){
     });
   });
 
+  // Pastikan token dan expires_in tersedia
   const access_token = tokenResp.access_token;
   const expires_in = Number(tokenResp.expires_in || 3600);
   const expires_at = Date.now() + expires_in * 1000;
 
+  console.log("Access Token:", access_token); // Debugging token
+
+  // Dapatkan email pengguna dari token yang diterima
   const email = await getUserEmail(access_token);
+
+  // Verifikasi email apakah diterima dengan benar
+  if (!email || email === "(unknown)") {
+    alert("Gagal mendapatkan email pengguna.");
+    return;
+  }
 
   const payload = {
     email,
@@ -131,7 +145,7 @@ async function googleSignInSelectAccount(){
 
   const accounts = loadAccounts();
   const idx = accounts.findIndex(a => a.email === email);
-  if(idx >= 0) accounts[idx] = payload;
+  if (idx >= 0) accounts[idx] = payload;
   else accounts.push(payload);
 
   saveAccounts(accounts);
