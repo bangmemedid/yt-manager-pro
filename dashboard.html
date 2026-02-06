@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Manager Pro | bangmemed.id</title>
-
   <link rel="preconnect" href="https://accounts.google.com">
   <link rel="preconnect" href="https://apis.google.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -13,17 +12,10 @@
 </head>
 <body>
   <script>
-    /* VALIDASI OWNER */
     const isOwnerLogged = localStorage.getItem("owner_logged_in");
     const ownerName = localStorage.getItem("owner_name") || "Member Premium";
-
-    if (isOwnerLogged !== "true") {
-      window.location.href = "login.html";
-    }
-
-    window.checkAccess = function(userEmail) {
-      return true; 
-    };
+    if (isOwnerLogged !== "true") { window.location.href = "login.html"; }
+    window.checkAccess = function(userEmail) { return true; };
   </script>
 
   <div class="bg-glow"></div>
@@ -57,17 +49,22 @@
           <span class="dot" style="opacity:.35"></span> 
           <i class="fas fa-file-alt" style="margin-right:8px; width:16px;"></i> Terms of Service
         </a>
+        
+        <div style="padding: 0 20px; margin-top: 15px;">
+            <button id="btnRefreshData" class="btn success" style="width:100%; font-size: 12px; height: 38px;">
+              <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+            <button id="btnLocalLogout" class="btn primary" style="width: 100%; margin-top: 8px; font-size: 11px; height: 38px;">
+              Hapus Akun Lokal
+            </button>
+        </div>
       </nav>
 
       <div class="side-footer">
-        <div class="side-actions">
-          <button id="btnAddGmail" class="btn primary" style="width:100%;">+ Tambah Gmail</button>
-          <button id="btnRefreshData" class="btn success" style="margin-top:8px; width:100%;">
-            <i class="fas fa-sync-alt"></i> Refresh Data
+        <div class="side-actions" style="padding: 20px;">
+          <button id="btnOwnerLogout" class="btn danger" style="width: 100%; font-weight: bold;">
+            KELUAR
           </button>
-          <hr style="opacity: 0.1; margin: 15px 0;">
-          <button id="btnOwnerLogout" class="btn ghost" style="width: 100%; text-align: left; font-size: 13px;">Logout Owner</button>
-          <button id="btnLocalLogout" class="btn danger" style="width: 100%; margin-top: 5px; text-align: left; font-size: 12px;">Hapus Akun Lokal</button>
         </div>
       </div>
     </aside>
@@ -92,18 +89,9 @@
       </div>
 
       <div class="stats-wrapper">
-        <div class="stat-card">
-          <div class="label">Total Channel</div>
-          <div class="value"><span id="totalChannel">0</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Total Subscribers</div>
-          <div class="value"><span id="totalSubs">0</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Total Views</div>
-          <div class="value"><span id="totalViews">0</span></div>
-        </div>
+        <div class="stat-card"><div class="label">Total Channel</div><div class="value" id="totalChannel">0</div></div>
+        <div class="stat-card"><div class="label">Total Subscribers</div><div class="value" id="totalSubs">0</div></div>
+        <div class="stat-card"><div class="label">Total Views</div><div class="value" id="totalViews">0</div></div>
         <div class="stat-card highlight">
           <div class="label">Realtime (48 Jam)</div>
           <div class="value" id="totalRealtime">0</div>
@@ -114,8 +102,7 @@
       <section id="channel" class="panel">
         <div class="panel-head" style="flex-wrap: wrap; gap: 10px;">
           <div class="panel-title">Daftar Channel</div>
-          
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
              <button onclick="exportData()" class="btn ghost" style="font-size: 11px; border: 1px solid #22d3ee; padding: 8px 12px;">
                 <i class="fas fa-copy"></i> Salin Data
              </button>
@@ -123,7 +110,7 @@
                 <i class="fas fa-file-import"></i> Tempel Data
              </button>
              <button id="btnExportData" class="btn success" style="font-size: 11px; padding: 8px 12px;">
-                <i class="fas fa-file-excel"></i> Export Excel
+                <i class="fas fa-file-excel"></i> Excel
              </button>
           </div>
         </div>
@@ -131,14 +118,7 @@
         <div class="table-wrap">
           <table class="channel-table">
             <thead>
-              <tr>
-                <th>Channel</th>
-                <th>Subs</th>
-                <th>Views (Total)</th>
-                <th style="color:#22d3ee">60 Mnt</th>
-                <th style="color:#fbbf24">48 Jam</th>
-                <th>Status</th>
-              </tr>
+              <tr><th>Channel</th><th>Subs</th><th>Views</th><th style="color:#22d3ee">60m</th><th style="color:#fbbf24">48h</th><th>Status</th></tr>
             </thead>
             <tbody id="channelBody">
               <tr><td colspan="6" class="empty">Memuat data...</td></tr>
@@ -151,18 +131,16 @@
 
   <div id="detailModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
     <div class="modal-content" style="background: #0f172a; border:1px solid rgba(255,255,255,0.1); width:90%; max-width:500px; border-radius:24px; padding:25px; position:relative; color:white;">
-      <button onclick="closeModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+      <button onclick="closeModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:white; font-size:24px;">&times;</button>
       <div id="modalBodyContent"></div>
     </div>
   </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const el = document.getElementById("ownerDisplay");
-      if(el) el.textContent = ownerName;
+      document.getElementById("ownerDisplay").textContent = ownerName;
     });
   </script>
-
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
