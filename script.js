@@ -171,27 +171,36 @@ function closeModal() { $("detailModal").style.display = "none"; }
 ========================= */
 async function googleSignIn(){
   if(!gApiInited) await initGapi();
+  
   tokenClient.callback = async (resp) => {
+    // Jika login berhasil, ambil data profil user
     const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { 
       headers: { Authorization: `Bearer ${resp.access_token}` } 
     });
     const data = await res.json();
     
-    // --- PENGECEKAN WHITELIST GMAIL TELAH DIHAPUS ---
-    // User bisa menambah Gmail mana pun asalkan sudah masuk Dashboard sebagai Owner.
-
     let accounts = loadAccounts();
     const payload = { 
       email: data.email, 
       access_token: resp.access_token, 
+      // Menghitung waktu kadaluarsa (biasanya 1 jam dari sekarang)
       expires_at: Date.now() + (resp.expires_in * 1000) 
     };
+
     const idx = accounts.findIndex(a => a.email === data.email);
     if(idx >= 0) accounts[idx] = payload; else accounts.push(payload);
+    
     saveAccounts(accounts);
     fetchAllChannelsData();
   };
-  tokenClient.requestAccessToken({ prompt: "consent select_account" });
+
+  // BAGIAN KUNCI: Menambahkan prompt 'consent' dan access_type 'offline'
+  // Ini memaksa Google memberikan izin yang lebih lama
+  tokenClient.requestAccessToken({ 
+    prompt: 'consent', 
+    access_type: 'offline' 
+  });
+}
 }
 
 /* =========================
@@ -243,3 +252,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
+
