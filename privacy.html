@@ -1,58 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Kebijakan Privasi - bangmemed.id</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - YouTube Manager Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 16px;line-height:1.6}
-    h1,h2{line-height:1.2}
-    code{background:#f3f3f3;padding:2px 6px;border-radius:6px}
-    .muted{color:#666}
+    .content-box { max-width: 800px; margin: 50px auto; padding: 40px; background: var(--card); border: 1px solid var(--stroke); border-radius: 24px; line-height: 1.8; }
+    h1 { color: var(--cyan); margin-bottom: 30px; }
+    h2 { color: #fff; margin-top: 30px; font-size: 1.2rem; }
+    p { color: var(--muted); font-size: 14px; }
+    .back-link { display: inline-block; margin-bottom: 20px; color: var(--cyan); text-decoration: none; font-size: 14px; }
   </style>
 </head>
 <body>
-  <h1>Kebijakan Privasi</h1>
-  <p class="muted">Terakhir diperbarui: 05 Feb 2026</p>
+  <div class="bg-glow"></div>
+  <div class="content-box">
+    <a href="index.html" class="back-link">← Kembali ke Dashboard</a>
+    <h1>Privacy Policy</h1>
+    <p>Terakhir diperbarui: 7 Februari 2026</p>
 
-  <p>
-    Aplikasi <b>bangmemed.id - YouTube Manager Pro</b> digunakan untuk membantu pengguna melihat ringkasan statistik
-    channel YouTube dan mengelola data terkait melalui YouTube API dan Google OAuth.
-  </p>
+    <h2>1. Informasi yang Kami Kumpulkan</h2>
+    <p>YouTube Manager Pro menggunakan Google OAuth API untuk mengakses data akun YouTube Anda. Kami hanya membaca data statistik (Subscriber, Views, Videos) dan data analitik (Realtime views).</p>
 
-  <h2>Data yang Dikumpulkan</h2>
-  <ul>
-    <li>Informasi akun Google dasar (mis. email/identitas) melalui Google OAuth.</li>
-    <li>Data YouTube yang diizinkan oleh pengguna (mis. statistik channel, daftar channel, metrik penayangan).</li>
-  </ul>
+    <h2>2. Penyimpanan Data</h2>
+    <p><b>PENTING:</b> Kami tidak memiliki server database. Semua data akses (Access Tokens) disimpan secara lokal di browser Anda (Local Storage). Kami tidak pernah mengirimkan data Anda ke server pihak ketiga mana pun.</p>
 
-  <h2>Penggunaan Data</h2>
-  <ul>
-    <li>Menampilkan dashboard statistik dan daftar channel yang terhubung.</li>
-    <li>Mengelola sesi login (token OAuth) agar aplikasi dapat mengakses data sesuai izin pengguna.</li>
-  </ul>
+    <h2>3. Penggunaan Data</h2>
+    <p>Data yang ditarik hanya digunakan untuk ditampilkan pada dashboard Anda guna memudahkan manajemen multi-channel secara real-time.</p>
 
-  <h2>Penyimpanan & Keamanan</h2>
-  <p>
-    Token OAuth digunakan untuk mengakses API atas nama pengguna. Kami berupaya menjaga keamanan token dan data
-    dengan praktik keamanan yang wajar. Jangan membagikan akses akun Anda kepada pihak lain.
-  </p>
+    <h2>4. Keamanan</h2>
+    <p>Keamanan data bergantung pada perangkat Anda. Harap pastikan Anda menggunakan perangkat pribadi dan melakukan "Logout Lokal" jika ingin menghapus seluruh data akses dari browser.</p>
 
-  <h2>Berbagi Data</h2>
-  <p>
-    Kami tidak menjual data pengguna. Data hanya digunakan untuk fungsi aplikasi dan tidak dibagikan ke pihak ketiga,
-    kecuali diwajibkan oleh hukum.
-  </p>
-
-  <h2>Penghapusan Akses</h2>
-  <p>
-    Anda dapat mencabut akses aplikasi kapan saja melalui pengaturan Google Account:
-    <code>myaccount.google.com/permissions</code>.
-  </p>
-
-  <h2>Kontak</h2>
-  <p>
-    Jika ada pertanyaan tentang kebijakan privasi ini, hubungi: <b>bangmemed.id@gmail.com</b>
-  </p>
+    <div class="footer" style="margin-top:40px; border-top: 1px solid var(--stroke); padding-top:20px;">
+      © 2026 bangmemed.id • YouTube Manager Pro
+    </div>
+  </div>
 </body>
 </html>
