@@ -4,11 +4,6 @@
 const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 
-/**
- * Scope sudah OK untuk Analytics:
- * - youtube.readonly (Data API v3)
- * - yt-analytics.readonly (Analytics API v2)
- */
 const SCOPES = [
   "openid",
   "email",
@@ -171,19 +166,30 @@ async function fetchMyChannelUsingToken(access_token){
 
 /* =========================
    ANALYTICS LAYER (YouTube Analytics API v2)
-   - Subscriber growth last 28 days (gained/lost/net)
-   - Views last 2 available days (proxy "48 hours")
+   Fix mismatch Studio:
+   - Pakai timezone America/Los_Angeles
+   - Query TOTAL (tanpa dimensions=day) agar tidak sering 0
 ========================= */
-function formatDateYYYYMMDD_UTC(d){
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+const YT_ANALYTICS_TZ = "America/Los_Angeles";
+
+function formatDateInTZ(date, timeZone){
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+
+  const y = parts.find(p => p.type === "year").value;
+  const m = parts.find(p => p.type === "month").value;
+  const d = parts.find(p => p.type === "day").value;
+  return `${y}-${m}-${d}`; // YYYY-MM-DD
 }
-function daysAgoUTC(n){
+
+function daysAgoInTZ(n, timeZone){
   const d = new Date();
-  d.setUTCDate(d.getUTCDate() - n);
-  return d;
+  d.setDate(d.getDate() - n);
+  return formatDateInTZ(d, timeZone);
 }
 
 async function ytAnalyticsQuery(access_token, params){
@@ -205,53 +211,48 @@ async function ytAnalyticsQuery(access_token, params){
   return res.json();
 }
 
+// 28 hari terakhir: dari 28 hari lalu sampai kemarin (lebih stabil dari "today")
 async function getSubscriberGrowth28d(access_token){
-  const startDate = formatDateYYYYMMDD_UTC(daysAgoUTC(28));
-  const endDate = formatDateYYYYMMDD_UTC(new Date());
+  const startDate = daysAgoInTZ(28, YT_ANALYTICS_TZ);
+  const endDate   = daysAgoInTZ(1,  YT_ANALYTICS_TZ);
 
   const data = await ytAnalyticsQuery(access_token, {
     ids: "channel==MINE",
     startDate,
     endDate,
-    metrics: "subscribersGained,subscribersLost",
-    dimensions: "day",
-    sort: "day"
+    metrics: "subscribersGained,subscribersLost"
   });
 
-  const rows = data?.rows || []; // [day, gained, lost]
-  let gained = 0, lost = 0;
+  const row = data?.rows?.[0] || [0,0];
+  const gained = Number(row[0] || 0);
+  const lost   = Number(row[1] || 0);
 
-  for(const r of rows){
-    gained += Number(r[1] || 0);
-    lost   += Number(r[2] || 0);
-  }
-
-  return { gained, lost, net: gained - lost };
+  return { gained, lost, net: gained - lost, range: `${startDate} → ${endDate}` };
 }
 
-async function getViewsLast2AvailableDays(access_token){
-  // buffer 3 hari supaya kalau data hari ini belum ada, tetap dapat 2 baris terakhir
-  const startDate = formatDateYYYYMMDD_UTC(daysAgoUTC(3));
-  const endDate = formatDateYYYYMMDD_UTC(new Date());
+// Proxy 48 jam: 2 hari terakhir yang sudah complete (kemarin + H-2)
+async function getViewsLast2DaysStable(access_token){
+  const startDate = daysAgoInTZ(2, YT_ANALYTICS_TZ);
+  const endDate   = daysAgoInTZ(1, YT_ANALYTICS_TZ);
 
   const data = await ytAnalyticsQuery(access_token, {
     ids: "channel==MINE",
     startDate,
     endDate,
-    metrics: "views",
-    dimensions: "day",
-    sort: "day"
+    metrics: "views"
   });
 
-  const rows = data?.rows || []; // [day, views]
-  const last2 = rows.slice(-2);
-  const total = last2.reduce((s, r) => s + Number(r[1] || 0), 0);
+  const row = data?.rows?.[0] || [0];
+  const total = Number(row[0] || 0);
 
-  return { total, days: last2.map(r => ({ day: r[0], views: Number(r[1] || 0) })) };
+  return {
+    total,
+    days: [{ day: `${startDate} → ${endDate}`, views: total }]
+  };
 }
 
 /* =========================
-   UI INJECTION (tanpa edit index.html/style.css)
+   UI INJECTION (tanpa edit style.css)
 ========================= */
 function injectAnalyticsCSS(){
   if(document.getElementById("ytmpro-analytics-style")) return;
@@ -331,10 +332,6 @@ function renderTable(rows){
       ? `Gained <b>${formatNumber(sub.gained)}</b> • Lost <b>${formatNumber(sub.lost)}</b> • Net <b>${formatNumber(sub.net)}</b>`
       : `—`;
 
-    const viewsText = v2d
-      ? `<b>${formatNumber(v2d.total)}</b> views`
-      : `—`;
-
     const viewsDaysText = v2d?.days?.length
       ? v2d.days.map(d => `${d.day}: <b>${formatNumber(d.views)}</b>`).join(" • ")
       : "";
@@ -348,11 +345,13 @@ function renderTable(rows){
             <span class="ytmpro-analytics-chip">Lost: <b>${sub ? formatNumber(sub.lost) : "—"}</b></span>
             <span class="ytmpro-analytics-chip">Net: <b>${sub ? formatNumber(sub.net) : "—"}</b></span>
           </div>
-          <div class="ytmpro-analytics-mini">${subsText}</div>
+          <div class="ytmpro-analytics-mini">
+            ${sub ? `${subsText} <span style="opacity:.6">(${sub.range})</span>` : "—"}
+          </div>
         </div>
 
         <div class="ytmpro-analytics-card">
-          <h4>Views (Last 2 Available Days)</h4>
+          <h4>Views (Last 2 Stable Days)</h4>
           <div class="ytmpro-analytics-metrics">
             <span class="ytmpro-analytics-chip">Total: ${v2d ? `<b>${formatNumber(v2d.total)}</b>` : "<b>—</b>"}</span>
           </div>
@@ -396,7 +395,6 @@ function renderStats(rows){
   const totalViews = rows.reduce((a,b)=>a + (b.views||0), 0);
   safeText($("totalViews"), formatNumber(totalViews));
 
-  // realtime 60m: tidak tersedia di API publik
   safeText($("view60m"), "—");
 }
 
@@ -427,7 +425,6 @@ async function refreshAllData(){
       const channel = await fetchMyChannelUsingToken(acc.access_token);
       if(!channel) continue;
 
-      // === Analytics calls (2 request) ===
       setStatus(`Ambil analytics: ${acc.email} ...`);
 
       let subs28 = null;
@@ -440,7 +437,7 @@ async function refreshAllData(){
       }
 
       try{
-        views2d = await getViewsLast2AvailableDays(acc.access_token);
+        views2d = await getViewsLast2DaysStable(acc.access_token);
       }catch(e){
         console.warn("views2d analytics failed:", acc.email, e);
       }
@@ -527,7 +524,7 @@ document.addEventListener("DOMContentLoaded", async ()=> {
     alert(
       "Gagal init Google API:\n\n" +
       (e?.details || e?.message || JSON.stringify(e)) +
-      "\n\nPastikan:\n- Script GIS & gapi sudah ada di HTML\n- Authorized JavaScript origins benar\n- YouTube Data API v3 enabled\n- YouTube Analytics API enabled\n- Scope yt-analytics.readonly sudah di-consent"
+      "\n\nPastikan:\n- index.html memuat GIS & gapi script (urutan benar)\n- Authorized JavaScript origins benar\n- YouTube Data API v3 enabled\n- YouTube Analytics API enabled\n- Scope yt-analytics.readonly sudah di-consent"
     );
     setStatus("Gagal init Google API.");
   }
