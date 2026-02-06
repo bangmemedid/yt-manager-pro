@@ -489,6 +489,64 @@ function bindUI(){
     });
   }
 }
+/* =========================
+   INJECT CSS (untuk chart analytics)
+========================= */
+function injectAnalyticsCSS(){
+  if(document.getElementById("ytmpro-analytics-style")) return;
+
+  const css = `
+    tr.analytics-row td{
+      padding: 12px 14px;
+      background: rgba(255,255,255,.03);
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .ytmpro-analytics-wrap{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 820px){
+      .ytmpro-analytics-wrap{ grid-template-columns: 1fr; }
+    }
+    .ytmpro-analytics-card{
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(0,0,0,.18);
+    }
+    .ytmpro-analytics-card h4{
+      margin: 0 0 8px;
+      font-size: 13px;
+      opacity: .9;
+      letter-spacing: .2px;
+    }
+    .ytmpro-analytics-metrics{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .ytmpro-analytics-chip{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      font-size: 12px;
+    }
+    .ytmpro-analytics-chip b{ font-weight: 800; }
+    .ytmpro-analytics-mini{
+      font-size: 12px;
+      opacity: .85;
+      margin-top: 6px;
+    }
+  `;
+
+  const style = document.createElement("style");
+  style.id = "ytmpro-analytics-style";
+  style.textContent = css;
+  document.head.appendChild(style);
+}
 
 /* =========================
    BOOT
@@ -508,3 +566,4 @@ document.addEventListener("DOMContentLoaded", async ()=> {
     setStatus("Gagal init Google API.");
   }
 });
+
