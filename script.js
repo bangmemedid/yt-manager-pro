@@ -363,7 +363,7 @@ function renderTable(rows){
       </div>
     `;
 
-    return `
+    return ` 
       <tr>
         <td>
           <div style="display:flex;align-items:center;gap:10px">
@@ -475,6 +475,7 @@ function bindUI(){
 
   const onAdd = async ()=> {
     try{
+      console.log("Tombol Tambah Gmail diklik");
       setStatus("Membuka Google login...");
       await googleSignInSelectAccount();
       await refreshAllData();
@@ -528,4 +529,8 @@ document.addEventListener("DOMContentLoaded", async ()=> {
     alert(
       "Gagal init Google API:\n\n" +
       (e?.details || e?.message || JSON.stringify(e)) +
-      "\n\nPastikan:\n- index.html memuat GIS & gapi script (urutan benar)\n- Authorized JavaScript origins benar\n- YouTube Data API v
+      "\n\nPastikan:\n- index.html memuat GIS & gapi script (urutan benar)\n- Authorized JavaScript origins benar\n- YouTube Data API v3 enabled\n- YouTube Analytics API enabled\n- Scope yt-analytics.readonly sudah di-consent"
+    );
+    setStatus("Gagal init Google API.");
+  }
+});
