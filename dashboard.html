@@ -13,23 +13,16 @@
 </head>
 <body>
   <script>
-    /* =========================================================
-       SISTEM VALIDASI OWNER (PINTU DEPAN)
-       Menghapus login Google sebagai syarat akses dashboard.
-       Akses hanya diberikan jika sudah login lewat login.html
-       ========================================================= */
-    
+    /* VALIDASI AKSES */
     const isOwnerLogged = localStorage.getItem("owner_logged_in");
     const ownerName = localStorage.getItem("owner_name") || "Member Premium";
 
     if (isOwnerLogged !== "true") {
-      // Jika belum login owner manual, lempar ke halaman login
       window.location.href = "login.html";
     }
 
-    // Fungsi checkAccess ditiadakan (Bebas akses setelah login owner)
     window.checkAccess = function(userEmail) {
-      return true; // Selalu benar karena user sudah melewati pintu login.html
+      return true;
     };
   </script>
 
@@ -43,7 +36,7 @@
         </div>
         <div class="side-title">
           <div class="name">YouTube Manager Pro</div>
-          <div id="ownerDisplay" class="sub" style="color: #22d3ee; font-weight: bold;">${ownerName}</div>
+          <div id="ownerDisplay" class="sub" style="color: #22d3ee; font-weight: bold;">Memuat...</div>
         </div>
       </div>
 
@@ -71,15 +64,22 @@
           <button id="btnAddGmail" class="btn primary">+ Tambah Gmail</button>
           <button id="btnRefreshData" class="btn success" style="margin-top:8px; width:100%;">
             <i class="fas fa-sync-alt"></i> Refresh Data
-         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-    <p style="font-size: 11px; color: var(--cyan); margin-bottom: 8px;">SINKRONISASI PERANGKAT</p>
-    <button onclick="exportData()" class="btn ghost" style="width: 100%; font-size: 12px; margin-bottom: 5px;">
-        <i class="fas fa-copy"></i> Salin Kode Data
-    </button>
-    <button onclick="importData()" class="btn ghost" style="width: 100%; font-size: 12px;">
-        <i class="fas fa-file-import"></i> Tempel Kode Data
-    </button>
-</div>
+          </button>
+
+          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+            <p style="font-size: 10px; color: #22d3ee; margin-bottom: 8px; font-weight: 600;">SINKRONISASI PERANGKAT</p>
+            <button onclick="exportData()" class="btn ghost" style="width: 100%; font-size: 11px; margin-bottom: 5px;">
+              <i class="fas fa-copy"></i> Salin Kode Data
+            </button>
+            <button onclick="importData()" class="btn ghost" style="width: 100%; font-size: 11px;">
+              <i class="fas fa-file-import"></i> Tempel Kode Data
+            </button>
+          </div>
+
+          <hr style="opacity: 0.1; margin: 15px 0;">
+          <button id="btnOwnerLogout" class="btn ghost" style="width: 100%; text-align: left;">Logout Owner</button>
+          <button id="btnLocalLogout" class="btn danger" style="width: 100%; margin-top: 5px; text-align: left;">Hapus Sesi Akun</button>
+        </div>
       </div>
     </aside>
 
@@ -159,7 +159,6 @@
   </div>
 
   <script>
-    // Update nama owner di sidebar secara realtime
     document.addEventListener("DOMContentLoaded", () => {
       const el = document.getElementById("ownerDisplay");
       if(el) el.textContent = ownerName;
@@ -172,4 +171,3 @@
   <script src="script.js" defer></script>
 </body>
 </html>
-
