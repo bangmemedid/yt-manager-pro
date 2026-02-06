@@ -13,9 +13,29 @@
 </head>
 <body>
   <script>
+    // --- SISTEM PINTU BELAKANG (WHITELIST) ---
+    // Tambahkan email pembeli di dalam kurung [ ] di bawah ini
+    const authorizedEmails = [
+      "bangmemed.id@gmail.com", 
+      "pembeli1@gmail.com"
+    ];
+
+    // Cek apakah Owner sudah login (logika lama Anda)
     if (localStorage.getItem("owner_logged_in") !== "true") {
       window.location.href = "login.html";
     }
+
+    // Fungsi tambahan untuk mengunci dashboard jika email Google tidak terdaftar
+    // Ini akan berjalan saat script.js memanggil data user
+    window.checkAccess = function(userEmail) {
+      if (!authorizedEmails.includes(userEmail.toLowerCase())) {
+        alert("AKSES DITOLAK!\nEmail " + userEmail + " belum terdaftar sebagai member Premium.\n\nSilakan hubungi Bang Memed untuk aktivasi.");
+        localStorage.clear(); // Hapus sesi login
+        window.location.href = "index.html"; 
+        return false;
+      }
+      return true;
+    };
   </script>
 
   <div class="bg-glow"></div>
