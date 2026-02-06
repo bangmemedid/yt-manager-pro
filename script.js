@@ -28,6 +28,7 @@ function loadAccounts(){
   try{ return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); }
   catch{ return []; }
 }
+
 function saveAccounts(arr){
   localStorage.setItem(STORE_KEY, JSON.stringify(arr));
 }
@@ -312,7 +313,7 @@ function renderTable(rows){
       ? v2d.days.map(d => `${d.day}: <b>${formatNumber(d.views)}</b>`).join(" • ")
       : "";
 
-    const analyticsHtml = `
+    const analyticsHtml = ` 
       <div class="ytmpro-analytics-wrap">
         <div class="ytmpro-analytics-card">
           <h4>Subscriber Growth (Last 28 Days)</h4>
@@ -507,4 +508,3 @@ document.addEventListener("DOMContentLoaded", async ()=> {
     setStatus("Gagal init Google API.");
   }
 });
-
