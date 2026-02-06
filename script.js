@@ -111,6 +111,8 @@ function renderTable(data) {
   const tbody = $("channelBody");
   const searchInput = $("searchInput");
   const search = searchInput ? searchInput.value.toLowerCase() : "";
+  if (!tbody) return;
+  
   tbody.innerHTML = "";
   let tSubs = 0, tViews = 0, tReal = 0;
 
@@ -131,11 +133,11 @@ function renderTable(data) {
       </tr>`;
   });
 
-  $("totalChannel").textContent = filtered.length;
-  $("totalSubs").textContent = formatNumber(tSubs);
-  $("totalViews").textContent = formatNumber(tViews);
-  $("totalRealtime").textContent = formatNumber(tReal);
-  $("lastUpdate").textContent = new Date().toLocaleTimeString();
+  if($("totalChannel")) $("totalChannel").textContent = filtered.length;
+  if($("totalSubs")) $("totalSubs").textContent = formatNumber(tSubs);
+  if($("totalViews")) $("totalViews").textContent = formatNumber(tViews);
+  if($("totalRealtime")) $("totalRealtime").textContent = formatNumber(tReal);
+  if($("lastUpdate")) $("lastUpdate").textContent = new Date().toLocaleTimeString();
   setStatus("Dashboard Aktif", true);
 }
 
@@ -173,7 +175,6 @@ async function googleSignIn(){
   if(!gApiInited) await initGapi();
   
   tokenClient.callback = async (resp) => {
-    // Jika login berhasil, ambil data profil user
     const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { 
       headers: { Authorization: `Bearer ${resp.access_token}` } 
     });
@@ -183,7 +184,6 @@ async function googleSignIn(){
     const payload = { 
       email: data.email, 
       access_token: resp.access_token, 
-      // Menghitung waktu kadaluarsa (biasanya 1 jam dari sekarang)
       expires_at: Date.now() + (resp.expires_in * 1000) 
     };
 
@@ -194,13 +194,10 @@ async function googleSignIn(){
     fetchAllChannelsData();
   };
 
-  // BAGIAN KUNCI: Menambahkan prompt 'consent' dan access_type 'offline'
-  // Ini memaksa Google memberikan izin yang lebih lama
   tokenClient.requestAccessToken({ 
     prompt: 'consent', 
     access_type: 'offline' 
   });
-}
 }
 
 /* =========================
@@ -210,44 +207,41 @@ document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
   fetchAllChannelsData();
 
-  // Tombol Tambah & Refresh
-  $("btnAddGmail").onclick = googleSignIn;
+  if($("btnAddGmail")) $("btnAddGmail").onclick = googleSignIn;
   if($("btnAddGmailTop")) $("btnAddGmailTop").onclick = googleSignIn;
-  $("btnRefreshData").onclick = fetchAllChannelsData;
-  $("btnExportData").onclick = exportToExcel;
+  if($("btnRefreshData")) $("btnRefreshData").onclick = fetchAllChannelsData;
+  if($("btnExportData")) $("btnExportData").onclick = exportToExcel;
 
-  // SMART ACTION: Channel List Button
   const btnChannelList = document.querySelector('a[href="#channel"]');
   if (btnChannelList) {
       btnChannelList.onclick = async (e) => {
           e.preventDefault();
-          
           if($("searchInput")) $("searchInput").value = "";
           await fetchAllChannelsData();
-          
           const target = $("channel");
           if (target) target.scrollIntoView({ behavior: "smooth" });
-          
           document.querySelectorAll(".side-link").forEach(l => l.classList.remove("active"));
           btnChannelList.classList.add("active");
       };
   }
   
-  // Logout & Cleanup
-  $("btnOwnerLogout").onclick = () => { 
-    localStorage.removeItem("owner_logged_in"); 
-    localStorage.removeItem("owner_name");
-    window.location.href="login.html"; 
-  };
+  if($("btnOwnerLogout")) {
+    $("btnOwnerLogout").onclick = () => { 
+      localStorage.removeItem("owner_logged_in"); 
+      localStorage.removeItem("owner_name");
+      window.location.href="login.html"; 
+    };
+  }
   
-  $("btnLocalLogout").onclick = () => { 
-    if(confirm("Hapus semua akun Gmail yang tertaut?")){ 
-      localStorage.removeItem(STORE_KEY); 
-      location.reload(); 
-    } 
-  };
+  if($("btnLocalLogout")) {
+    $("btnLocalLogout").onclick = () => { 
+      if(confirm("Hapus semua akun Gmail yang tertaut?")){ 
+        localStorage.removeItem(STORE_KEY); 
+        location.reload(); 
+      } 
+    };
+  }
   
-  // Search Action
   if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
 });
 
@@ -257,42 +251,35 @@ window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
    FUNGSI SINKRON ANTAR PERANGKAT
    ========================= */
 
-// Fungsi untuk mengambil data dan menyalinnya sebagai teks
 function exportData() {
     const data = localStorage.getItem(STORE_KEY);
     if (!data || data === "[]") {
         alert("Belum ada akun YouTube yang bisa disalin.");
         return;
     }
-    
-    // Proses salin teks otomatis
     const tempInput = document.createElement("textarea");
     tempInput.value = data;
     document.body.appendChild(tempInput);
     tempInput.select();
     document.execCommand("copy");
     document.body.removeChild(tempInput);
-    
-    alert("KODE DATA BERHASIL DISALIN!\n\nSilakan kirim kode ini ke WhatsApp/Email Anda sendiri, lalu gunakan menu 'Tempel Kode Data' di perangkat lain.");
+    alert("KODE DATA BERHASIL DISALIN!\n\nSilakan kirim kode ini ke WhatsApp/Email Anda sendiri.");
 }
 
-// Fungsi untuk menerima kode teks dari perangkat lain
 function importData() {
     const code = prompt("Tempelkan (Paste) Kode Data dari perangkat Anda yang lain di sini:");
-    
     if (code && code.trim() !== "") {
         try {
-            // Validasi data
             const parsed = JSON.parse(code);
             if (Array.isArray(parsed)) {
                 localStorage.setItem(STORE_KEY, code);
-                alert("SINKRONISASI SUKSES!\nHalaman akan dimuat ulang untuk menampilkan akun.");
+                alert("SINKRONISASI SUKSES!");
                 location.reload();
             } else {
-                alert("Kode tidak valid! Pastikan Anda menyalin semua teks tanpa terpotong.");
+                alert("Kode tidak valid!");
             }
         } catch (e) {
-            alert("Error: Kode gagal dibaca. Pastikan kode yang Anda tempel sudah benar.");
+            alert("Error: Kode gagal dibaca.");
         }
     }
 }
