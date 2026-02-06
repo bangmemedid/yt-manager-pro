@@ -13,28 +13,23 @@
 </head>
 <body>
   <script>
-    // --- SISTEM PINTU BELAKANG (WHITELIST) ---
-    // Tambahkan email pembeli di dalam kurung [ ] di bawah ini
-    const authorizedEmails = [
-      "bangmemed.id@gmail.com", 
-      "pembeli1@gmail.com"
-    ];
+    /* =========================================================
+       SISTEM VALIDASI OWNER (PINTU DEPAN)
+       Menghapus login Google sebagai syarat akses dashboard.
+       Akses hanya diberikan jika sudah login lewat login.html
+       ========================================================= */
+    
+    const isOwnerLogged = localStorage.getItem("owner_logged_in");
+    const ownerName = localStorage.getItem("owner_name") || "Member Premium";
 
-    // Cek apakah Owner sudah login (logika lama Anda)
-    if (localStorage.getItem("owner_logged_in") !== "true") {
+    if (isOwnerLogged !== "true") {
+      // Jika belum login owner manual, lempar ke halaman login
       window.location.href = "login.html";
     }
 
-    // Fungsi tambahan untuk mengunci dashboard jika email Google tidak terdaftar
-    // Ini akan berjalan saat script.js memanggil data user
+    // Fungsi checkAccess ditiadakan (Bebas akses setelah login owner)
     window.checkAccess = function(userEmail) {
-      if (!authorizedEmails.includes(userEmail.toLowerCase())) {
-        alert("AKSES DITOLAK!\nEmail " + userEmail + " belum terdaftar sebagai member Premium.\n\nSilakan hubungi Bang Memed untuk aktivasi.");
-        localStorage.clear(); // Hapus sesi login
-        window.location.href = "index.html"; 
-        return false;
-      }
-      return true;
+      return true; // Selalu benar karena user sudah melewati pintu login.html
     };
   </script>
 
@@ -48,7 +43,7 @@
         </div>
         <div class="side-title">
           <div class="name">YouTube Manager Pro</div>
-          <div class="sub">bangmemed.id</div>
+          <div id="ownerDisplay" class="sub" style="color: #22d3ee; font-weight: bold;">${ownerName}</div>
         </div>
       </div>
 
@@ -157,6 +152,14 @@
       <div id="modalBodyContent"></div>
     </div>
   </div>
+
+  <script>
+    // Update nama owner di sidebar secara realtime
+    document.addEventListener("DOMContentLoaded", () => {
+      const el = document.getElementById("ownerDisplay");
+      if(el) el.textContent = ownerName;
+    });
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
