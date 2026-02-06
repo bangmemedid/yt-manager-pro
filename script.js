@@ -1,6 +1,10 @@
-/* =========================
-   CONFIG (PUNYA KAMU)
-========================= */
+/* YouTube Manager Pro - Core Engine
+   Author: bangmemed.id | Version 2.0 (Premium)
+*/
+
+// =========================
+// CONFIGURATION
+// =========================
 const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 
@@ -8,177 +12,232 @@ const SCOPES = [
   "openid",
   "email",
   "profile",
-  "https://www.googleapis.com/auth/youtube.readonly",
-  "https://www.googleapis.com/auth/yt-analytics.readonly"
+  "https://www.googleapis.com/auth/youtube.readonly"
 ].join(" ");
 
 const STORE_KEY = "ytmpro_accounts_merge_v1";
 
-/* =========================
-   HELPERS
-========================= */
+// =========================
+// SELECTORS & HELPERS
+// =========================
 const $ = (id) => document.getElementById(id);
 
-function setStatus(msg){
+function setStatus(msg, isOnline = false) {
   const el = $("statusText");
-  if(el) el.textContent = "Status: " + msg;
-}
-
-function loadAccounts(){
-  try{ return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); }
-  catch{ return []; }
-}
-function saveAccounts(arr){
-  localStorage.setItem(STORE_KEY, JSON.stringify(arr));
-}
-
-function formatNumber(n){
-  const x = Number(n || 0);
-  return x.toLocaleString("id-ID");
-}
-
-/* =========================
-   GOOGLE INIT (GIS + gapi client)
-========================= */
-let gApiInited = false;
-let tokenClient = null;
-
-function initGapi(){
-  return new Promise((resolve, reject) => {
-    if(typeof gapi === "undefined"){
-      reject(new Error("gapi belum termuat. Pastikan ada <script src='https://apis.google.com/js/api.js'></script>"));
-      return;
-    }
-    if(typeof google === "undefined" || !google.accounts?.oauth2){
-      reject(new Error("Google Identity Services belum termuat. Pastikan ada <script src='https://accounts.google.com/gsi/client' async defer></script>"));
-      return;
-    }
-
-    gapi.load("client", async () => {
-      try{
-        await gapi.client.init({
-          apiKey: API_KEY,
-          discoveryDocs: [
-            "https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"
-          ]
-        });
-        gApiInited = true;
-
-        if(!tokenClient){
-          tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: SCOPES,
-            callback: () => {}
-          });
-        }
-
-        resolve();
-      }catch(e){
-        reject(e);
-      }
-    });
-  });
-}
-
-/* =========================
-   USERINFO (ambil email)
-========================= */
-async function getUserEmail(access_token){
-  try{
-    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-    const data = await res.json();
-    return data?.email || "(unknown)";
-  }catch{
-    return "(unknown)";
+  const indicator = $("statusIndicator");
+  if (el) el.textContent = msg;
+  if (indicator) {
+    if (isOnline) indicator.classList.add("status-online");
+    else indicator.classList.remove("status-online");
   }
 }
 
-/* =========================
-   LOGIN GOOGLE (GIS) - PILIH AKUN
-========================= */
-async function googleSignInSelectAccount(){
-  if(!gApiInited) await initGapi();
+function formatNumber(n) {
+  return Number(n || 0).toLocaleString("id-ID");
+}
 
-  const tokenResp = await new Promise((resolve, reject) => {
-    tokenClient.callback = (resp) => {
-      if(resp?.error) reject(resp);
-      else resolve(resp);
+function loadAccounts() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function saveAccounts(arr) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(arr));
+}
+
+// =========================
+// GOOGLE API INITIALIZATION
+// =========================
+let gApiInited = false;
+let tokenClient = null;
+
+async function initGsiAndGapi() {
+  setStatus("Menginisialisasi Google SDK...");
+  
+  // 1. Init GAPI Client
+  await new Promise((resolve) => gapi.load("client", resolve));
+  await gapi.client.init({
+    apiKey: API_KEY,
+    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"]
+  });
+  gApiInited = true;
+
+  // 2. Init GIS Token Client
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: "", // Diisi nanti saat request
+  });
+
+  setStatus("Sistem Siap", true);
+  refreshAllData(); // Otomatis muat data jika ada token tersimpan
+}
+
+// =========================
+// AUTHENTICATION LOGIC
+// =========================
+async function googleSignIn() {
+  if (!gApiInited) await initGsiAndGapi();
+
+  return new Promise((resolve, reject) => {
+    tokenClient.callback = async (resp) => {
+      if (resp.error) return reject(resp);
+      
+      const email = await getUserEmail(resp.access_token);
+      const payload = {
+        email,
+        access_token: resp.access_token,
+        expires_at: Date.now() + (resp.expires_in * 1000)
+      };
+
+      let accounts = loadAccounts();
+      const idx = accounts.findIndex(a => a.email === email);
+      if (idx >= 0) accounts[idx] = payload;
+      else accounts.push(payload);
+
+      saveAccounts(accounts);
+      resolve(payload);
     };
+    tokenClient.requestAccessToken({ prompt: "select_account" });
+  });
+}
 
-    tokenClient.requestAccessToken({
-      prompt: "consent select_account"
+async function getUserEmail(token) {
+  const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await res.json();
+  return data.email;
+}
+
+// =========================
+// DATA FETCHING (YOUTUBE API)
+// =========================
+async function fetchAccountData(token) {
+  try {
+    gapi.client.setToken({ access_token: token });
+    const res = await gapi.client.youtube.channels.list({
+      part: "snippet,statistics",
+      mine: true
     });
-  });
+    return res.result.items || [];
+  } catch (e) {
+    console.error("Token expired or invalid", e);
+    return [];
+  }
+}
 
-  const access_token = tokenResp.access_token;
-  const expires_in = Number(tokenResp.expires_in || 3600);
-  const expires_at = Date.now() + expires_in * 1000;
-
-  const email = await getUserEmail(access_token);
-
-  const payload = {
-    email,
-    access_token,
-    expires_at,
-    added_at: Date.now()
-  };
-
+async function refreshAllData() {
   const accounts = loadAccounts();
-  const idx = accounts.findIndex(a => a.email === email);
-  if(idx >= 0) accounts[idx] = payload;
-  else accounts.push(payload);
+  if (accounts.length === 0) {
+    setStatus("Belum ada akun terhubung", false);
+    return;
+  }
 
-  saveAccounts(accounts);
-  setStatus(`Login sukses: ${email}`);
-  return payload;
+  setStatus("Sinkronisasi data...", true);
+  let allChannels = [];
+  
+  for (const acc of accounts) {
+    // Cek jika token expired (kurang dari 1 menit tersisa)
+    if (Date.now() > acc.expires_at - 60000) continue;
+
+    const data = await fetchAccountData(acc.access_token);
+    allChannels = allChannels.concat(data);
+  }
+
+  renderDashboard(allChannels);
 }
 
-/* =========================
-   FETCH DATA PER ACCOUNT (YouTube Data API v3)
-========================= */
-async function fetchMyChannelUsingToken(access_token){
-  gapi.client.setToken({ access_token });
+// =========================
+// UI RENDERING
+// =========================
+function renderDashboard(channels) {
+  const tbody = $("channelBody");
+  const searchVal = $("searchInput").value.toLowerCase();
+  
+  // Reset Stats
+  let totalSubs = 0, totalViews = 0, totalVideos = 0;
+  tbody.innerHTML = "";
 
-  const res = await gapi.client.youtube.channels.list({
-    part: "snippet,statistics",
-    mine: true,
-    maxResults: 50
+  const filtered = channels.filter(c => 
+    c.snippet.title.toLowerCase().includes(searchVal)
+  );
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">Tidak ada channel ditemukan.</td></tr>`;
+  }
+
+  filtered.forEach(ch => {
+    const s = ch.statistics;
+    totalSubs += Number(s.subscriberCount);
+    totalViews += Number(s.viewCount);
+    
+    tbody.innerHTML += `
+      <tr>
+        <td>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <img src="${ch.snippet.thumbnails.default.url}" style="width:35px; border-radius:50%;">
+            <b>${ch.snippet.title}</b>
+          </div>
+        </td>
+        <td>${formatNumber(s.subscriberCount)}</td>
+        <td>${formatNumber(s.videoCount)}</td>
+        <td>${formatNumber(s.viewCount)}</td>
+        <td><span class="badge-ok">ACTIVE</span></td>
+      </tr>
+    `;
   });
 
-  const item = res?.result?.items?.[0];
-  if(!item) return null;
-
-  return {
-    channelId: item.id,
-    title: item.snippet?.title || "-",
-    thumb: item.snippet?.thumbnails?.default?.url || "",
-    subs: Number(item.statistics?.subscriberCount || 0),
-    videos: Number(item.statistics?.videoCount || 0),
-    views: Number(item.statistics?.viewCount || 0),
-  };
+  // Update Global Stats
+  $("totalChannel").textContent = filtered.length;
+  $("totalSubs").textContent = formatNumber(totalSubs);
+  $("totalViews").textContent = formatNumber(totalViews);
+  $("connectionStatus").textContent = "Connected";
+  $("lastUpdated").textContent = "Update: " + new Date().toLocaleTimeString();
+  
+  setStatus("Data Terkini", true);
 }
 
-/* =========================
-   EVENTS
-========================= */
-function bindUI(){
-  const btnAdd = $("btnAddGmail");
-  const btnAddTop = $("btnAddGmailTop");
+// =========================
+// EVENT LISTENERS (AKTIF SEMUA)
+// =========================
+document.addEventListener("DOMContentLoaded", () => {
+  initGsiAndGapi();
 
-  const onAdd = async () => {
-    try {
-      setStatus("Membuka Google login...");
-      await googleSignInSelectAccount(); // Memanggil fungsi login Google
-      await refreshAllData(); // Setelah login, refresh data channel
-    } catch (e) {
-      console.error(e);
-      alert("Gagal login Google: " + (e?.details || e?.message || JSON.stringify(e)));
-      setStatus("Gagal login Google.");
-    }
-  };
+  // Tombol Tambah Gmail
+  [$("btnAddGmail"), $("btnAddGmailTop")].forEach(btn => {
+    if(btn) btn.onclick = async () => {
+      await googleSignIn();
+      refreshAllData();
+    };
+  });
 
-  if (btnAdd) btnAdd.addEventListener("click", onAdd);  // Tombol di sidebar
-  if (btnAddTop) btnAddTop.addEventListener("click", onAdd);  // Tombol di topbar
-}
+  // Tombol Refresh Manual
+  if($("btnRefreshData")) {
+    $("btnRefreshData").onclick = () => refreshAllData();
+  }
+
+  // Search Logic
+  if($("searchInput")) {
+    $("searchInput").oninput = () => refreshAllData();
+  }
+
+  // Logout Owner
+  if($("btnOwnerLogout")) {
+    $("btnOwnerLogout").onclick = () => {
+      localStorage.removeItem("owner_logged_in");
+      window.location.href = "login.html";
+    };
+  }
+
+  // Logout Lokal (Hapus Data)
+  if($("btnLocalLogout")) {
+    $("btnLocalLogout").onclick = () => {
+      if(confirm("Hapus semua data akun Gmail yang tersimpan?")) {
+        localStorage.removeItem(STORE_KEY);
+        refreshAllData();
+        location.reload();
+      }
+    };
+  }
+});
