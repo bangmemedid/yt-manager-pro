@@ -172,17 +172,20 @@ function closeModal() { $("detailModal").style.display = "none"; }
 async function googleSignIn(){
   if(!gApiInited) await initGapi();
   tokenClient.callback = async (resp) => {
-    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${resp.access_token}` } });
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { 
+      headers: { Authorization: `Bearer ${resp.access_token}` } 
+    });
     const data = await res.json();
     
-    // --- PENGECEKAN WHITELIST (TAMBAHAN) ---
-    if (window.checkAccess) {
-      if (!window.checkAccess(data.email)) return; 
-    }
-    // --- AKHIR PENGECEKAN ---
+    // --- PENGECEKAN WHITELIST GMAIL TELAH DIHAPUS ---
+    // User bisa menambah Gmail mana pun asalkan sudah masuk Dashboard sebagai Owner.
 
     let accounts = loadAccounts();
-    const payload = { email: data.email, access_token: resp.access_token, expires_at: Date.now() + (resp.expires_in * 1000) };
+    const payload = { 
+      email: data.email, 
+      access_token: resp.access_token, 
+      expires_at: Date.now() + (resp.expires_in * 1000) 
+    };
     const idx = accounts.findIndex(a => a.email === data.email);
     if(idx >= 0) accounts[idx] = payload; else accounts.push(payload);
     saveAccounts(accounts);
@@ -210,28 +213,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       btnChannelList.onclick = async (e) => {
           e.preventDefault();
           
-          // 1. Reset filter pencarian agar semua channel muncul
           if($("searchInput")) $("searchInput").value = "";
-          
-          // 2. Refresh data terbaru dari API
           await fetchAllChannelsData();
           
-          // 3. Scroll halus ke tabel
           const target = $("channel");
           if (target) target.scrollIntoView({ behavior: "smooth" });
           
-          // 4. Update status UI active
           document.querySelectorAll(".side-link").forEach(l => l.classList.remove("active"));
           btnChannelList.classList.add("active");
       };
   }
   
   // Logout & Cleanup
-  $("btnOwnerLogout").onclick = () => { localStorage.removeItem("owner_logged_in"); window.location.href="login.html"; };
-  $("btnLocalLogout").onclick = () => { if(confirm("Hapus akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
+  $("btnOwnerLogout").onclick = () => { 
+    localStorage.removeItem("owner_logged_in"); 
+    localStorage.removeItem("owner_name");
+    window.location.href="login.html"; 
+  };
+  
+  $("btnLocalLogout").onclick = () => { 
+    if(confirm("Hapus semua akun Gmail yang tertaut?")){ 
+      localStorage.removeItem(STORE_KEY); 
+      location.reload(); 
+    } 
+  };
   
   // Search Action
-  $("searchInput").oninput = () => renderTable(allCachedChannels);
+  if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
 });
 
 window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
