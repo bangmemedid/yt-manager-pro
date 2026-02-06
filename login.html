@@ -3,65 +3,126 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Owner Login | bangmemed.id</title>
+  <title>Owner Login | YouTube Manager Pro</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css" />
 
   <style>
-    /* Layout login pakai style.css + sedikit tambahan */
-    .login-wrap{
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      position:relative;
-      z-index:1;
+    /* Custom Login Styling yang Terintegrasi dengan style.css */
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      z-index: 1;
     }
-    .login-card{
-      width:100%;
-      max-width:420px;
-      background: var(--card);
-      border:1px solid var(--stroke);
-      border-radius:18px;
-      box-shadow: 0 12px 30px rgba(0,0,0,.28);
-      padding:18px;
+    
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--stroke);
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      text-align: center;
     }
-    .login-head{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:6px 6px 12px;
+
+    .login-head {
+      margin-bottom: 30px;
     }
-    .login-title{font-weight:800;font-size:20px;margin:0}
-    .login-sub{opacity:.7;font-size:12px;margin-top:4px}
-    .field{
-      width:100%;
-      padding:12px 12px;
-      margin:10px 0;
-      border-radius:14px;
-      border:1px solid var(--stroke);
-      background: rgba(0,0,0,.25);
-      color:#fff;
-      outline:none;
+
+    .login-head .logo {
+      margin: 0 auto 15px;
+      width: 60px;
+      height: 60px;
+    }
+
+    .login-title {
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: -1px;
+      margin: 0;
+    }
+
+    .login-sub {
+      opacity: 0.6;
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .field {
+      width: 100%;
+      padding: 14px 15px 14px 45px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      outline: none;
       font-family: inherit;
+      font-size: 14px;
+      transition: all 0.3s ease;
     }
-    .err{
-      display:none;
-      color:#ffb4b4;
-      background: rgba(239,68,68,.12);
-      border:1px solid rgba(239,68,68,.25);
-      padding:10px 12px;
-      border-radius:14px;
-      margin-top:10px;
-      font-size:13px;
+
+    .field:focus {
+      border-color: var(--cyan);
+      background: rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.1);
     }
-    .hintbox{
-      margin-top:10px;
-      font-size:12px;
-      opacity:.7;
-      line-height:1.4;
+
+    #btnLogin {
+      width: 100%;
+      margin-top: 10px;
+      padding: 14px;
+      font-size: 15px;
+      justify-content: center;
+    }
+
+    .err {
+      display: none;
+      color: #ffb4b4;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 15px;
+      font-size: 13px;
+      animation: shake 0.4s ease;
+    }
+
+    .hintbox {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid var(--stroke);
+      font-size: 11px;
+      opacity: 0.5;
+      line-height: 1.5;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
     }
   </style>
 </head>
@@ -73,21 +134,33 @@
     <div class="login-card">
       <div class="login-head">
         <div class="logo">
-          <img alt="yt" src="https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png">
+          <img alt="YouTube" src="https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png">
         </div>
-        <div>
-          <div class="login-title">Owner Login</div>
-          <div class="login-sub">YouTube Manager Pro • bangmemed.id</div>
-        </div>
+        <div class="login-title">Owner Access</div>
+        <div class="login-sub">YouTube Manager Pro Dashboard</div>
       </div>
 
-      <input id="user" class="field" placeholder="Username" autocomplete="username">
-      <input id="pass" class="field" type="password" placeholder="Password" autocomplete="current-password">
+      <div class="input-group">
+        <i class="fas fa-user"></i>
+        <input id="user" class="field" placeholder="Username" autocomplete="username">
+      </div>
 
-      <button id="btnLogin" class="btn primary" type="button">Login</button>
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input id="pass" class="field" type="password" placeholder="Password" autocomplete="current-password">
+      </div>
 
-      <div class="err" id="err">Username / Password salah</div>
-      <div class="hintbox">Hint: username = <b>bangmemedid</b></div>
+      <button id="btnLogin" class="btn primary" type="button">
+        <i class="fas fa-sign-in-alt"></i> Masuk Ke Dashboard
+      </button>
+
+      <div class="err" id="err">
+        <i class="fas fa-times-circle"></i> Username atau Password salah!
+      </div>
+
+      <div class="hintbox">
+        Hanya akun owner (bangmemedid) yang diizinkan mengelola Multi-Gmail Token.
+      </div>
     </div>
   </div>
 
@@ -95,21 +168,34 @@
     const USER_OK = "bangmemedid";
     const PASS_OK = "pandi2310@";
 
-    // kalau sudah login, langsung masuk
+    // Proteksi: Jika sudah login, lempar ke dashboard
     if (localStorage.getItem("owner_logged_in") === "true") {
       window.location.href = "index.html";
     }
 
-    document.getElementById("btnLogin").addEventListener("click", () => {
+    const loginAction = () => {
       const u = document.getElementById("user").value.trim();
       const p = document.getElementById("pass").value;
+      const errEl = document.getElementById("err");
 
       if (u === USER_OK && p === PASS_OK) {
         localStorage.setItem("owner_logged_in", "true");
         window.location.href = "index.html";
       } else {
-        document.getElementById("err").style.display = "block";
+        errEl.style.display = "block";
+        // Reset animasi shake jika salah lagi
+        errEl.style.animation = 'none';
+        errEl.offsetHeight; 
+        errEl.style.animation = null;
       }
+    };
+
+    // Klik tombol
+    document.getElementById("btnLogin").addEventListener("click", loginAction);
+
+    // Support tombol Enter
+    document.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") loginAction();
     });
   </script>
 </body>
