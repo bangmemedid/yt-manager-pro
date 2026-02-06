@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Manager Pro | bangmemed.id</title>
-
   <link rel="preconnect" href="https://accounts.google.com">
   <link rel="preconnect" href="https://apis.google.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -13,17 +12,10 @@
 </head>
 <body>
   <script>
-    /* VALIDASI AKSES */
     const isOwnerLogged = localStorage.getItem("owner_logged_in");
     const ownerName = localStorage.getItem("owner_name") || "Member Premium";
-
-    if (isOwnerLogged !== "true") {
-      window.location.href = "login.html";
-    }
-
-    window.checkAccess = function(userEmail) {
-      return true;
-    };
+    if (isOwnerLogged !== "true") { window.location.href = "login.html"; }
+    window.checkAccess = function(userEmail) { return true; };
   </script>
 
   <div class="bg-glow"></div>
@@ -42,20 +34,10 @@
 
       <nav class="side-nav">
         <a class="side-link active" href="index.html">
-          <span class="dot"></span> 
-          <i class="fas fa-chart-pie" style="margin-right:8px; width:16px;"></i> Dashboard
+          <i class="fas fa-chart-pie"></i> Dashboard
         </a>
         <a class="side-link" href="#channel">
-          <span class="dot" style="opacity:.35"></span> 
-          <i class="fas fa-list" style="margin-right:8px; width:16px;"></i> Channel List
-        </a>
-        <a class="side-link" href="privacy.html">
-          <span class="dot" style="opacity:.35"></span> 
-          <i class="fas fa-user-shield" style="margin-right:8px; width:16px;"></i> Privacy Policy
-        </a>
-        <a class="side-link" href="terms.html">
-          <span class="dot" style="opacity:.35"></span> 
-          <i class="fas fa-file-alt" style="margin-right:8px; width:16px;"></i> Terms of Service
+          <i class="fas fa-list"></i> Channel List
         </a>
       </nav>
 
@@ -66,8 +48,8 @@
             <i class="fas fa-sync-alt"></i> Refresh Data
           </button>
 
-          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-            <p style="font-size: 10px; color: #22d3ee; margin-bottom: 8px; font-weight: 600;">SINKRONISASI PERANGKAT</p>
+          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%;">
+            <p style="font-size: 10px; color: #22d3ee; margin-bottom: 8px; text-align: center; font-weight: bold;">SINKRON DATA</p>
             <button onclick="exportData()" class="btn ghost" style="width: 100%; font-size: 11px; margin-bottom: 5px;">
               <i class="fas fa-copy"></i> Salin Kode Data
             </button>
@@ -77,8 +59,8 @@
           </div>
 
           <hr style="opacity: 0.1; margin: 15px 0;">
-          <button id="btnOwnerLogout" class="btn ghost" style="width: 100%; text-align: left;">Logout Owner</button>
-          <button id="btnLocalLogout" class="btn danger" style="width: 100%; margin-top: 5px; text-align: left;">Hapus Sesi Akun</button>
+          <button id="btnOwnerLogout" class="btn ghost" style="width: 100%;">Logout Owner</button>
+          <button id="btnLocalLogout" class="btn danger" style="width: 100%; margin-top: 5px;">Hapus Sesi Akun</button>
         </div>
       </div>
     </aside>
@@ -92,10 +74,8 @@
              <div id="statusText" class="page-sub" style="margin-top:0;">Status: Memuat...</div>
           </div>
         </div>
-
         <div style="display:flex;align-items:center;gap:10px;">
           <div class="search-wrap">
-            <div class="search-ic">🔎</div>
             <input id="searchInput" class="search" placeholder="Search channel..." />
           </div>
           <button id="btnAddGmailTop" class="btn primary">+ Tambah Gmail</button>
@@ -103,18 +83,9 @@
       </div>
 
       <div class="stats-wrapper">
-        <div class="stat-card">
-          <div class="label">Total Channel</div>
-          <div class="value"><span id="totalChannel">0</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Total Subscribers</div>
-          <div class="value"><span id="totalSubs">0</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="label">Total Views</div>
-          <div class="value"><span id="totalViews">0</span></div>
-        </div>
+        <div class="stat-card"><div class="label">Total Channel</div><div class="value" id="totalChannel">0</div></div>
+        <div class="stat-card"><div class="label">Total Subscribers</div><div class="value" id="totalSubs">0</div></div>
+        <div class="stat-card"><div class="label">Total Views</div><div class="value" id="totalViews">0</div></div>
         <div class="stat-card highlight">
           <div class="label">Realtime (48 Jam)</div>
           <div class="value" id="totalRealtime">0</div>
@@ -125,26 +96,14 @@
       <section id="channel" class="panel">
         <div class="panel-head">
           <div class="panel-title">Daftar Channel</div>
-          <button id="btnExportData" class="btn success">
-            <i class="fas fa-file-excel"></i> Export Excel
-          </button>
+          <button id="btnExportData" class="btn success">Export Excel</button>
         </div>
-
         <div class="table-wrap">
           <table class="channel-table">
             <thead>
-              <tr>
-                <th>Channel</th>
-                <th>Subs</th>
-                <th>Views (Total)</th>
-                <th style="color:#22d3ee">60 Mnt</th>
-                <th style="color:#fbbf24">48 Jam</th>
-                <th>Status</th>
-              </tr>
+              <tr><th>Channel</th><th>Subs</th><th>Views</th><th style="color:#22d3ee">60 Mnt</th><th style="color:#fbbf24">48 Jam</th><th>Status</th></tr>
             </thead>
-            <tbody id="channelBody">
-              <tr><td colspan="6" class="empty">Memuat data...</td></tr>
-            </tbody>
+            <tbody id="channelBody"><tr><td colspan="6" class="empty">Memuat data...</td></tr></tbody>
           </table>
         </div>
       </section>
@@ -160,11 +119,9 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const el = document.getElementById("ownerDisplay");
-      if(el) el.textContent = ownerName;
+      document.getElementById("ownerDisplay").textContent = ownerName;
     });
   </script>
-
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
