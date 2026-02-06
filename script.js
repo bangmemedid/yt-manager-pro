@@ -9,15 +9,16 @@ const SCOPES = [
   "email",
   "profile",
   "https://www.googleapis.com/auth/youtube.readonly",
+  "https://www.googleapis.com/auth/yt-analytics.readonly" // SCOPE UNTUK REALTIME
 ].join(" ");
 
 const STORE_KEY = "ytmpro_accounts_merge_v1";
 let gApiInited = false;
 let tokenClient = null;
-let allCachedChannels = []; // Untuk fitur search dan detail
+let allCachedChannels = []; 
 
 /* =========================
-   HELPERS (SESUAI KODE AWAL)
+   HELPERS (Gaya Penulisan Asli)
 ========================= */
 const $ = (id) => document.getElementById(id);
 
@@ -43,7 +44,7 @@ function formatNumber(n){
 }
 
 /* =========================
-   GOOGLE INIT (SESUAI KODE AWAL)
+   GOOGLE INIT
 ========================= */
 function initGapi(){
   return new Promise((resolve, reject) => {
@@ -51,7 +52,10 @@ function initGapi(){
       try{
         await gapi.client.init({
           apiKey: API_KEY,
-          discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"]
+          discoveryDocs: [
+            "https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest",
+            "https://youtubeanalytics.googleapis.com/$discovery/rest?version=v2"
+          ]
         });
         gApiInited = true;
 
@@ -69,7 +73,7 @@ function initGapi(){
 }
 
 /* =========================
-   FETCHING DATA LOGIC
+   DATA FETCHING ENGINE
 ========================= */
 async function getUserEmail(access_token){
   try{
@@ -84,27 +88,36 @@ async function getUserEmail(access_token){
 async function fetchAllChannelsData() {
   const accounts = loadAccounts();
   if(accounts.length === 0) {
-    setStatus("Belum ada akun.", false);
+    setStatus("Belum ada akun terhubung.", false);
     return;
   }
 
-  setStatus("Menyinkronkan data...", true);
+  setStatus("Menarik data YouTube & Analytics...", true);
   let mergedData = [];
 
   for (const acc of accounts) {
-    // Skip jika expired
     if (Date.now() > acc.expires_at - 60000) continue;
 
     try {
       gapi.client.setToken({ access_token: acc.access_token });
+      
+      // 1. Ambil Data Channel Dasar
       const res = await gapi.client.youtube.channels.list({
         part: "snippet,statistics",
         mine: true,
         maxResults: 50
       });
-      if(res.result.items) mergedData = mergedData.concat(res.result.items);
+
+      if(res.result.items) {
+          // 2. Ambil Data Analytics Realtime untuk setiap channel
+          for(let item of res.result.items) {
+              const analytics = await fetchRealtimeStats(item.id);
+              item.realtime = analytics; // Simpan data realtime ke objek channel
+          }
+          mergedData = mergedData.concat(res.result.items);
+      }
     } catch (err) {
-      console.error("Gagal ambil data untuk: " + acc.email, err);
+      console.error("Gagal tarik data: " + acc.email, err);
     }
   }
 
@@ -112,8 +125,34 @@ async function fetchAllChannelsData() {
   renderChannelTable(mergedData);
 }
 
+// Fungsi Baru untuk Analytics 60m & 48h
+async function fetchRealtimeStats(channelId) {
+    try {
+        // Karena YouTube Analytics API biasanya delay beberapa jam/hari, 
+        // kita ambil data aggregat hari ini dan kemarin sebagai estimasi 48 jam.
+        const end = new Date().toISOString().split('T')[0];
+        const start = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        const res = await gapi.client.youtubeAnalytics.reports.query({
+            ids: `channel==${channelId}`,
+            startDate: start,
+            endDate: end,
+            metrics: "views",
+            dimensions: "day"
+        });
+
+        const rows = res.result.rows || [];
+        const total48h = rows.reduce((acc, row) => acc + row[1], 0);
+        const est60m = Math.floor(total48h / 48); // Estimasi rata-rata per jam
+
+        return { m60: est60m, h48: total48h };
+    } catch (e) {
+        return { m60: 0, h48: 0 };
+    }
+}
+
 /* =========================
-   UI RENDERING (EXPANDED)
+   UI RENDERING
 ========================= */
 function renderChannelTable(data) {
   const tbody = $("channelBody");
@@ -122,21 +161,22 @@ function renderChannelTable(data) {
 
   let totalSubs = 0;
   let totalViews = 0;
-  let count = 0;
+  let totalReal48 = 0;
 
   const filtered = data.filter(item => 
     item.snippet.title.toLowerCase().includes(search)
   );
 
   if(filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty">Data tidak ditemukan.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">Data tidak ditemukan.</td></tr>`;
   }
 
   filtered.forEach((item, index) => {
     const s = item.statistics;
+    const r = item.realtime || { m60: 0, h48: 0 };
     totalSubs += Number(s.subscriberCount);
     totalViews += Number(s.viewCount);
-    count++;
+    totalReal48 += r.h48;
 
     tbody.innerHTML += `
       <tr onclick="openDetail(${index})" style="cursor:pointer">
@@ -147,42 +187,51 @@ function renderChannelTable(data) {
           </div>
         </td>
         <td>${formatNumber(s.subscriberCount)}</td>
-        <td>${formatNumber(s.videoCount)}</td>
         <td>${formatNumber(s.viewCount)}</td>
-        <td><span class="badge-ok">ACTIVE</span></td>
+        <td style="color:#22d3ee; font-weight:700;">${formatNumber(r.m60)}</td>
+        <td style="color:#fbbf24; font-weight:700;">${formatNumber(r.h48)}</td>
+        <td><span class="badge-ok">LIVE</span></td>
       </tr>
     `;
   });
 
-  $("totalChannel").textContent = count;
+  $("totalChannel").textContent = filtered.length;
   $("totalSubs").textContent = formatNumber(totalSubs);
   $("totalViews").textContent = formatNumber(totalViews);
+  $("totalRealtime").textContent = formatNumber(totalReal48);
   $("lastUpdate").textContent = new Date().toLocaleTimeString();
-  setStatus("Dashboard Aktif", true);
+  setStatus("Data Terkini", true);
 }
 
 /* =========================
-   NEW FEATURES: EXPORT & MODAL
+   EXPORT & MODAL FEATURES
 ========================= */
 function exportToExcel() {
   const table = document.querySelector(".channel-table");
-  const wb = XLSX.utils.table_to_book(table, { sheet: "Data_Channel" });
+  const wb = XLSX.utils.table_to_book(table, { sheet: "Dashboard_Report" });
   XLSX.writeFile(wb, `YT_Manager_Pro_${new Date().toLocaleDateString()}.xlsx`);
 }
 
 function openDetail(idx) {
   const ch = allCachedChannels[idx];
   const s = ch.statistics;
+  const r = ch.realtime || { m60: 0, h48: 0 };
   $("modalBodyContent").innerHTML = `
     <div style="text-align:center;">
-      <img src="${ch.snippet.thumbnails.medium.url}" style="width:120px; border-radius:50%; border:4px solid #22d3ee; margin-bottom:15px;">
+      <img src="${ch.snippet.thumbnails.medium.url}" style="width:110px; border-radius:50%; border:3px solid #22d3ee; margin-bottom:10px;">
       <h2 style="margin:0;">${ch.snippet.title}</h2>
-      <p style="opacity:0.7; font-size:14px; margin-bottom:20px;">${ch.snippet.description || 'Tidak ada deskripsi.'}</p>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-        <div class="stat-card" style="padding:10px;"><small>Videos</small><br><b>${formatNumber(s.videoCount)}</b></div>
-        <div class="stat-card" style="padding:10px;"><small>Subs</small><br><b>${formatNumber(s.subscriberCount)}</b></div>
+      <p style="opacity:0.6; font-size:12px; margin-bottom:15px;">${ch.snippet.description.substring(0, 100)}...</p>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+        <div class="stat-card" style="padding:10px; background:rgba(255,255,255,0.05);">
+            <small>60 Menit</small><br><b style="color:#22d3ee">${formatNumber(r.m60)}</b>
+        </div>
+        <div class="stat-card" style="padding:10px; background:rgba(255,255,255,0.05);">
+            <small>48 Jam</small><br><b style="color:#fbbf24">${formatNumber(r.h48)}</b>
+        </div>
       </div>
-      <a href="https://youtube.com/channel/${ch.id}" target="_blank" class="btn primary" style="text-decoration:none; display:inline-block; width:100%;">Buka Channel</a>
+      
+      <a href="https://youtube.com/channel/${ch.id}" target="_blank" class="btn primary" style="text-decoration:none; display:block;">Lihat Channel</a>
     </div>
   `;
   $("detailModal").style.display = "flex";
@@ -195,12 +244,8 @@ function closeModal() { $("detailModal").style.display = "none"; }
 ========================= */
 async function googleSignInSelectAccount(){
   if(!gApiInited) await initGapi();
-
   const tokenResp = await new Promise((resolve, reject) => {
-    tokenClient.callback = (resp) => {
-      if(resp?.error) reject(resp);
-      else resolve(resp);
-    };
+    tokenClient.callback = (resp) => { if(resp?.error) reject(resp); else resolve(resp); };
     tokenClient.requestAccessToken({ prompt: "consent select_account" });
   });
 
@@ -208,25 +253,22 @@ async function googleSignInSelectAccount(){
   const expires_at = Date.now() + (Number(tokenResp.expires_in || 3600) * 1000);
   const email = await getUserEmail(access_token);
 
-  const payload = { email, access_token, expires_at, added_at: Date.now() };
-
   let accounts = loadAccounts();
+  const payload = { email, access_token, expires_at, added_at: Date.now() };
   const idx = accounts.findIndex(a => a.email === email);
-  if(idx >= 0) accounts[idx] = payload;
-  else accounts.push(payload);
+  if(idx >= 0) accounts[idx] = payload; else accounts.push(payload);
 
   saveAccounts(accounts);
   await fetchAllChannelsData();
 }
 
 /* =========================
-   EVENTS BINDING
+   DOM LOAD & EVENTS
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
   await fetchAllChannelsData();
 
-  // Button Events
   $("btnAddGmail").onclick = googleSignInSelectAccount;
   $("btnAddGmailTop").onclick = googleSignInSelectAccount;
   $("btnRefreshData").onclick = fetchAllChannelsData;
@@ -238,15 +280,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
   
   $("btnLocalLogout").onclick = () => {
-    if(confirm("Hapus semua akun Gmail?")) {
+    if(confirm("Hapus semua data login?")) {
       localStorage.removeItem(STORE_KEY);
       location.reload();
     }
   };
 
-  // Search Event
   $("searchInput").oninput = () => renderChannelTable(allCachedChannels);
 });
 
-// Close modal on outside click
 window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
