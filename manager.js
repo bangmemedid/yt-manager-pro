@@ -1,7 +1,3 @@
-/* =========================================================
-   MANAGER.JS - UI MERAH NEON & UPLOAD ENGINE
-   ========================================================= */
-
 let activeAccessToken = "";
 
 function goToManager(idx) {
