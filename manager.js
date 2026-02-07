@@ -1,34 +1,31 @@
 /* =========================================================
-   MANAGER.JS - LOGIKA DASBOR PENGELOLA CHANNEL (FINAL UI)
+   MANAGER.JS - SISTEM UPLOAD OTOMATIS KE YOUTUBE
    ========================================================= */
 
-/**
- * Fungsi untuk berpindah dari Dashboard Utama ke Dashboard Pengelola
- */
+let activeAccessToken = "";
+
 function goToManager(idx) {
     const ch = allCachedChannels[idx]; 
     if (ch.isExpired) {
-        alert("Sesi akun ini habis. Silakan refresh atau login ulang akun Gmail ini.");
+        alert("Sesi akun ini habis. Silakan login ulang akun Gmail ini.");
         return;
     }
 
-    const managerDiv = document.getElementById("managerDashboard");
-    if (managerDiv) {
-        managerDiv.style.display = "block";
-        document.body.style.overflow = "hidden"; 
-    }
+    // Ambil token akses dari akun yang dipilih
+    const accounts = JSON.parse(localStorage.getItem("ytmpro_accounts_merge_v1") || "[]");
+    const targetAcc = accounts.find(a => a.email === ch.snippet.title || ch.id);
+    activeAccessToken = targetAcc ? targetAcc.access_token : "";
 
-    const header = document.getElementById("activeChannelHeader");
-    if (header) {
-        header.innerHTML = `
-            <img src="${ch.snippet.thumbnails.medium.url}" style="width:80px; border-radius:50%; border:3px solid #22d3ee; margin-bottom:10px;">
-            <h2 style="margin-top:5px; color:white;">${ch.snippet.title}</h2>
-            <p style="color:#94a3b8; font-size:13px;">Control Panel Channel</p>
-        `;
-    }
+    document.getElementById("managerDashboard").style.display = "block";
+    document.body.style.overflow = "hidden"; 
+
+    document.getElementById("activeChannelHeader").innerHTML = `
+        <img src="${ch.snippet.thumbnails.medium.url}" style="width:80px; border-radius:50%; border:3px solid #22d3ee; margin-bottom:10px;">
+        <h2 style="margin-top:5px; color:white;">${ch.snippet.title}</h2>
+        <p style="color:#94a3b8; font-size:13px;">Control Panel Channel</p>
+    `;
     
-    const area = document.getElementById("formArea");
-    if (area) area.style.display = "none";
+    document.getElementById("formArea").style.display = "none";
 }
 
 function closeManager() {
@@ -36,101 +33,111 @@ function closeManager() {
     document.body.style.overflow = "auto";
 }
 
-/**
- * Fungsi untuk membuka menu aksi dengan Pilihan Lengkap
- */
 function openAction(type) {
     const area = document.getElementById("formArea");
     if (!area) return;
-    
     area.style.display = "block";
     
     if (type === 'upload') {
         area.innerHTML = `
             <div style="background: rgba(34, 211, 238, 0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(34, 211, 238, 0.2);">
-                <h3 style="color:#22d3ee; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
-                    <i class="fas fa-cloud-upload-alt"></i> Upload Video Baru
-                </h3>
+                <h3 style="color:#22d3ee; margin-bottom:20px;"><i class="fas fa-cloud-upload-alt"></i> Upload Video Baru</h3>
                 
-                <div style="margin-bottom:15px;">
-                    <label style="color:#94a3b8; font-size:12px; display:block; margin-bottom:5px;">1. Pilih File Video:</label>
-                    <input type="file" id="videoFile" accept="video/*" style="width:100%; color:white; font-size:13px;">
-                </div>
+                <label style="color:#94a3b8; font-size:12px;">1. Pilih File Video:</label>
+                <input type="file" id="videoFile" accept="video/*" style="width:100%; color:white; margin-bottom:15px;">
                 
-                <div style="margin-bottom:15px;">
-                    <label style="color:#94a3b8; font-size:12px; display:block; margin-bottom:5px;">2. Judul & Deskripsi:</label>
-                    <input type="text" id="videoTitle" placeholder="Judul Video" 
-                        style="width:100%; padding:12px; background:#0f172a; border:1px solid #334155; color:white; border-radius:8px; margin-bottom:10px;">
-                    <textarea id="videoDesc" placeholder="Deskripsi Video" 
-                        style="width:100%; padding:12px; background:#0f172a; border:1px solid #334155; color:white; border-radius:8px; height:80px; resize:none;"></textarea>
-                </div>
+                <label style="color:#94a3b8; font-size:12px;">2. Judul & Deskripsi:</label>
+                <input type="text" id="videoTitle" placeholder="Judul Video" style="width:100%; padding:12px; background:#0f172a; border:1px solid #334155; color:white; border-radius:8px; margin-bottom:10px;">
+                <textarea id="videoDesc" placeholder="Deskripsi Video" style="width:100%; padding:12px; background:#0f172a; border:1px solid #334155; color:white; border-radius:8px; height:80px; resize:none; margin-bottom:15px;"></textarea>
                 
-                <div style="margin-bottom:20px;">
-                    <label style="color:#94a3b8; font-size:12px; display:block; margin-bottom:5px;">3. Opsi Publikasi:</label>
-                    <select id="videoPrivacy" onchange="toggleScheduleUI()" 
-                        style="width:100%; padding:12px; background:#0f172a; border:1px solid #334155; color:white; border-radius:8px; cursor:pointer;">
-                        <option value="private">🔒 Privat (Hanya Saya)</option>
-                        <option value="unlisted">🔗 Tidak Publik (Hanya via Link)</option>
-                        <option value="public">🌐 Publik (Terbitkan Sekarang)</option>
-                        <option value="scheduled">📅 Jadwalkan Video</option>
-                    </select>
+                <label style="color:#94a3b8; font-size:12px;">3. Opsi Publikasi:</label>
+                <select id="videoPrivacy" onchange="toggleScheduleUI()" style="width:100%; padding:12px; background:#0f172a; border:1px solid #334155; color:white; border-radius:8px; margin-bottom:15px;">
+                    <option value="private">🔒 Privat</option>
+                    <option value="unlisted">🔗 Tidak Publik</option>
+                    <option value="public">🌐 Publik</option>
+                    <option value="scheduled">📅 Jadwalkan</option>
+                </select>
+
+                <div id="scheduleBox" style="display:none; margin-bottom:20px; padding:15px; background:rgba(251, 191, 36, 0.1); border:1px dashed #fbbf24;">
+                    <label style="color:#fbbf24; font-size:12px;">Waktu Tayang:</label>
+                    <input type="datetime-local" id="scheduleDate" style="width:100%; padding:10px; background:#0f172a; border:1px solid #fbbf24; color:white;">
                 </div>
 
-                <div id="scheduleBox" style="display:none; margin-bottom:20px; padding:15px; background:rgba(251, 191, 36, 0.1); border-radius:8px; border:1px dashed #fbbf24;">
-                    <label style="color:#fbbf24; font-size:12px; display:block; margin-bottom:5px;">Pilih Waktu Tayang:</label>
-                    <input type="datetime-local" id="scheduleDate" 
-                        style="width:100%; padding:10px; background:#0f172a; border:1px solid #fbbf24; color:white; border-radius:5px;">
-                </div>
-
-                <button class="btn success" style="width:100%; font-weight:bold; height:50px;" onclick="startFinalUpload()">
+                <button class="btn success" style="width:100%; font-weight:bold; height:50px;" id="btnUploadFinal" onclick="executeYoutubeUpload()">
                     <i class="fas fa-paper-plane"></i> KONFIRMASI & UNGGAH
                 </button>
                 
-                <div id="uploadStatus" style="margin-top:15px; text-align:center; color:#22d3ee; font-size:13px; display:none;">
-                    <i class="fas fa-spinner fa-spin"></i> Menghubungkan ke API YouTube...
-                </div>
+                <div id="uploadStatus" style="margin-top:15px; text-align:center; color:#22d3ee; display:none;"></div>
             </div>
         `;
-    } else {
-        area.innerHTML = `<div style="padding:20px; text-align:center; color:#94a3b8;">Fitur ${type} akan segera hadir.</div>`;
     }
     area.scrollIntoView({ behavior: 'smooth' });
 }
 
-/**
- * Fungsi untuk Menampilkan/Menyembunyikan Input Jadwal
- */
 function toggleScheduleUI() {
     const val = document.getElementById("videoPrivacy").value;
-    const box = document.getElementById("scheduleBox");
-    box.style.display = (val === "scheduled") ? "block" : "none";
+    document.getElementById("scheduleBox").style.display = (val === "scheduled") ? "block" : "none";
 }
 
 /**
- * Fungsi Konfirmasi Akhir
+ * FUNGSI INTI: MENGIRIM VIDEO KE YOUTUBE
  */
-function startFinalUpload() {
+async function executeYoutubeUpload() {
     const file = document.getElementById("videoFile").files[0];
     const title = document.getElementById("videoTitle").value;
+    const desc = document.getElementById("videoDesc").value;
     const privacy = document.getElementById("videoPrivacy").value;
+    const statusDiv = document.getElementById("uploadStatus");
 
-    if (!file) { alert("Pilih file video dulu, Bang!"); return; }
-    if (!title.trim()) { alert("Judul video tidak boleh kosong!"); return; }
+    if (!file || !title) { alert("File dan Judul wajib diisi!"); return; }
 
-    let confirmMsg = `Konfirmasi Upload:\n\nJudul: ${title}\nPrivasi: ${privacy.toUpperCase()}`;
-    
+    statusDiv.style.display = "block";
+    statusDiv.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Memulai proses upload...`;
+    document.getElementById("btnUploadFinal").disabled = true;
+
+    // Persiapan Metadata Video
+    const metadata = {
+        snippet: { title: title, description: desc, categoryId: "22" },
+        status: { privacyStatus: (privacy === "scheduled" ? "private" : privacy) }
+    };
+
     if (privacy === "scheduled") {
-        const date = document.getElementById("scheduleDate").value;
-        if (!date) { alert("Pilih tanggal jadwal dulu!"); return; }
-        confirmMsg += `\nJadwal: ${date}`;
+        const publishTime = document.getElementById("scheduleDate").value;
+        if (publishTime) metadata.status.publishAt = new Date(publishTime).toISOString();
     }
 
-    if (confirm(confirmMsg + "\n\nLanjutkan proses unggah?")) {
-        const status = document.getElementById("uploadStatus");
-        status.style.display = "block";
-        status.innerHTML = `<i class="fas fa-paper-plane"></i> Berhasil dikonfirmasi! Sedang menyiapkan koneksi API YouTube...`;
-        
-        // Logika pengiriman file sesungguhnya akan diletakkan di sini
-        console.log("Memulai proses upload ke YouTube...");
+    try {
+        // Step 1: Inisialisasi Resumable Upload
+        const response = await fetch("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${activeAccessToken}`,
+                "Content-Type": "application/json",
+                "X-Upload-Content-Length": file.size,
+                "X-Upload-Content-Type": file.type
+            },
+            body: JSON.stringify(metadata)
+        });
+
+        if (!response.ok) throw new Error("Gagal inisialisasi API YouTube.");
+
+        const uploadUrl = response.headers.get("Location");
+
+        // Step 2: Kirim File Video ke YouTube
+        const uploadRes = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": file.type },
+            body: file
+        });
+
+        if (uploadRes.ok) {
+            statusDiv.innerHTML = `<b style="color:#10b981;"><i class="fas fa-check-circle"></i> BERHASIL! Video Sedang Diproses YouTube.</b>`;
+            alert("UPLOAD BERHASIL! Silakan cek YouTube Studio Anda.");
+        } else {
+            throw new Error("Gagal mengirim file video.");
+        }
+    } catch (err) {
+        statusDiv.innerHTML = `<b style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> ERROR: ${err.message}</b>`;
+        document.getElementById("btnUploadFinal").disabled = false;
     }
 }
