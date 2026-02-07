@@ -1,4 +1,3 @@
-
 /* =========================
     CONFIG & GLOBAL VARIABLES
 ========================= */
@@ -273,3 +272,4 @@ function goToManager(idx) {
     // 5. Buka tab baru khusus pengelola
     window.open('manager.html', '_blank');
 }
+
