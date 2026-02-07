@@ -197,19 +197,40 @@ function openDetail(idx) {
 
 function closeModal() { $("detailModal").style.display = "none"; }
 
-async function googleSignIn(){
-  if(!gApiInited) await initGapi();
-  tokenClient.callback = async (resp) => {
-    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${resp.access_token}` } });
-    const data = await res.json();
-    let accounts = loadAccounts();
-    const payload = { email: data.email, access_token: resp.access_token, expires_at: Date.now() + (resp.expires_in * 1000) };
-    const idx = accounts.findIndex(a => a.email === data.email);
-    if(idx >= 0) accounts[idx] = payload; else accounts.push(payload);
-    saveAccounts(accounts);
-    fetchAllChannelsData();
-  };
-  tokenClient.requestAccessToken({ prompt: 'consent', access_type: 'offline' });
+/* =========================
+    ANALYTICS ENGINE (VERSI 24 JAM PRESISI)
+========================= */
+async function fetchRealtimeStats(channelId) {
+    try {
+        const now = new Date();
+        // Tarik data 2 hari terakhir agar gap 24 jam terisi penuh
+        const start = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const end = now.toISOString().split('T')[0];
+
+        const res = await gapi.client.youtubeAnalytics.reports.query({
+            ids: `channel==${channelId}`,
+            startDate: start,
+            endDate: end,
+            metrics: "views",
+            dimensions: "hour", // Minta data per jam
+            sort: "-hour"       // Urutkan dari jam paling baru
+        });
+
+        const rows = res.result.rows || [];
+        
+        // Ambil 24 baris (jam) terbaru untuk mendapatkan data 24 jam terakhir
+        const last24hRows = rows.slice(0, 24);
+        const total24h = last24hRows.reduce((acc, row) => acc + row[1], 0);
+        
+        // Rata-rata per jam (Estimasi 60 Menit)
+        const m60 = Math.floor(total24h / 24);
+        
+        // Kita kembalikan total24h ke variabel h48 agar tabel Abang tidak perlu diubah kodenya
+        return { m60: m60, h48: total24h };
+    } catch (e) { 
+        console.error("Gagal tarik data Analytics untuk: " + channelId, e);
+        return { m60: 0, h48: 0 }; 
+    }
 }
 
 /* =========================
