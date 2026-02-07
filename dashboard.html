@@ -15,7 +15,6 @@
     const isOwnerLogged = localStorage.getItem("owner_logged_in");
     const ownerName = localStorage.getItem("owner_name") || "Member Premium";
     if (isOwnerLogged !== "true") { window.location.href = "login.html"; }
-    window.checkAccess = function(userEmail) { return true; };
   </script>
 
   <div class="bg-glow"></div>
@@ -23,9 +22,7 @@
   <div class="app">
     <aside class="sidebar">
       <div class="side-brand">
-        <div class="logo">
-          <img alt="yt" src="https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png">
-        </div>
+        <div class="logo"><img alt="yt" src="https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png"></div>
         <div class="side-title">
           <div class="name">YouTube Manager Pro</div>
           <div id="ownerDisplay" class="sub" style="color: #22d3ee; font-weight: bold;">Memuat...</div>
@@ -35,9 +32,6 @@
       <nav class="side-nav">
         <a class="side-link active" href="index.html"><i class="fas fa-chart-pie"></i> Dashboard</a>
         <a class="side-link" href="#channel"><i class="fas fa-list"></i> Channel List</a>
-        <a class="side-link" href="privacy.html"><i class="fas fa-user-shield"></i> Privacy Policy</a>
-        <a class="side-link" href="terms.html"><i class="fas fa-file-alt"></i> Terms of Service</a>
-        
         <div style="padding: 0 20px; margin-top: 15px;">
             <button id="btnRefreshData" class="btn success" style="width:100%; font-size: 12px; height: 38px;">
               <i class="fas fa-sync-alt"></i> Refresh Data
@@ -49,7 +43,7 @@
       </nav>
 
       <div class="side-footer">
-        <div class="side-actions" style="padding: 20px;">
+        <div style="padding: 20px;">
           <button id="btnOwnerLogout" class="btn danger" style="width: 100%; font-weight: bold;">KELUAR</button>
         </div>
       </div>
@@ -59,9 +53,9 @@
       <div class="topbar">
         <div>
           <h1 class="page-title">Dashboard</h1>
-          <div id="statusIndicator" class="status-badge" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-             <span class="status-dot" style="width:10px; height:10px; background:#ef4444; border-radius:50%; display:inline-block;"></span>
-             <div id="statusText" class="page-sub" style="margin-top:0;">Status: Memuat...</div>
+          <div id="statusIndicator" class="status-badge">
+             <span class="status-dot"></span>
+             <div id="statusText">Status: Memuat...</div>
           </div>
         </div>
 
@@ -77,7 +71,6 @@
       <div class="stats-wrapper">
         <div class="stat-card"><div class="label">Total Channel</div><div class="value" id="totalChannel">0</div></div>
         <div class="stat-card"><div class="label">Total Subscribers</div><div class="value" id="totalSubs">0</div></div>
-        <div class="stat-card"><div class="label">Total Views</div><div class="value" id="totalViews">0</div></div>
         <div class="stat-card highlight">
           <div class="label">Realtime (48 Jam)</div>
           <div class="value" id="totalRealtime">0</div>
@@ -112,33 +105,11 @@
         <button class="btn ghost" onclick="closeManager()" style="border:1px solid #22d3ee; color:#22d3ee; margin-bottom:20px;">
             <i class="fas fa-arrow-left"></i> Kembali ke Pantau
         </button>
-        
         <div id="activeChannelHeader" style="text-align:center; margin-bottom:30px;"></div>
-
-        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px;">
-            <div class="stat-card" onclick="openAction('upload')" style="cursor:pointer; text-align:center; border:1px solid rgba(255,255,255,0.1); padding:20px;">
-                <i class="fas fa-cloud-upload-alt" style="font-size:30px; color:#22d3ee; margin-bottom:10px;"></i>
-                <p>Upload Video</p>
-            </div>
-            <div class="stat-card" onclick="openAction('edit')" style="cursor:pointer; text-align:center; border:1px solid rgba(255,255,255,0.1); padding:20px;">
-                <i class="fas fa-edit" style="font-size:30px; color:#fbbf24; margin-bottom:10px;"></i>
-                <p>Edit Metadata</p>
-            </div>
-            <div class="stat-card" onclick="openAction('visibility')" style="cursor:pointer; text-align:center; border:1px solid rgba(255,255,255,0.1); padding:20px;">
-                <i class="fas fa-eye" style="font-size:30px; color:#10b981; margin-bottom:10px;"></i>
-                <p>Set Visibility</p>
-            </div>
-            <div class="stat-card" onclick="openAction('schedule')" style="cursor:pointer; text-align:center; border:1px solid rgba(255,255,255,0.1); padding:20px;">
-                <i class="fas fa-calendar-alt" style="font-size:30px; color:#22d3ee; margin-bottom:10px;"></i>
-                <p>Penjadwalan</p>
-            </div>
-        </div>
-
-        <div id="formArea" style="margin-top:25px; display:none; background:#1e293b; padding:20px; border-radius:15px; border:1px solid #334155;"></div>
+        <div id="formArea"></div>
     </div>
   </div>
 
-  <script>document.addEventListener("DOMContentLoaded", () => { document.getElementById("ownerDisplay").textContent = ownerName; });</script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://apis.google.com/js/api.js"></script>
