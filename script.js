@@ -58,18 +58,37 @@ function initGapi(){
 }
 
 /* =========================
-    ANALYTICS ENGINE
+    ANALYTICS ENGINE (FIXED)
 ========================= */
 async function fetchRealtimeStats(channelId) {
     try {
-        const end = new Date().toISOString().split('T')[0];
-        const start = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const today = new Date();
+        const end = today.toISOString().split('T')[0];
+        // Tarik data 3 hari terakhir untuk memastikan data 48 jam tercover penuh
+        const start = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
         const res = await gapi.client.youtubeAnalytics.reports.query({
-            ids: `channel==${channelId}`, startDate: start, endDate: end, metrics: "views", dimensions: "day"
+            ids: `channel==${channelId}`,
+            startDate: start,
+            endDate: end,
+            metrics: "views",
+            // Hapus dimensions "day" agar Google langsung menjumlahkan totalnya untuk kita
+            dimensions: null 
         });
-        const total48h = (res.result.rows || []).reduce((acc, row) => acc + row[1], 0);
-        return { m60: Math.floor(total48h / 48), h48: total48h };
-    } catch (e) { return { m60: 0, h48: 0 }; }
+
+        // Jika rows ada, ambil angka pertama (Total Views dalam rentang waktu tsb)
+        const totalViewsPeriod = (res.result.rows && res.result.rows[0]) ? res.result.rows[0][0] : 0;
+
+        // Estimasi Realtime (Karena API Analytics YouTube tidak memberikan detik/menit murni secara publik)
+        // Kita hitung 48 jam dari total periode tersebut
+        const h48 = totalViewsPeriod;
+        const m60 = Math.floor(h48 / 48); 
+
+        return { m60: m60, h48: h48 };
+    } catch (e) { 
+        console.error("Analytics Error for " + channelId, e);
+        return { m60: 0, h48: 0 }; 
+    }
 }
 
 /* =========================
@@ -272,4 +291,5 @@ function goToManager(idx) {
     // 5. Buka tab baru khusus pengelola
     window.open('manager.html', '_blank');
 }
+
 
