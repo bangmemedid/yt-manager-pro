@@ -1,20 +1,20 @@
 /* =========================================================
-   MANAGER.JS - ENGINE PENGELOLA VIDEO (VERSI LUXURY)
+   MANAGER.JS - ENGINE LENGKAP (FITUR THUMBNAIL + LOG PINTAR)
    ========================================================= */
 
 let activeData = null;
 
-// 1. Inisialisasi Data & UI saat Halaman Dimuat
+// 1. Inisialisasi Data & UI Header
 document.addEventListener("DOMContentLoaded", () => {
     const raw = sessionStorage.getItem("active_manager_data");
     if (!raw) {
-        alert("Data Channel tidak ditemukan. Kembali ke Dashboard.");
+        alert("Data Channel tidak ditemukan.");
         window.close();
         return;
     }
     activeData = JSON.parse(raw);
 
-    // Update UI Header (Foto Bulat + Cahaya Bernapas + Nama Tanpa ID)
+    // Render Profil Tengah (Bulat + Pulse)
     const chanUI = document.getElementById("chanUI");
     if (chanUI) {
         chanUI.innerHTML = `
@@ -26,10 +26,10 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
     
-    addLog("SISTEM", "Siap melayani. Silakan pilih video untuk diunggah.");
+    addLog("SYSTEM", "Koneksi Aman. Jalur transmisi siap.");
 });
 
-// 2. Preview Video & Auto-Title Pintar
+// 2. Preview Video & Auto-Title
 document.getElementById("inVid").onchange = function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -38,85 +38,74 @@ document.getElementById("inVid").onchange = function(e) {
         v.src = url;
         v.style.display = "block";
         
-        // Deteksi Otomatis (Log Pintar)
         const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-        addLog("DETECTED", `Video: ${file.name} | Size: ${sizeMB} MB`);
+        addLog("DETECTED", `Video: ${file.name} [${sizeMB} MB]`);
         
-        // Isi judul otomatis dari nama file
         const tInput = document.getElementById("vTitle");
-        if (!tInput.value) {
-            tInput.value = file.name.split('.').slice(0, -1).join('.');
-        }
+        if (!tInput.value) tInput.value = file.name.split('.').slice(0, -1).join('.');
     }
 };
 
-// 3. Toggle Jadwal Tayang
+// 3. Preview Thumbnail
+document.getElementById("inThumb").onchange = function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const url = URL.createObjectURL(file);
+        const img = document.getElementById("tPrev");
+        img.src = url;
+        img.style.display = "block";
+        addLog("DETECTED", `Thumbnail: ${file.name} terpilih.`);
+    }
+};
+
+// 4. Toggle Jadwal
 function toggleSched() {
     const val = document.getElementById("vPriv").value;
-    const schedUI = document.getElementById("schedUI");
-    if (schedUI) {
-        schedUI.style.display = (val === "scheduled") ? "block" : "none";
-    }
+    const ui = document.getElementById("schedUI");
+    if(ui) ui.style.display = (val === "scheduled") ? "block" : "none";
 }
 
-// 4. Helper Log (Hacker Style dengan Tag)
+// 5. Helper Log (Hacker Style)
 function addLog(tag, msg) {
     const log = document.getElementById("vLog");
     if (!log) return;
-    
     const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
-    const logEntry = document.createElement("div");
-    logEntry.style.marginBottom = "4px";
-    logEntry.innerHTML = `<span style="color: #64748b;">[${time}]</span> <span style="color: #ff4444; font-weight:bold;">[${tag}]</span> ${msg}`;
-    
-    log.appendChild(logEntry);
+    const line = document.createElement("div");
+    line.style.marginBottom = "5px";
+    line.innerHTML = `<span style="color:#64748b">[${time}]</span> <span style="color:#ff4444;font-weight:bold">[${tag}]</span> ${msg}`;
+    log.appendChild(line);
     log.scrollTop = log.scrollHeight;
 }
 
-// 5. PROSES UTAMA: UPLOAD VIDEO KE YOUTUBE (Resumable)
+// 6. PROSES UPLOAD UTAMA
 async function mulaiUpload() {
     const vFile = document.getElementById("inVid").files[0];
+    const tFile = document.getElementById("inThumb").files[0];
     const title = document.getElementById("vTitle").value;
     const desc = document.getElementById("vDesc").value;
     const privacy = document.getElementById("vPriv").value;
     const btn = document.getElementById("btnGo");
 
-    if (!vFile || !title) {
-        alert("Waduh Bang, Video dan Judul jangan dikosongin!");
-        return;
-    }
+    if (!vFile || !title) return alert("Pilih Video dan Judul dulu!");
 
-    // Aktifkan UI Progress
     btn.disabled = true;
     btn.innerText = "SEDANG PROSES...";
-    addLog("SYSTEM", "Menyiapkan jalur upload aman...");
+    addLog("SYSTEM", "Memulai protokol upload YouTube...");
 
-    // Siapkan Metadata
     const metadata = {
-        snippet: {
-            title: title,
-            description: desc,
-            categoryId: "22",
-            tags: document.getElementById("vTags").value.split(',').map(t => t.trim())
-        },
-        status: {
-            privacyStatus: (privacy === "scheduled" ? "private" : privacy)
-        }
+        snippet: { title: title, description: desc, categoryId: "22", 
+                   tags: document.getElementById("vTags").value.split(',').map(t => t.trim()) },
+        status: { privacyStatus: (privacy === "scheduled" ? "private" : privacy) }
     };
 
     if (privacy === "scheduled") {
-        const dateVal = document.getElementById("vDate").value;
-        if (!dateVal) {
-            alert("Atur tanggal jadwalnya dulu, Bang!");
-            btn.disabled = false;
-            return;
-        }
-        metadata.status.publishAt = new Date(dateVal).toISOString();
+        const d = document.getElementById("vDate").value;
+        if (!d) { btn.disabled = false; return alert("Set tanggal tayang!"); }
+        metadata.status.publishAt = new Date(d).toISOString();
     }
 
     try {
-        // STEP 1: Inisialisasi Resumable Upload
-        const response = await fetch(`https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status`, {
+        const initRes = await fetch(`https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${activeData.token}`,
@@ -127,50 +116,51 @@ async function mulaiUpload() {
             body: JSON.stringify(metadata)
         });
 
-        if (!response.ok) throw new Error("Gagal inisialisasi sesi Google.");
-        const uploadUrl = response.headers.get("Location");
+        if (!initRes.ok) throw new Error("Init Gagal.");
+        const uploadUrl = initRes.headers.get("Location");
 
-        addLog("UPLOAD", "Koneksi stabil. Mulai transfer data...");
-
-        // STEP 2: Kirim File dengan XMLHttpRequest (untuk progress bar)
         const xhr = new XMLHttpRequest();
         xhr.open("PUT", uploadUrl, true);
-        
         xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
                 const percent = Math.round((e.loaded / e.total) * 100);
-                // Update log setiap kelipatan 25% biar tidak penuh
-                if (percent % 25 === 0) addLog("PROGRESS", `Terkirim: ${percent}%`);
-                
-                // Jika Abang ingin progress bar visual di masa depan, kodenya di sini
                 btn.innerText = `UPLOADING ${percent}%`;
+                if (percent % 25 === 0) addLog("PROGRESS", `Status: ${percent}%`);
             }
         };
 
         xhr.onload = async () => {
             if (xhr.status === 200 || xhr.status === 201) {
-                const resData = JSON.parse(xhr.responseText);
-                addLog("SUCCESS", `Video Berhasil! ID: ${resData.id}`);
-                alert("MANTAP BANG! Video sukses terupload.");
+                const res = JSON.parse(xhr.responseText);
+                addLog("SUCCESS", `Video ID: ${res.id}`);
+                
+                // UPLOAD THUMBNAIL JIKA ADA
+                if (tFile) {
+                    addLog("SYSTEM", "Mengirim Thumbnail...");
+                    await uploadThumb(res.id, tFile);
+                }
+                
+                addLog("FINISHED", "Misi Berhasil!");
+                alert("MANTAP BANG! Sukses.");
                 btn.disabled = false;
                 btn.innerText = "UPLOAD LAGI";
-            } else {
-                addLog("ERROR", `Gagal: ${xhr.statusText}`);
-                btn.disabled = false;
-                btn.innerText = "COBA LAGI";
             }
         };
-
-        xhr.onerror = () => {
-            addLog("CRITICAL", "Jaringan terputus!");
-            btn.disabled = false;
-        };
-
         xhr.send(vFile);
-
     } catch (err) {
-        addLog("FAILED", err.message);
+        addLog("ERROR", err.message);
         btn.disabled = false;
-        btn.innerText = "COBA LAGI";
     }
+}
+
+// 7. Fungsi Upload Thumbnail
+async function uploadThumb(vId, file) {
+    try {
+        const res = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${vId}`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${activeData.token}` },
+            body: file
+        });
+        if (res.ok) addLog("SUCCESS", "Thumbnail terpasang.");
+    } catch (e) { addLog("WARNING", "Thumbnail gagal."); }
 }
