@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Manager | YouTube Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --neon-red: #ff4444; --bg-dark: #0f172a; --panel: #1e293b; --input: #0f172a; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: #e2e8f0; margin: 0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 1100px; margin: auto; display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+        
+        /* Header */
+        header { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding: 20px; background: var(--panel); border-radius: 16px; border-bottom: 4px solid var(--neon-red); margin-bottom: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .brand h1 { margin: 0; font-size: 22px; color: var(--neon-red); text-transform: uppercase; letter-spacing: 1px; }
+        .channel-profile { display: flex; align-items: center; gap: 12px; }
+        .channel-profile img { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--neon-red); }
+        .channel-name { font-weight: 700; font-size: 14px; }
+
+        /* Panel Box */
+        .panel { background: var(--panel); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); height: fit-content; }
+        h3 { margin: 0 0 20px 0; font-size: 16px; color: var(--neon-red); display: flex; align-items: center; gap: 10px; }
+        
+        /* Forms */
+        label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: #94a3b8; }
+        input, textarea, select { width: 100%; padding: 12px; background: var(--input); border: 1px solid #334155; color: white; border-radius: 10px; font-family: inherit; margin-bottom: 20px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--neon-red); box-shadow: 0 0 0 2px rgba(255,68,68,0.2); }
+
+        /* Upload Area */
+        .upload-area { border: 2px dashed #334155; padding: 30px; text-align: center; border-radius: 15px; cursor: pointer; transition: 0.3s; background: rgba(15,23,42,0.5); }
+        .upload-area:hover { border-color: var(--neon-red); background: rgba(255,68,68,0.05); }
+        .preview-media { width: 100%; border-radius: 10px; margin-top: 15px; display: none; border: 1px solid #334155; }
+
+        /* Status & Progress */
+        .progress-box { display: none; margin-top: 20px; padding: 15px; background: #000; border-radius: 12px; }
+        .bar-bg { width: 100%; height: 8px; background: #1e293b; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .bar-fill { width: 0%; height: 100%; background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); transition: 0.3s; }
+        .log { font-family: monospace; font-size: 11px; color: #10b981; height: 80px; overflow-y: auto; margin-top: 10px; border-top: 1px solid #334155; padding-top: 10px; }
+
+        /* Buttons */
+        .btn-send { width: 100%; padding: 15px; background: var(--neon-red); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px; transition: 0.3s; box-shadow: 0 4px 14px 0 rgba(255,68,68,0.3); }
+        .btn-send:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,68,68,0.5); }
+        .btn-send:disabled { background: #475569; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .schedule-ui { display: none; background: rgba(255,68,68,0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        <h1>YouTube Manager Pro</h1>
+    </div>
+    <div class="channel-profile" id="chanUI">
+        </div>
+</header>
+
+<div class="container">
+    <div class="left-side">
+        <section class="panel">
+            <h3><i class="fas fa-file-video"></i> Konten Video</h3>
+            <div class="upload-area" onclick="document.getElementById('inVid').click()">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 30px; color: var(--neon-red)"></i>
+                <p style="margin: 10px 0 0 0; font-size: 13px;">Seret video atau Klik untuk memilih</p>
+                <input type="file" id="inVid" accept="video/*" style="display:none">
+            </div>
+            <video id="vPrev" class="preview-media" controls></video>
+
+            <label style="margin-top: 20px;">JUDUL VIDEO</label>
+            <input type="text" id="vTitle" placeholder="Contoh: Tutorial Masak Enak #shorts">
+            
+            <label>DESKRIPSI</label>
+            <textarea id="vDesc" rows="5" placeholder="Jelaskan isi video Anda..."></textarea>
+            
+            <label>TAGS (Pisahkan dengan koma)</label>
+            <input type="text" id="vTags" placeholder="hiburan, gaming, veda...">
+            
+            <h3><i class="fas fa-image"></i> Custom Thumbnail (Opsional)</h3>
+            <input type="file" id="inThumb" accept="image/*">
+            <img id="tPrev" class="preview-media">
+        </section>
+    </div>
+
+    <div class="right-side">
+        <section class="panel">
+            <h3><i class="fas fa-paper-plane"></i> Publikasi</h3>
+            
+            <label>STATUS VISIBILITAS</label>
+            <select id="vPriv" onchange="toggleSched()">
+                <option value="private">🔒 Privat (Hanya Anda)</option>
+                <option value="unlisted">🔗 Unlisted (Hanya yang punya link)</option>
+                <option value="public">🌐 Publik (Tayang Langsung)</option>
+                <option value="scheduled">📅 Jadwalkan (Set Waktu)</option>
+            </select>
+
+            <div id="schedUI" class="schedule-ui">
+                <label>PILIH TANGGAL & JAM TAYANG</label>
+                <input type="datetime-local" id="vDate">
+            </div>
+
+            <button class="btn-send" id="btnGo" onclick="mulaiUpload()">
+                UPLOAD KE YOUTUBE
+            </button>
+
+            <div class="progress-box" id="pBox">
+                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                    <span id="pStat">Mengunggah...</span>
+                    <span id="pPerc">0%</span>
+                </div>
+                <div class="bar-bg"><div class="bar-fill" id="pFill"></div></div>
+                <div class="log" id="vLog">> Menunggu file...</div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script src="manager.js"></script>
+</body>
+</html>
