@@ -19,7 +19,8 @@ function setStatus(msg, isOnline = false){
   const el = $("statusText");
   const dot = document.querySelector(".status-dot");
   if(el) el.textContent = "Status: " + msg;
-  if(dot) dot.style.background = isOnline ? "#22d3ee" : "#ef4444";
+  if(dot && isOnline) dot.style.background = "#22d3ee";
+  else if(dot) dot.style.background = "#ef4444";
 }
 
 function loadAccounts(){
@@ -50,7 +51,9 @@ function initGapi(){
       });
       gApiInited = true;
       tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID, scope: SCOPES, callback: () => {}
+        client_id: CLIENT_ID, 
+        scope: SCOPES, 
+        callback: (resp) => { /* Diisi saat googleSignIn dipanggil */ }
       });
       resolve();
     });
@@ -58,36 +61,35 @@ function initGapi(){
 }
 
 /* =========================
-    ANALYTICS ENGINE (FIXED)
+    ANALYTICS ENGINE (VERSI 24 JAM)
 ========================= */
 async function fetchRealtimeStats(channelId) {
     try {
-        const today = new Date();
-        const end = today.toISOString().split('T')[0];
-        // Tarik data 3 hari terakhir untuk memastikan data 48 jam tercover penuh
-        const start = new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const now = new Date();
+        const start = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const end = now.toISOString().split('T')[0];
 
         const res = await gapi.client.youtubeAnalytics.reports.query({
             ids: `channel==${channelId}`,
             startDate: start,
             endDate: end,
             metrics: "views",
-            // Hapus dimensions "day" agar Google langsung menjumlahkan totalnya untuk kita
-            dimensions: null 
+            dimensions: "hour",
+            sort: "-hour"
         });
 
-        // Jika rows ada, ambil angka pertama (Total Views dalam rentang waktu tsb)
-        const totalViewsPeriod = (res.result.rows && res.result.rows[0]) ? res.result.rows[0][0] : 0;
+        const rows = res.result.rows || [];
+        // Ambil 24 jam terbaru
+        const last24hRows = rows.slice(0, 24);
+        const total24h = last24hRows.reduce((acc, row) => acc + row[1], 0);
+        
+        // m60 = Rata-rata per jam
+        const m60 = Math.floor(total24h / 24);
 
-        // Estimasi Realtime (Karena API Analytics YouTube tidak memberikan detik/menit murni secara publik)
-        // Kita hitung 48 jam dari total periode tersebut
-        const h48 = totalViewsPeriod;
-        const m60 = Math.floor(h48 / 48); 
-
-        return { m60: m60, h48: h48 };
+        return { m60: m60, h24: total24h }; // Menggunakan h24 sebagai penanda baru
     } catch (e) { 
-        console.error("Analytics Error for " + channelId, e);
-        return { m60: 0, h48: 0 }; 
+        console.error("Gagal Analytics:", channelId, e);
+        return { m60: 0, h24: 0 }; 
     }
 }
 
@@ -106,9 +108,12 @@ async function fetchAllChannelsData() {
   let mergedData = [];
 
   for (const acc of accounts) {
-    const isExpired = Date.now() > acc.expires_at;
-    if (isExpired) {
-        mergedData.push({ snippet: { title: acc.email, thumbnails: { default: { url: "" } } }, statistics: { subscriberCount: 0, viewCount: 0 }, isExpired: true });
+    if (Date.now() > acc.expires_at) {
+        mergedData.push({ 
+            snippet: { title: acc.email, thumbnails: { default: { url: "" } } }, 
+            statistics: { subscriberCount: 0, viewCount: 0 }, 
+            isExpired: true 
+        });
         continue;
     }
 
@@ -119,17 +124,18 @@ async function fetchAllChannelsData() {
           for(let item of res.result.items) {
               item.realtime = await fetchRealtimeStats(item.id);
               item.isExpired = false;
+              item.emailSource = acc.email; // Simpan asal emailnya
               mergedData.push(item);
           }
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Sync Error:", err); }
   }
   allCachedChannels = mergedData;
   renderTable(mergedData);
 }
 
 /* =========================
-    UI RENDERING
+    UI RENDERING (UPDATE LABEL 24H)
 ========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
@@ -138,26 +144,36 @@ function renderTable(data) {
   const search = searchInput ? searchInput.value.toLowerCase() : "";
   
   tbody.innerHTML = "";
-  let tSubs = 0, tViews = 0, tReal = 0;
+  let tSubs = 0, tViews = 0, tReal24 = 0;
 
   const filtered = data.filter(i => (i.snippet.title || "").toLowerCase().includes(search));
   filtered.forEach((item, index) => {
     const s = item.statistics;
-    const r = item.realtime || { m60:0, h48:0 };
+    const r = item.realtime || { m60: 0, h24: 0 };
     const isExpired = item.isExpired;
-    if (!isExpired) { tSubs += Number(s.subscriberCount); tViews += Number(s.viewCount); tReal += r.h48; }
+    
+    if (!isExpired) { 
+        tSubs += Number(s.subscriberCount); 
+        tViews += Number(s.viewCount); 
+        tReal24 += r.h24; 
+    }
 
     const statusLabel = isExpired 
       ? `<span style="background:#ef4444; color:white; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold;">EXPIRED</span>`
       : `<span style="background:rgba(34,211,238,0.1); color:#22d3ee; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold; border:1px solid #22d3ee;">ACTIVE</span>`;
 
     tbody.innerHTML += `
-     <tr onclick="openDetail(${index}); goToManager(${index});" style="cursor:pointer">
-        <td><div style="display:flex;align-items:center;gap:10px;"><img src="${item.snippet.thumbnails.default.url || 'https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png'}" style="width:24px;border-radius:50%"><b>${item.snippet.title}</b></div></td>
+      <tr onclick="goToManager(${index})" style="cursor:pointer">
+        <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <img src="${item.snippet.thumbnails.default.url || 'https://www.gstatic.com/youtube/img/branding/favicon/favicon_96x96.png'}" style="width:24px;border-radius:50%">
+                <b>${item.snippet.title}</b>
+            </div>
+        </td>
         <td>${isExpired ? '---' : formatNumber(s.subscriberCount)}</td>
         <td>${isExpired ? '---' : formatNumber(s.viewCount)}</td>
         <td style="color:#22d3ee;font-weight:700">${isExpired ? '---' : formatNumber(r.m60)}</td>
-        <td style="color:#fbbf24;font-weight:700">${isExpired ? '---' : formatNumber(r.h48)}</td>
+        <td style="color:#fbbf24;font-weight:700">${isExpired ? '---' : formatNumber(r.h24)}</td>
         <td>${statusLabel}</td>
       </tr>`;
   });
@@ -165,7 +181,7 @@ function renderTable(data) {
   if($("totalChannel")) $("totalChannel").textContent = filtered.length;
   if($("totalSubs")) $("totalSubs").textContent = formatNumber(tSubs);
   if($("totalViews")) $("totalViews").textContent = formatNumber(tViews);
-  if($("totalRealtime")) $("totalRealtime").textContent = formatNumber(tReal);
+  if($("totalRealtime")) $("totalRealtime").textContent = formatNumber(tReal24);
   if($("lastUpdate")) $("lastUpdate").textContent = new Date().toLocaleTimeString() + " (Auto-Sync)";
   setStatus("Dashboard Aktif", true);
 }
@@ -173,144 +189,75 @@ function renderTable(data) {
 /* =========================
     FEATURES & AUTH
 ========================= */
-function exportToExcel() {
-  const table = document.querySelector(".channel-table");
-  const wb = XLSX.utils.table_to_book(table, { sheet: "YT_Pro_Report" });
-  XLSX.writeFile(wb, `YT_Report_${new Date().toLocaleDateString()}.xlsx`);
-}
+async function googleSignIn(){
+  if(!gApiInited) await initGapi();
+  
+  setStatus("Membuka Google Login...", true);
+  
+  tokenClient.callback = async (resp) => {
+    if (resp.error !== undefined) {
+      setStatus("Gagal Login", false);
+      return;
+    }
 
-function openDetail(idx) {
-  const ch = allCachedChannels[idx];
-  if(ch.isExpired) return;
-  const r = ch.realtime || { m60: 0, h48: 0 };
-  $("modalBodyContent").innerHTML = `
-    <div style="text-align:center;">
-      <img src="${ch.snippet.thumbnails.medium.url}" style="width:80px; border-radius:50%; border:2px solid #22d3ee; margin-bottom:15px;">
-      <h2>${ch.snippet.title}</h2>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;">
-        <div class="stat-card">60m<br><b style="color:#22d3ee">${formatNumber(r.m60)}</b></div>
-        <div class="stat-card">48h<br><b style="color:#fbbf24">${formatNumber(r.h48)}</b></div>
-      </div>
-    </div>`;
-  $("detailModal").style.display = "flex";
-}
-
-function closeModal() { $("detailModal").style.display = "none"; }
-
-/* =========================
-    ANALYTICS ENGINE (VERSI 24 JAM PRESISI)
-========================= */
-async function fetchRealtimeStats(channelId) {
     try {
-        const now = new Date();
-        // Tarik data 2 hari terakhir agar gap 24 jam terisi penuh
-        const start = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        const end = now.toISOString().split('T')[0];
-
-        const res = await gapi.client.youtubeAnalytics.reports.query({
-            ids: `channel==${channelId}`,
-            startDate: start,
-            endDate: end,
-            metrics: "views",
-            dimensions: "hour", // Minta data per jam
-            sort: "-hour"       // Urutkan dari jam paling baru
-        });
-
-        const rows = res.result.rows || [];
-        
-        // Ambil 24 baris (jam) terbaru untuk mendapatkan data 24 jam terakhir
-        const last24hRows = rows.slice(0, 24);
-        const total24h = last24hRows.reduce((acc, row) => acc + row[1], 0);
-        
-        // Rata-rata per jam (Estimasi 60 Menit)
-        const m60 = Math.floor(total24h / 24);
-        
-        // Kita kembalikan total24h ke variabel h48 agar tabel Abang tidak perlu diubah kodenya
-        return { m60: m60, h48: total24h };
-    } catch (e) { 
-        console.error("Gagal tarik data Analytics untuk: " + channelId, e);
-        return { m60: 0, h48: 0 }; 
+      const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { 
+        headers: { Authorization: `Bearer ${resp.access_token}` } 
+      });
+      const data = await res.json();
+      
+      let accounts = loadAccounts();
+      const payload = { 
+        email: data.email, 
+        access_token: resp.access_token, 
+        expires_at: Date.now() + (resp.expires_in * 1000) 
+      };
+      
+      const idx = accounts.findIndex(a => a.email === data.email);
+      if(idx >= 0) accounts[idx] = payload; else accounts.push(payload);
+      
+      saveAccounts(accounts);
+      fetchAllChannelsData();
+    } catch (err) {
+      console.error(err);
+      setStatus("Error Sinkron Akun", false);
     }
+  };
+
+  tokenClient.requestAccessToken({ prompt: 'consent', access_type: 'offline' });
 }
 
-/* =========================
-    SINKRONISASI DATA
-========================= */
-function exportData() {
-    const data = localStorage.getItem(STORE_KEY);
-    if (!data || data === "[]") return;
-    const tempInput = document.createElement("textarea");
-    tempInput.value = data; document.body.appendChild(tempInput);
-    tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput);
-    alert("KODE DATA BERHASIL DISALIN!");
-}
-
-function importData() {
-    const code = prompt("Tempelkan Kode Data di sini:");
-    if (code && code.trim() !== "") {
-        try {
-            const newData = JSON.parse(code);
-            if (Array.isArray(newData)) {
-                let currentData = loadAccounts();
-                newData.forEach(newAcc => {
-                    const exists = currentData.findIndex(oldAcc => oldAcc.email === newAcc.email);
-                    if (exists !== -1) currentData[exists] = newAcc; else currentData.push(newAcc);
-                });
-                saveAccounts(currentData);
-                location.reload();
-            }
-        } catch (e) { alert("Gagal membaca kode."); }
-    }
-}
-
-/* =========================
-    INIT & AUTO REFRESH
-========================= */
-document.addEventListener("DOMContentLoaded", async () => {
-  await initGapi();
-  fetchAllChannelsData();
-  if($("btnAddGmailTop")) $("btnAddGmailTop").onclick = googleSignIn;
-  if($("btnRefreshData")) $("btnRefreshData").onclick = fetchAllChannelsData;
-  if($("btnExportData")) $("btnExportData").onclick = exportToExcel;
-  if($("btnOwnerLogout")) $("btnOwnerLogout").onclick = () => { localStorage.removeItem("owner_logged_in"); window.location.href="login.html"; };
-  if($("btnLocalLogout")) $("btnLocalLogout").onclick = () => { if(confirm("Hapus akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
-  if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
-  setInterval(() => { if(loadAccounts().length > 0) fetchAllChannelsData(); }, 300000);
-});
-
-window.onclick = (e) => { if(e.target == $("detailModal")) closeModal(); };
-
-/* =========================
-    NEW FEATURE: TAB MANAGER
-========================= */
 function goToManager(idx) {
-    // 1. Ambil data channel dari cache yang sudah Abang buat
     const ch = allCachedChannels[idx];
-    if (!ch || ch.isExpired) {
-        console.warn("Channel expired atau tidak ditemukan.");
-        return;
-    }
+    if (!ch || ch.isExpired) return;
 
-    // 2. Cari token yang sesuai dengan email channel tersebut
     const accounts = loadAccounts();
-    const targetAcc = accounts.find(a => a.email === ch.snippet.title) || accounts[0];
+    const targetAcc = accounts.find(a => a.email === ch.emailSource) || accounts[0];
 
-    // 3. Bungkus data penting untuk dibawa ke tab baru
     const sessionData = {
         channelId: ch.id,
         title: ch.snippet.title,
         img: ch.snippet.thumbnails.default.url,
-        token: targetAcc.access_token,
-        // Kita bawa juga API_KEY dan CLIENT_ID agar tab baru bisa mandiri
-        apiKey: API_KEY,
-        clientId: CLIENT_ID
+        token: targetAcc.access_token
     };
 
-    // 4. Simpan di sessionStorage (aman, akan hilang jika browser ditutup)
     sessionStorage.setItem("active_manager_data", JSON.stringify(sessionData));
-    
-    // 5. Buka tab baru khusus pengelola
     window.open('manager.html', '_blank');
 }
 
+/* =========================
+    INIT & EVENT LISTENERS
+========================= */
+document.addEventListener("DOMContentLoaded", async () => {
+  await initGapi();
+  fetchAllChannelsData();
 
+  if($("btnAddGmailTop")) $("btnAddGmailTop").onclick = googleSignIn;
+  if($("btnRefreshData")) $("btnRefreshData").onclick = fetchAllChannelsData;
+  if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
+  
+  // Auto-refresh data setiap 5 menit
+  setInterval(() => { 
+    if(loadAccounts().length > 0) fetchAllChannelsData(); 
+  }, 300000);
+});
