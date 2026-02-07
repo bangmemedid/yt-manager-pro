@@ -154,9 +154,11 @@ function renderTable(data) {
     
     if (!isExpired) { tSubs += Number(s.subscriberCount); tViews += Number(s.viewCount); tReal += r.h48; }
 
-    const statusLabel = isExpired 
+    const statuslabel = isExpired 
       ? `<span style="background:#ef4444; color:white; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold;">EXPIRED</span>`
-      : `<span style="background:rgba(34,211,238,0.1); color:#22d3ee; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold; border:1px solid #22d3ee;">ACTIVE</span>`;
+      : `<button onclick="goToManager(${index})" style="background:rgba(34,211,238,0.1); color:#22d3ee; padding:6px 12px; border-radius:6px; font-size:10px; font-weight:bold; border:1px solid #22d3ee; cursor:pointer; transition: 0.3s;" onmouseover="this.style.background='rgba(34,211,238,0.3)'" onmouseout="this.style.background='rgba(34,211,238,0.1)'">
+            <i class="fas fa-upload" style="margin-right:5px;"></i> UPLOAD
+         </button>`;
 
     tbody.innerHTML += `
       <tr>
@@ -264,3 +266,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
   setInterval(() => { if(loadAccounts().length > 0) fetchAllChannelsData(); }, 300000);
 });
+
