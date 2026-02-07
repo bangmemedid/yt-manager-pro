@@ -10,83 +10,83 @@
         :root { --neon-red: #ff4444; --bg-dark: #0f172a; --panel: #1e293b; --input: #0f172a; }
         body { font-family: 'Poppins', sans-serif; background: var(--bg-dark); color: #e2e8f0; margin: 0; padding: 20px; }
         
-        /* HEADER BARU (SIMETRIS) */
+        /* HEADER LUXURY (TANPA GARIS) */
         header { 
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr; /* Membagi header jadi 3 bagian sama besar */
+            grid-template-columns: 1fr 1fr 1fr;
             align-items: center;
-            padding: 20px 30px; 
-            background: var(--panel); 
-            border-radius: 20px; 
-            border-bottom: 4px solid var(--neon-red); 
+            padding: 30px; 
+            background: linear-gradient(180deg, rgba(30,41,59,1) 0%, rgba(15,23,42,1) 100%); 
+            border-radius: 24px; 
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6); /* Shadow tebal pengganti garis */
         }
 
-        /* Bagian Kiri: Branding */
-        .header-left { display: flex; flex-direction: column; gap: 2px; }
-        .brand-title { margin: 0; font-size: 20px; font-weight: 700; color: var(--neon-red); text-transform: uppercase; letter-spacing: 1px; }
-        .brand-sub { font-size: 11px; color: #94a3b8; font-weight: 400; letter-spacing: 0.5px; }
+        /* Branding Kiri */
+        .header-left { display: flex; flex-direction: column; }
+        .brand-title { margin: 0; font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 1px; }
+        .brand-title span { color: var(--neon-red); } /* Efek warna merah pada kata PRO */
+        .brand-sub { font-size: 11px; color: #64748b; font-weight: 400; font-style: italic; }
 
-        /* Bagian Tengah: Profil Mewah */
-        .header-center { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        /* Profil Tengah (Glowing & Breathing) */
+        .header-center { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        
+        .profile-container { position: relative; width: 75px; height: 75px; }
         .profile-circle { 
-            width: 70px; 
-            height: 70px; 
-            border-radius: 50%; 
-            border: 3px solid var(--neon-red); 
-            box-shadow: 0 0 15px rgba(255, 68, 68, 0.5); 
-            object-fit: cover;
+            width: 100%; height: 100%; border-radius: 50%; 
+            border: 2.5px solid var(--neon-red); object-fit: cover;
+            position: relative; z-index: 2;
         }
-        .channel-name { font-size: 16px; font-weight: 600; color: white; margin: 0; }
 
-        /* Bagian Kanan: Navigasi */
+        /* Animasi Cahaya Bernapas */
+        .pulse-glow {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%; background: var(--neon-red);
+            filter: blur(12px); z-index: 1;
+            animation: breathing 3s ease-in-out infinite;
+        }
+
+        @keyframes breathing {
+            0% { transform: scale(0.9); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+            100% { transform: scale(0.9); opacity: 0.3; }
+        }
+
+        .channel-name { font-size: 18px; font-weight: 700; color: white; margin: 0; letter-spacing: 0.5px; }
+
+        /* Navigasi Kanan */
         .header-right { display: flex; justify-content: flex-end; }
-        .btn-back { 
-            background: rgba(255,255,255,0.05); 
-            border: 1px solid #334155; 
-            color: white; 
-            padding: 10px 20px; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            font-size: 13px;
-            transition: 0.3s;
-            text-decoration: none;
+        .btn-close { 
+            background: transparent; border: 1.5px solid #334155; color: #94a3b8; 
+            padding: 10px 18px; border-radius: 30px; cursor: pointer; font-size: 12px;
+            transition: 0.3s; font-weight: 600;
         }
-        .btn-back:hover { background: var(--neon-red); border-color: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
+        .btn-close:hover { border-color: var(--neon-red); color: white; box-shadow: 0 0 10px rgba(255,68,68,0.3); }
 
-        /* Container Layout */
+        /* Area Konten */
         .container { max-width: 1200px; margin: auto; display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; }
-        .panel { background: var(--panel); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
-        h3 { margin: 0 0 20px 0; font-size: 15px; color: var(--neon-red); display: flex; align-items: center; gap: 10px; border-left: 3px solid var(--neon-red); padding-left: 12px; }
+        .panel { background: var(--panel); padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.03); }
+        h3 { margin: 0 0 20px 0; font-size: 15px; color: var(--neon-red); display: flex; align-items: center; gap: 10px; }
         
-        /* Form Styling */
-        label { display: block; margin-bottom: 8px; font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; }
-        input, textarea, select { width: 100%; padding: 12px; background: var(--input); border: 1px solid #334155; color: white; border-radius: 10px; font-family: inherit; margin-bottom: 15px; box-sizing: border-box; outline: none; }
-        input:focus { border-color: var(--neon-red); }
-
-        .upload-area { border: 2px dashed #334155; padding: 40px; text-align: center; border-radius: 15px; cursor: pointer; transition: 0.3s; background: rgba(0,0,0,0.2); }
-        .upload-area:hover { border-color: var(--neon-red); background: rgba(255,68,68,0.05); }
-        .preview-media { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 2px solid #334155; }
-
-        /* Progress & Log (Neon Green) */
-        .progress-box { display: none; margin-top: 20px; padding: 20px; background: #000; border-radius: 15px; border: 1px solid #334155; }
-        .bar-bg { width: 100%; height: 10px; background: #1e293b; border-radius: 10px; overflow: hidden; margin: 12px 0; }
-        .bar-fill { width: 0%; height: 100%; background: var(--neon-red); box-shadow: 0 0 15px var(--neon-red); transition: 0.3s; }
-        .log { font-family: 'Courier New', monospace; font-size: 12px; color: #00ff41; height: 100px; overflow-y: auto; margin-top: 15px; padding: 10px; background: rgba(0,255,65,0.05); border-radius: 8px; }
-
-        .btn-send { width: 100%; padding: 18px; background: var(--neon-red); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px; transition: 0.3s; box-shadow: 0 4px 15px rgba(255,68,68,0.4); }
-        .btn-send:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255,68,68,0.6); }
-        .btn-send:disabled { background: #475569; cursor: not-allowed; }
+        input, textarea, select { width: 100%; padding: 12px; background: var(--input); border: 1px solid #334155; color: white; border-radius: 10px; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         
-        .schedule-ui { display: none; background: rgba(255,68,68,0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--neon-red); }
+        .upload-area { border: 2px dashed #334155; padding: 40px; text-align: center; border-radius: 15px; cursor: pointer; background: rgba(0,0,0,0.2); transition: 0.3s; }
+        .upload-area:hover { border-color: var(--neon-red); }
+        .preview-media { width: 100%; border-radius: 12px; margin-top: 15px; display: none; border: 1px solid #334155; }
+
+        /* Log Hacker Style */
+        .log-box { margin-top: 20px; padding: 15px; background: #000; border-radius: 15px; border: 1px solid #1e293b; }
+        .log { font-family: 'Courier New', monospace; font-size: 12px; color: #00ff41; height: 100px; overflow-y: auto; padding: 5px; }
+        
+        .btn-send { width: 100%; padding: 18px; background: var(--neon-red); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(255,68,68,0.3); }
+        .btn-send:hover { transform: translateY(-3px); }
     </style>
 </head>
 <body>
 
 <header>
     <div class="header-left">
-        <div class="brand-title">YouTube Manager Pro</div>
+        <div class="brand-title">YouTube Manager <span>PRO</span></div>
         <div class="brand-sub">by-bangmemed.id</div>
     </div>
 
@@ -94,65 +94,41 @@
         </div>
 
     <div class="header-right">
-        <a href="#" onclick="window.close()" class="btn-back">
-            <i class="fas fa-times"></i> Tutup Panel
-        </a>
+        <button class="btn-close" onclick="window.close()">TUTUP PANEL</button>
     </div>
 </header>
 
 <div class="container">
     <div class="left-side">
         <section class="panel">
-            <h3><i class="fas fa-video"></i> Pengaturan Konten</h3>
+            <h3><i class="fas fa-edit"></i> Detailing Video</h3>
             <div class="upload-area" onclick="document.getElementById('inVid').click()">
                 <i class="fas fa-cloud-upload-alt" style="font-size: 40px; color: var(--neon-red)"></i>
-                <p style="margin-top:10px; font-weight:600;">Pilih atau Seret Video ke Sini</p>
+                <p style="margin-top:10px; font-weight:500;">Pilih file video Anda</p>
                 <input type="file" id="inVid" accept="video/*" style="display:none">
             </div>
             <video id="vPrev" class="preview-media" controls></video>
 
-            <label style="margin-top: 25px;">Judul Video</label>
-            <input type="text" id="vTitle" placeholder="Masukkan judul...">
-            
-            <label>Deskripsi Video</label>
-            <textarea id="vDesc" rows="4" placeholder="Masukkan deskripsi..."></textarea>
-            
-            <label>Tags</label>
-            <input type="text" id="vTags" placeholder="tag1, tag2...">
-            
-            <h3><i class="fas fa-image"></i> Custom Thumbnail</h3>
-            <input type="file" id="inThumb" accept="image/*">
-            <img id="tPrev" class="preview-media">
+            <input type="text" id="vTitle" placeholder="Ketik Judul Menarik..." style="margin-top:20px">
+            <textarea id="vDesc" rows="4" placeholder="Ketik Deskripsi Video..."></textarea>
+            <input type="text" id="vTags" placeholder="Tags: tutorial, shorts, gaming">
         </section>
     </div>
 
     <div class="right-side">
         <section class="panel">
-            <h3><i class="fas fa-paper-plane"></i> Publikasi</h3>
-            <label>Visibilitas</label>
+            <h3><i class="fas fa-rocket"></i> Publish</h3>
             <select id="vPriv" onchange="toggleSched()">
                 <option value="private">🔒 Privat</option>
                 <option value="unlisted">🔗 Unlisted</option>
-                <option value="public">🌐 Publik Langsung</option>
+                <option value="public">🌐 Publik</option>
                 <option value="scheduled">📅 Jadwalkan</option>
             </select>
 
-            <div id="schedUI" class="schedule-ui">
-                <label>Waktu Tayang</label>
-                <input type="datetime-local" id="vDate">
-            </div>
+            <button class="btn-send" id="btnGo" onclick="mulaiUpload()">Mulai Unggah Sekarang</button>
 
-            <button class="btn-send" id="btnGo" onclick="mulaiUpload()">
-                MULAI UNGGAH
-            </button>
-
-            <div class="progress-box" id="pBox">
-                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: var(--neon-red);">
-                    <span id="pStat">MENGUNGGAH...</span>
-                    <span id="pPerc">0%</span>
-                </div>
-                <div class="bar-bg"><div class="bar-fill" id="pFill"></div></div>
-                <div class="log" id="vLog">> Menunggu perintah...</div>
+            <div class="log-box">
+                <div class="log" id="vLog">> Sistem Berjalan...</div>
             </div>
         </section>
     </div>
