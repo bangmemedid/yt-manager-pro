@@ -33,16 +33,14 @@ async function initGapi() {
       });
       gApiInited = true;
       tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: ""
+        client_id: CLIENT_ID, scope: SCOPES, callback: ""
       });
       resolve();
     });
   });
 }
 
-// --- FETCHING ENGINE ---
+// --- FETCHING ENGINE (TURBO PARALLEL) ---
 async function fetchRealtimeStats(channelId) {
     try {
         const end = new Date().toISOString().split('T')[0];
@@ -65,7 +63,7 @@ async function fetchAllChannelsData() {
   }
   setStatus("Syncing...", true);
   
-  // OPTIMASI: Jalankan secara paralel agar tidak lelet
+  // TEKNIK PARALEL: Menarik data semua akun secara serentak
   const results = await Promise.all(accounts.map(async (acc) => {
     const isExpired = Date.now() > acc.expires_at;
     if (isExpired) return { isExpired: true, snippet: { title: acc.email, thumbnails:{default:{url:""}}} };
@@ -118,7 +116,7 @@ function renderTable(data) {
   if($("lastUpdate")) $("lastUpdate").textContent = new Date().toLocaleTimeString();
 }
 
-// --- FITUR LOGIN & SINKRON ---
+// --- LOGIN & SYNC ---
 async function googleSignIn(){
   if(!gApiInited) await initGapi();
   tokenClient.callback = async (resp) => {
@@ -147,7 +145,7 @@ function importData() {
     if (code) { localStorage.setItem(STORE_KEY, code); location.reload(); }
 }
 
-// --- INIT ---
+// --- DOM INIT ---
 document.addEventListener("DOMContentLoaded", () => {
     initGapi().then(() => fetchAllChannelsData());
     if($("btnAddGmailTop")) $("btnAddGmailTop").onclick = googleSignIn;
