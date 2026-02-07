@@ -58,7 +58,7 @@ function initGapi(){
 }
 
 /* =========================
-    ANALYTICS ENGINE (ANTI-NOL & 24H)
+    ANALYTICS ENGINE (ANTI-NOL)
 ========================= */
 async function fetchRealtimeStats(channelId) {
     try {
@@ -66,7 +66,6 @@ async function fetchRealtimeStats(channelId) {
         const start = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         const end = now.toISOString().split('T')[0];
 
-        // Usaha 1: Ambil data per jam (Paling Akurat)
         let res = await gapi.client.youtubeAnalytics.reports.query({
             ids: `channel==${channelId}`,
             startDate: start, endDate: end,
@@ -74,14 +73,12 @@ async function fetchRealtimeStats(channelId) {
         });
 
         let rows = res.result.rows || [];
-        
         if (rows.length > 0) {
             const last24hRows = rows.slice(0, 24);
             const total24h = last24hRows.reduce((acc, row) => acc + row[1], 0);
             return { m60: Math.floor(total24h / 24), h48: total24h };
         } 
         
-        // Usaha 2: Fallback jika per jam kosong
         res = await gapi.client.youtubeAnalytics.reports.query({
             ids: `channel==${channelId}`,
             startDate: start, endDate: end,
@@ -90,9 +87,7 @@ async function fetchRealtimeStats(channelId) {
         
         let totalFallback = (res.result.rows && res.result.rows[0]) ? res.result.rows[0][0] : 0;
         return { m60: Math.floor(totalFallback / 72), h48: Math.floor(totalFallback / 3) };
-
     } catch (e) { 
-        console.error("Gagal Analytics:", e);
         return { m60: 0, h48: 0 }; 
     }
 }
@@ -112,8 +107,7 @@ async function fetchAllChannelsData() {
   let mergedData = [];
 
   for (const acc of accounts) {
-    const isExpired = Date.now() > acc.expires_at;
-    if (isExpired) {
+    if (Date.now() > acc.expires_at) {
         mergedData.push({ snippet: { title: acc.email, thumbnails: { default: { url: "" } } }, statistics: { subscriberCount: 0, viewCount: 0 }, isExpired: true, emailSource: acc.email });
         continue;
     }
@@ -136,8 +130,8 @@ async function fetchAllChannelsData() {
 }
 
 /* =========================
-    UI RENDERING
-======================== */
+    UI RENDERING (TOMBOL UPLOAD & HAPUS)
+========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
   if (!tbody) return;
@@ -155,8 +149,7 @@ function renderTable(data) {
     
     if (!isExpired) { tSubs += Number(s.subscriberCount); tViews += Number(s.viewCount); tReal += r.h48; }
 
-    // LOCK: Label Active diubah jadi Tombol UPLOAD sesuai permintaan
-    const statusLabel = isExpired 
+    const statusBtn = isExpired 
       ? `<span style="background:#ef4444; color:white; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold;">EXPIRED</span>`
       : `<button onclick="goToManager(${index})" style="background:rgba(34,211,238,0.1); color:#22d3ee; padding:6px 12px; border-radius:6px; font-size:10px; font-weight:bold; border:1px solid #22d3ee; cursor:pointer;">UPLOAD</button>`;
 
@@ -167,9 +160,9 @@ function renderTable(data) {
         <td>${isExpired ? '---' : formatNumber(s.viewCount)}</td>
         <td style="color:#22d3ee;font-weight:700">${isExpired ? '---' : formatNumber(r.m60)}</td>
         <td style="color:#fbbf24;font-weight:700">${isExpired ? '---' : formatNumber(r.h48)}</td>
-        <td>${statusLabel}</td>
+        <td>${statusBtn}</td>
         <td style="text-align:center;">
-            <button onclick="hapusChannelSatu('${item.emailSource}')" style="background:transparent; border:none; color:#ef4444; cursor:pointer;" title="Hapus">
+            <button onclick="hapusChannelSatu('${item.emailSource}')" style="background:transparent; border:none; color:#ef4444; cursor:pointer;">
                 <i class="fas fa-trash-alt"></i>
             </button>
         </td>
@@ -185,10 +178,10 @@ function renderTable(data) {
 }
 
 /* =========================
-    FEATURES: HAPUS, EXPORT, IMPORT
+    FITUR GABUNGAN
 ========================= */
 function hapusChannelSatu(email) {
-    if (confirm(`Apakah yakin ingin menghapus akun ${email}?`)) {
+    if (confirm("Hapus akun " + email + "?")) {
         let accounts = loadAccounts();
         const updated = accounts.filter(acc => acc.email !== email);
         saveAccounts(updated);
@@ -198,7 +191,7 @@ function hapusChannelSatu(email) {
 
 function exportData() {
     const data = localStorage.getItem(STORE_KEY);
-    if (!data || data === "[]") return;
+    if (!data) return;
     const tempInput = document.createElement("textarea");
     tempInput.value = data; document.body.appendChild(tempInput);
     tempInput.select(); document.execCommand('copy'); document.body.removeChild(tempInput);
@@ -206,8 +199,8 @@ function exportData() {
 }
 
 function importData() {
-    const code = prompt("Tempelkan Kode Data di sini:");
-    if (code && code.trim() !== "") {
+    const code = prompt("Tempelkan Kode Data:");
+    if (code) {
         try {
             const newData = JSON.parse(code);
             if (Array.isArray(newData)) {
@@ -224,12 +217,12 @@ function importData() {
 }
 
 /* =========================
-    AUTH & NAVIGATION
+    AUTH & NAV
 ========================= */
 async function googleSignIn(){
   if(!gApiInited) await initGapi();
   tokenClient.callback = async (resp) => {
-    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${resp.access_token}` } });
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: "Bearer " + resp.access_token } });
     const data = await res.json();
     let accounts = loadAccounts();
     const payload = { email: data.email, access_token: resp.access_token, expires_at: Date.now() + (resp.expires_in * 1000) };
@@ -252,21 +245,17 @@ function goToManager(idx) {
 }
 
 /* =========================
-    INIT & AUTO REFRESH
+    INIT
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
   fetchAllChannelsData();
-  
   if($("btnAddGmailTop")) $("btnAddGmailTop").onclick = googleSignIn;
   if($("btnRefreshData")) $("btnRefreshData").onclick = fetchAllChannelsData;
   if($("btnExportData")) $("btnExportData").onclick = exportData;
   if($("btnImportData")) $("btnImportData").onclick = importData;
-  
   if($("btnOwnerLogout")) $("btnOwnerLogout").onclick = () => { window.location.href="login.html"; };
-  if($("btnLocalLogout")) $("btnLocalLogout").onclick = () => { if(confirm("Hapus semua akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
+  if($("btnLocalLogout")) $("btnLocalLogout").onclick = () => { if(confirm("Hapus akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
   if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
-  
-  // Auto Refresh 5 Menit
   setInterval(() => { if(loadAccounts().length > 0) fetchAllChannelsData(); }, 300000);
 });
