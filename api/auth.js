@@ -52,12 +52,8 @@ export default async function handler(req, res) {
             payload.refresh_token = tokens.refresh_token;
         }
 
-        // 5. SIMPAN KE SUPABASE (UPSERT)
-        const { error } = await supabase.from('yt_accounts').upsert(payload, { onConflict: 'gmail' });
 
-        if (error) throw error;
-
-// 5. SIMPAN KE SUPABASE (SUDAH OKE)
+//  SIMPAN KE SUPABASE (SUDAH OKE)
         const { error } = await supabase.from('yt_accounts').upsert(payload, { onConflict: 'gmail' });
 
         if (error) throw error;
@@ -67,16 +63,18 @@ export default async function handler(req, res) {
         return res.status(200).send(`
             <html>
                 <head>
-                    <title>Login Sukses</title>
-                    <meta http-equiv="refresh" content="0;url=/dashboard.html">
+                    <meta http-equiv="refresh" content="0;url=https://yt-manager-pro.vercel.app/dashboard.html">
                 </head>
                 <body>
+                    <p>Login Sukses! Mengalihkan ke Dashboard...</p>
                     <script>
-                        // Hapus memori lama browser
-                        localStorage.removeItem('ytmpro_accounts_merge_v1'); 
-                        // Paksa masuk ke dashboard dalam
-                        window.location.replace('/dashboard.html');
+                        window.location.replace("https://yt-manager-pro.vercel.app/dashboard.html");
                     </script>
                 </body>
             </html>
         `);
+    } catch (err) {
+        console.error("Auth Error:", err.message);
+        res.status(500).send("Error: " + err.message);
+    }
+}
