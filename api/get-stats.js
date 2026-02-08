@@ -1,11 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = "https://yeejuntixygygszxnxit.supabase.co"; 
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllZWp1bnRpeHlneWdzenhueGl0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDQ4ODQ4NywiZXhwIjoyMDg2MDY0NDg3fQ.vHAescYQhCBh7bTioQnUMeRVmyqekVWDv41uyWFWVYQ"; 
-const G_CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
-const G_CLIENT_SECRET = "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";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Gunakan Environment Variables agar Aman & Sinkron
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 export default async function handler(req, res) {
     try {
@@ -14,52 +10,49 @@ export default async function handler(req, res) {
 
         const updatedAccounts = await Promise.all(accounts.map(async (acc) => {
             let token = acc.access_token;
-            let expiresAt = acc.expires_at;
+            let expiresAt = acc.expires_at; // Dalam hitungan DETIK
+            let nowInSeconds = Math.floor(Date.now() / 1000);
 
-            // CEK: Jika token mati (expired), minta bensin baru pakai Refresh Token
-            if (Date.now() >= expiresAt) {
-                const response = await fetch("https://oauth2.googleapis.com/token", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: new URLSearchParams({
-                        client_id: G_CLIENT_ID,
-                        client_secret: G_CLIENT_SECRET,
-                        refresh_token: acc.refresh_token,
-                        grant_type: "refresh_token",
-                    }),
-                });
+            // FIX: Perbandingan waktu yang benar (Detik vs Detik)
+            if (nowInSeconds >= expiresAt && acc.refresh_token) {
+                try {
+                    const response = await fetch("https://oauth2.googleapis.com/token", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: new URLSearchParams({
+                            client_id: "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com",
+                            client_secret: process.env.G_CLIENT_SECRET,
+                            refresh_token: acc.refresh_token,
+                            grant_type: "refresh_token",
+                        }),
+                    });
 
-                const newTokenData = await response.json();
-                
-                if (newTokenData.access_token) {
-                    token = newTokenData.access_token;
-                    expiresAt = Date.now() + (newTokenData.expires_in * 1000);
+                    const newTokenData = await response.json();
+                    
+                    if (newTokenData.access_token) {
+                        token = newTokenData.access_token;
+                        expiresAt = nowInSeconds + (newTokenData.expires_in || 3600);
 
-                    // Simpan bensin baru ke database biar awet
-                    await supabase.from('yt_accounts').update({
-                        access_token: token,
-                        expires_at: expiresAt
-                    }).eq('gmail', acc.gmail);
+                        // Simpan bensin baru ke database
+                        await supabase.from('yt_accounts').update({
+                            access_token: token,
+                            expires_at: expiresAt
+                        }).eq('gmail', acc.gmail);
+                    }
+                } catch (refreshErr) {
+                    console.error("Gagal Refresh Token untuk: " + acc.gmail);
                 }
             }
 
-            // Ambil data statistik dari YouTube
-            const ytRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&mine=true`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const ytData = await ytRes.json();
-            
-            if (!ytData.items) return { gmail: acc.gmail, name: "Error", subs: 0, views: 0 };
-
-            const stats = ytData.items[0].statistics;
-            const snippet = ytData.items[0].snippet;
-
+            // Kembalikan data yang dibutuhkan Frontend (Dashboard)
             return {
                 gmail: acc.gmail,
-                name: snippet.title,
-                subs: stats.subscriberCount,
-                views: stats.viewCount,
-                thumbnail: snippet.thumbnails.default.url
+                name: acc.name || "Unknown Channel",
+                subs: acc.subs || "0",
+                views: acc.views || "0",
+                thumbnail: acc.thumbnail || "",
+                access_token: token, // Dikirim agar gapi.client.setToken di frontend sukses
+                expires_at: expiresAt
             };
         }));
 
