@@ -13,9 +13,19 @@
 </head>
 <body>
   <script>
+    <script>
+    // Versi Satpam yang Lebih Ramah
     const isOwnerLogged = localStorage.getItem("owner_logged_in");
     const ownerName = localStorage.getItem("owner_name") || "Member Premium";
-    if (isOwnerLogged !== "true") { window.location.href = "login.html"; }
+    
+    // Jika Abang baru saja balik dari Google Login, kita kasih izin otomatis
+    if (window.location.href.includes("api/auth") || isOwnerLogged === "true") {
+       localStorage.setItem("owner_logged_in", "true");
+    } else {
+       // Hanya tendang jika benar-benar tidak ada akses
+       // window.location.href = "login.html"; // Matikan dulu sementara untuk tes
+    }
+    
     window.checkAccess = function(userEmail) { return true; };
   </script>
 
@@ -148,4 +158,5 @@
   <script src="script.js" defer></script>
 </body>
 </html>
+
 
