@@ -14,7 +14,7 @@ let allCachedChannels = [];
 const $ = (id) => document.getElementById(id);
 
 /* =========================
-    HELPERS
+    HELPERS (ASLI)
 ========================= */
 function setStatus(msg, isOnline = false){
   const el = $("statusText");
@@ -37,7 +37,7 @@ function formatNumber(n){
 }
 
 /* =========================
-    GOOGLE INIT
+    GOOGLE INIT (ASLI)
 ========================= */
 function initGapi(){
   return new Promise((resolve) => {
@@ -59,7 +59,7 @@ function initGapi(){
 }
 
 /* =========================
-    ANALYTICS ENGINE
+    ANALYTICS ENGINE (ASLI)
 ========================= */
 async function fetchRealtimeStats(channelId) {
     try {
@@ -94,10 +94,10 @@ async function fetchRealtimeStats(channelId) {
 }
 
 /* =========================
-    CORE DATA FETCHING (SYNC DATABASE)
+    CORE DATA FETCHING (DATABASE SYNC)
 ========================= */
 async function fetchAllChannelsData() {
-  setStatus("Syncing with Database...", true);
+  setStatus("Syncing with Cloud...", true);
   
   try {
     const response = await fetch('/api/get-stats');
@@ -105,9 +105,9 @@ async function fetchAllChannelsData() {
 
     if (dbAccounts.error) throw new Error(dbAccounts.error);
 
-    // DISESUAIKAN DENGAN NAMA KOLOM 'gmail' DI SUPABASE ABANG
+    // Sinkronkan ke localStorage agar fitur Import/Export tetap jalan
     const syncLocal = dbAccounts.map(acc => ({
-        email: acc.gmail, 
+        email: acc.gmail,
         access_token: acc.access_token,
         expires_at: acc.expires_at
     }));
@@ -122,7 +122,6 @@ async function fetchAllChannelsData() {
     let mergedData = [];
     for (const acc of dbAccounts) {
         try {
-          // GUNAKAN BENSIN TERBARU DARI DATABASE
           gapi.client.setToken({ access_token: acc.access_token });
           const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
           
@@ -130,7 +129,7 @@ async function fetchAllChannelsData() {
               for(let item of res.result.items) {
                   item.realtime = await fetchRealtimeStats(item.id);
                   item.isExpired = false;
-                  item.emailSource = acc.gmail; 
+                  item.emailSource = acc.gmail;
                   mergedData.push(item);
               }
           }
@@ -142,14 +141,14 @@ async function fetchAllChannelsData() {
 
   } catch (err) {
     console.error("Sync Error:", err);
-    setStatus("Database Offline. Re-logging...", false);
+    setStatus("Database Offline.", false);
     const localData = loadAccounts();
     if (localData.length > 0) renderTable(allCachedChannels);
   }
 }
 
 /* =========================
-    UI RENDERING (FINAL CLOUD SYNC)
+    UI RENDERING (ASLI)
 ========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
@@ -160,40 +159,28 @@ function renderTable(data) {
   tbody.innerHTML = "";
   let tSubs = 0, tViews = 0, tReal = 0;
 
-  // Filter berdasarkan nama channel dari database (item.name)
-  const filtered = data.filter(i => (i.name || "").toLowerCase().includes(search));
-  
+  const filtered = data.filter(i => (i.snippet.title || "").toLowerCase().includes(search));
   filtered.forEach((item, index) => {
-    // Sesuaikan data dari Supabase agar bisa dibaca fungsi render
-    const s = { 
-        subscriberCount: item.subs || "0", 
-        viewCount: item.views || "0" 
-    };
-    const r = item.realtime || { m60: 0, h48: 0 };
-    const isExpired = false; // Akun dari DB selalu kita anggap aktif (auto-refresh)
+    const s = item.statistics;
+    const r = item.realtime || { m60:0, h48:0 };
+    const isExpired = item.isExpired;
     
-    // Hitung Total Statistik
-    tSubs += Number(s.subscriberCount); 
-    tViews += Number(s.viewCount); 
-    tReal += Number(r.h48 || 0);
+    if (!isExpired) { tSubs += Number(s.subscriberCount); tViews += Number(s.viewCount); tReal += r.h48; }
 
-    const statusBtn = `<button onclick="goToManager(${index})" style="background:rgba(34,211,238,0.1); color:#22d3ee; padding:6px 12px; border-radius:6px; font-size:10px; font-weight:bold; border:1px solid #22d3ee; cursor:pointer;">UPLOAD</button>`;
+    const statusBtn = isExpired 
+      ? `<span style="background:#ef4444; color:white; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold;">EXPIRED</span>`
+      : `<button onclick="goToManager(${index})" style="background:rgba(34,211,238,0.1); color:#22d3ee; padding:6px 12px; border-radius:6px; font-size:10px; font-weight:bold; border:1px solid #22d3ee; cursor:pointer;">UPLOAD</button>`;
 
     tbody.innerHTML += `
       <tr>
-        <td>
-            <div style="display:flex;align-items:center;gap:10px;">
-                <img src="${item.thumbnail || ''}" style="width:24px;border-radius:50%">
-                <b>${item.name}</b>
-            </div>
-        </td>
-        <td>${formatNumber(s.subscriberCount)}</td>
-        <td>${formatNumber(s.viewCount)}</td>
-        <td style="color:#22d3ee;font-weight:700">${formatNumber(r.m60)}</td>
-        <td style="color:#fbbf24;font-weight:700">${formatNumber(r.h48)}</td>
+        <td><div style="display:flex;align-items:center;gap:10px;"><img src="${item.snippet.thumbnails.default.url || ''}" style="width:24px;border-radius:50%"><b>${item.snippet.title}</b></div></td>
+        <td>${isExpired ? '---' : formatNumber(s.subscriberCount)}</td>
+        <td>${isExpired ? '---' : formatNumber(s.viewCount)}</td>
+        <td style="color:#22d3ee;font-weight:700">${isExpired ? '---' : formatNumber(r.m60)}</td>
+        <td style="color:#fbbf24;font-weight:700">${isExpired ? '---' : formatNumber(r.h48)}</td>
         <td>${statusBtn}</td>
         <td style="text-align:center;">
-            <button onclick="hapusChannelSatu('${item.gmail}')" style="background:transparent; border:none; color:#ef4444; cursor:pointer;">
+            <button onclick="hapusChannelSatu('${item.emailSource}')" style="background:transparent; border:none; color:#ef4444; cursor:pointer;">
                 <i class="fas fa-trash-alt"></i>
             </button>
         </td>
@@ -204,12 +191,12 @@ function renderTable(data) {
   if($("totalSubs")) $("totalSubs").textContent = formatNumber(tSubs);
   if($("totalViews")) $("totalViews").textContent = formatNumber(tViews);
   if($("totalRealtime")) $("totalRealtime").textContent = formatNumber(tReal);
-  if($("lastUpdate")) $("lastUpdate").textContent = new Date().toLocaleTimeString() + " (Cloud Sync)";
+  if($("lastUpdate")) $("lastUpdate").textContent = new Date().toLocaleTimeString() + " (Auto-Sync)";
   setStatus("Dashboard Aktif", true);
 }
 
 /* =========================
-    FITUR GABUNGAN
+    FITUR GABUNGAN (ASLI)
 ========================= */
 function hapusChannelSatu(email) {
     if (confirm("Hapus akun " + email + " dari database?")) {
@@ -273,7 +260,7 @@ function goToManager(idx) {
 }
 
 /* =========================
-    INIT
+    INIT (ASLI)
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
@@ -286,7 +273,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   if($("btnLocalLogout")) $("btnLocalLogout").onclick = () => { if(confirm("Hapus akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
   if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
   
-  // AUTO SYNC TIAP 5 MENIT AGAR TETAP ABADI
   setInterval(() => { fetchAllChannelsData(); }, 300000);
 });
-
