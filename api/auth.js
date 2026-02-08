@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
         // 6. BALIK KE DASHBOARD
         // 6. PAKSA MASUK KE HALAMAN DASHBOARD
-res.redirect('/index.html');
+res.redirect('/dashboard.html');
     } catch (err) {
         console.error("Auth Error:", err.message);
         res.status(500).send("Error: " + err.message);
