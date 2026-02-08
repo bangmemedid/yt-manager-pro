@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-// DATA DARI SCREENSHOT SUPABASE ABANG
+// KONFIGURASI SUPABASE (Sesuai SS Abang)
 const SUPABASE_URL = "https://yeejuntixygygszxnxit.supabase.co"; 
-const SUPABASE_KEY = "sb_secret_Gn_6dMyCrhF3V1DMF9AhUg_ulRQ1Oo7"; // Secret Key (Service Role)
+const SUPABASE_KEY = "sb_secret_Gn_6dMyCrhF3V1DMF9AhUg_ulRQ1Oo7"; 
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
             body: new URLSearchParams({
                 code,
                 client_id: "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com",
-                client_secret: "ISI_CLIENT_SECRET_ABANG_DI_SINI", // Ambil dari kolom 'Client secret' di image_99f99d.jpg
+                client_secret: "GOCSPX-qB8_GvD-U0F-L2e0I1XUC", // Sesuaikan dengan Client Secret dari JSON Google Abang
                 redirect_uri: "https://yt-manager-pro.vercel.app/api/auth",
                 grant_type: "authorization_code",
             }),
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
         });
         const userData = await userRes.json();
 
-        // 3. SIMPAN KE TABEL SUPABASE (yt_accounts)
+        // 3. SIMPAN KE TABEL SUPABASE (GUDANG ABADI)
         const { error } = await supabase
             .from('yt_accounts')
             .upsert({ 
@@ -46,10 +46,11 @@ export default async function handler(req, res) {
 
         if (error) throw error;
 
-        // 4. BALIK KE DASHBOARD
+        // 4. BERHASIL! BALIK KE DASHBOARD
         res.redirect('/dashboard.html?status=success');
 
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: err.message });
     }
 }
