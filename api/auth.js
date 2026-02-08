@@ -57,7 +57,6 @@ export default async function handler(req, res) {
 
         if (error) throw error;
 
-        // 6. BALIK KE DASHBOARD
         // 6. PAKSA MASUK KE HALAMAN DASHBOARD
 res.redirect('/dashboard.html');
     } catch (err) {
