@@ -94,7 +94,7 @@ async function fetchRealtimeStats(channelId) {
 }
 
 /* =========================
-    CORE DATA FETCHING (SYNC DATABASE CLOUD)
+    CORE DATA FETCHING (SMART SYNC)
 ========================= */
 async function fetchAllChannelsData() {
   setStatus("Syncing with Cloud Database...", true);
@@ -105,16 +105,8 @@ async function fetchAllChannelsData() {
 
     if (dbAccounts.error) throw new Error(dbAccounts.error);
 
-    // Tetap sinkronkan ke localStorage agar fitur Export/Import Abang tidak rusak
-    const syncLocal = dbAccounts.map(acc => ({
-        email: acc.gmail,
-        access_token: acc.access_token,
-        expires_at: acc.expires_at
-    }));
-    saveAccounts(syncLocal);
-
     if(dbAccounts.length === 0) { 
-        setStatus("Belum ada akun di Database.", false); 
+        setStatus("Database Kosong.", false); 
         if($("channelBody")) $("channelBody").innerHTML = '<tr><td colspan="7" class="empty">Klik + Tambah Gmail untuk memulai</td></tr>';
         return; 
     }
@@ -122,20 +114,37 @@ async function fetchAllChannelsData() {
     let mergedData = [];
     for (const acc of dbAccounts) {
         try {
-          // Inilah "Mesin Pemroses" yang kemarin hilang:
+          // Coba minta data terbaru ke Google
           gapi.client.setToken({ access_token: acc.access_token });
           const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
           
-          if(res.result.items) {
+          if(res.result && res.result.items) {
               for(let item of res.result.items) {
-                  // Jalankan mesin Analytics asli Abang
                   item.realtime = await fetchRealtimeStats(item.id);
                   item.isExpired = false;
                   item.emailSource = acc.gmail;
                   mergedData.push(item);
               }
+          } else {
+              // KALAU GOOGLE MENOLAK, PAKAI DATA DARI DATABASE (FALLBACK)
+              mergedData.push({
+                  id: acc.gmail,
+                  emailSource: acc.gmail,
+                  isExpired: true, // Kasih tanda biar tahu harus login ulang
+                  snippet: { title: acc.name || acc.gmail, thumbnails: { default: { url: acc.thumbnail || '' } } },
+                  statistics: { subscriberCount: acc.subs || "0", viewCount: acc.views || "0" }
+              });
           }
-        } catch (err) { console.error("GAPI Error for " + acc.gmail, err); }
+        } catch (err) { 
+            // JIKA ERROR (TOKEN BASI), TETAP TAMPILKAN DATA DARI DB
+            mergedData.push({
+                id: acc.gmail,
+                emailSource: acc.gmail,
+                isExpired: true,
+                snippet: { title: acc.name || acc.gmail, thumbnails: { default: { url: acc.thumbnail || '' } } },
+                statistics: { subscriberCount: acc.subs || "0", viewCount: acc.views || "0" }
+            });
+        }
     }
     
     allCachedChannels = mergedData;
@@ -143,9 +152,7 @@ async function fetchAllChannelsData() {
 
   } catch (err) {
     console.error("Sync Error:", err);
-    setStatus("Database Offline. Pakai Data Lokal...", false);
-    const localData = loadAccounts();
-    if (localData.length > 0) renderTable(allCachedChannels);
+    setStatus("Database Offline.", false);
   }
 }
 
@@ -277,3 +284,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   setInterval(() => { fetchAllChannelsData(); }, 300000);
 });
+
