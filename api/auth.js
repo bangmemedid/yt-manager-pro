@@ -58,10 +58,18 @@ export default async function handler(req, res) {
         if (error) throw error;
 
     
-// 6. PAKSA MASUK KE HALAMAN DASHBOARD
-res.redirect('/dashboard.html');
-    } catch (err) {
-        console.error("Auth Error:", err.message);
-        res.status(500).send("Error: " + err.message);
-    }
-}
+// Hapus baris redirect lama, ganti dengan ini:
+res.setHeader('Content-Type', 'text/html');
+res.write(`
+    <html>
+        <body>
+            <script>
+                // Simpan tanda login sukses di browser
+                localStorage.setItem('isLoggedIn', 'true');
+                // Paksa pindah ke dashboard
+                window.location.href = '/dashboard.html';
+            </script>
+        </body>
+    </html>
+`);
+res.end();
