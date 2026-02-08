@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     if (!code) return res.status(400).send("No code provided");
 
     try {
-        // 1. TUKAR CODE DENGAN TOKEN
+        // 1. TUKAR CODE DENGAN TOKEN (KODE ASLI ABANG)
         const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -23,20 +23,20 @@ export default async function handler(req, res) {
         const tokens = await tokenRes.json();
         if (tokens.error) throw new Error(tokens.error_description);
 
-        // 2. AMBIL DATA GMAIL USER
+        // 2. AMBIL DATA GMAIL USER (KODE ASLI ABANG)
         const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
             headers: { Authorization: `Bearer ${tokens.access_token}` },
         });
         const user = await userRes.json();
 
-        // 3. AMBIL DATA CHANNEL YOUTUBE (PENTING: Buat ngisi Name & Thumbnail)
+        // 3. AMBIL DATA CHANNEL YOUTUBE (KODE ASLI ABANG)
         const ytRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true', {
             headers: { Authorization: `Bearer ${tokens.access_token}` },
         });
         const ytData = await ytRes.json();
         const channel = ytData.items ? ytData.items[0] : null;
 
-        // 4. SUSUN DATA UNTUK SUPABASE
+        // 4. SUSUN DATA UNTUK SUPABASE (KODE ASLI ABANG + PERBAIKAN REFRESH TOKEN)
         const payload = {
             gmail: user.email,
             name: channel ? channel.snippet.title : user.name,
@@ -47,34 +47,36 @@ export default async function handler(req, res) {
             expires_at: Math.floor(Date.now() / 1000) + (tokens.expires_in || 3600)
         };
 
-        // HANYA MASUKKAN REFRESH TOKEN JIKA ADA (Kunci Abadi)
         if (tokens.refresh_token) {
             payload.refresh_token = tokens.refresh_token;
         }
 
-
-//  SIMPAN KE SUPABASE (SUDAH OKE)
+        // 5. SIMPAN KE SUPABASE
         const { error } = await supabase.from('yt_accounts').upsert(payload, { onConflict: 'gmail' });
-
         if (error) throw error;
 
-        // 6. SOLUSI TERAKHIR: PAKSA PINDAH PAKAI HTML META & JS ABSOLUT
+        // 6. SOLUSI REDIRECT (PAKSA PINDAH TANPA MEMBAL)
+        // Kita gunakan res.write + res.end agar Vercel mengirimkan HTML murni ke browser
         res.setHeader('Content-Type', 'text/html');
-        return res.status(200).send(`
+        res.write(`
             <html>
                 <head>
-                    <meta http-equiv="refresh" content="0;url=https://yt-manager-pro.vercel.app/dashboard.html">
+                    <title>Redirecting...</title>
+                    <meta http-equiv="refresh" content="0;url=/dashboard.html">
                 </head>
                 <body>
-                    <p>Login Sukses! Mengalihkan ke Dashboard...</p>
                     <script>
-                        window.location.replace("https://yt-manager-pro.vercel.app/dashboard.html");
+                        // Cara paling ampuh pindah halaman tanpa membal
+                        window.location.href = "/dashboard.html";
                     </script>
                 </body>
             </html>
         `);
+        return res.end();
+
     } catch (err) {
         console.error("Auth Error:", err.message);
-        res.status(500).send("Error: " + err.message);
+        // Jika error, kirim pesan jelas tapi tetap arahkan kembali agar tidak macet
+        return res.status(500).send("Error: " + err.message);
     }
 }
