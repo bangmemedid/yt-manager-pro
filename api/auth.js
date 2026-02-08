@@ -1,25 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 
-// KONFIGURASI SUPABASE (Sesuai SS Abang)
 const SUPABASE_URL = "https://yeejuntixygygszxnxit.supabase.co"; 
 const SUPABASE_KEY = "sb_secret_Gn_6dMyCrhF3V1DMF9AhUg_ulRQ1Oo7"; 
+const G_CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
+const G_CLIENT_SECRET = "GOCSPX-qB8_GvD-U0F-L2e0I1XUC";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default async function handler(req, res) {
     const { code } = req.query;
-
     if (!code) return res.status(400).send("No code provided");
 
     try {
-        // 1. TUKAR CODE JADI REFRESH TOKEN (KUNCI ABADI)
         const response = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
                 code,
-                client_id: "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com",
-                client_secret: "GOCSPX-qB8_GvD-U0F-L2e0I1XUC", // Sesuaikan dengan Client Secret dari JSON Google Abang
+                client_id: G_CLIENT_ID,
+                client_secret: G_CLIENT_SECRET,
                 redirect_uri: "https://yt-manager-pro.vercel.app/api/auth",
                 grant_type: "authorization_code",
             }),
@@ -28,13 +27,11 @@ export default async function handler(req, res) {
         const data = await response.json();
         if (data.error) throw new Error(data.error_description);
 
-        // 2. AMBIL INFO USER (GMAIL)
         const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
             headers: { Authorization: `Bearer ${data.access_token}` }
         });
         const userData = await userRes.json();
 
-        // 3. SIMPAN KE TABEL SUPABASE (GUDANG ABADI)
         const { error } = await supabase
             .from('yt_accounts')
             .upsert({ 
@@ -45,12 +42,8 @@ export default async function handler(req, res) {
             }, { onConflict: 'gmail' });
 
         if (error) throw error;
-
-        // 4. BERHASIL! BALIK KE DASHBOARD
         res.redirect('/dashboard.html?status=success');
-
     } catch (err) {
-        console.error(err);
         res.status(500).json({ error: err.message });
     }
 }
