@@ -247,8 +247,8 @@ async function googleSignIn(){
       `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
       `response_type=code&` +
       `scope=${encodeURIComponent(SCOPES)}&` +
-      `access_type=offline&` + 
-      `prompt=consent`; 
+      `access_type=offline&` + // <--- WAJIB ADA INI
+      `prompt=consent`;          // <--- WAJIB ADA INI (Agar kotak centang muncul)
 
   window.location.href = authUrl;
 }
@@ -284,4 +284,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   setInterval(() => { fetchAllChannelsData(); }, 300000);
 });
+
 
