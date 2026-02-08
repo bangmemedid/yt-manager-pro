@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://yeejuntixygygszxnxit.supabase.co"; 
-const SUPABASE_KEY = "sb_secret_Gn_6dMyCrhF3V1DMF9AhUg_ulRQ1Oo7"; 
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllZWp1bnRpeHlneWdzenhueGl0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDQ4ODQ4NywiZXhwIjoyMDg2MDY0NDg3fQ.vHAescYQhCBh7bTioQnUMeRVmyqekVWDv41uyWFWVYQ"; 
 const G_CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const G_CLIENT_SECRET = "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";
 
