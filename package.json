@@ -1,11 +1,8 @@
 {
   "name": "yt-manager-pro",
   "version": "1.0.0",
-  "main": "index.js",
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0"
-  },
-  "engines": {
-    "node": "24.x"
+    "@supabase/supabase-js": "^2.39.0",
+    "node-fetch": "^3.3.2"
   }
 }
