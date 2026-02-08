@@ -1,8 +1,17 @@
 {
   "name": "yt-manager-pro",
   "version": "1.0.0",
+  "description": "YouTube Manager Pro with Cloud Sync",
+  "main": "index.html",
+  "scripts": {
+    "start": "next dev",
+    "build": "next build"
+  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/supabase-js": "^2.39.7",
     "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.x"
   }
 }
