@@ -1,3 +1,4 @@
+// api/auth.js
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://yeejuntixygygszxnxit.supabase.co"; 
@@ -9,10 +10,14 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default async function handler(req, res) {
     const { code } = req.query;
-    if (!code) return res.status(400).send("No code provided");
+
+    if (!code) {
+        return res.status(400).json({ error: "Authorization code is missing" });
+    }
 
     try {
-        const response = await fetch("https://oauth2.googleapis.com/token", {
+        // 1. Tukar Code Google
+        const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
@@ -24,26 +29,40 @@ export default async function handler(req, res) {
             }),
         });
 
-        const data = await response.json();
-        if (data.error) throw new Error(data.error_description);
+        const tokenData = await tokenResponse.json();
 
-        const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-            headers: { Authorization: `Bearer ${data.access_token}` }
+        if (tokenData.error) {
+            throw new Error(`Google Token Error: ${tokenData.error_description || tokenData.error}`);
+        }
+
+        // 2. Ambil Email User
+        const userResponse = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: `Bearer ${tokenData.access_token}` },
         });
-        const userData = await userRes.json();
+        const userData = await userResponse.json();
 
-        const { error } = await supabase
+        // 3. Simpan ke Supabase (Gudang Data Abadi)
+        const { error: dbError } = await supabase
             .from('yt_accounts')
             .upsert({ 
                 gmail: userData.email, 
-                refresh_token: data.refresh_token, 
-                access_token: data.access_token,
-                expires_at: Date.now() + (data.expires_in * 1000)
+                refresh_token: tokenData.refresh_token, 
+                access_token: tokenData.access_token,
+                expires_at: Date.now() + (tokenData.expires_in * 1000)
             }, { onConflict: 'gmail' });
 
-        if (error) throw error;
-        res.redirect('/dashboard.html?status=success');
+        if (dbError) {
+            throw new Error(`Database Error: ${dbError.message}`);
+        }
+
+        // 4. Berhasil! Balik ke Dashboard
+        return res.redirect('/dashboard.html?status=success');
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("Critical Error:", err.message);
+        return res.status(500).json({ 
+            error: "Internal Server Error", 
+            details: err.message 
+        });
     }
 }
