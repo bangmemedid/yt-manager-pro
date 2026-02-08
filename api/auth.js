@@ -1,68 +1,58 @@
-// api/auth.js
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = "https://yeejuntixygygszxnxit.supabase.co"; 
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InllZWp1bnRpeHlneWdzenhueGl0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDQ4ODQ4NywiZXhwIjoyMDg2MDY0NDg3fQ.vHAescYQhCBh7bTioQnUMeRVmyqekVWDv41uyWFWVYQ"; 
-const G_CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
-const G_CLIENT_SECRET = "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";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 export default async function handler(req, res) {
     const { code } = req.query;
-
-    if (!code) {
-        return res.status(400).json({ error: "Authorization code is missing" });
-    }
+    if (!code) return res.status(400).send("No code provided");
 
     try {
-        // 1. Tukar Code Google
-        const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        // 1. TUKAR CODE DENGAN TOKEN (PAKAI CLIENT_SECRET DARI VERCEL)
+        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
                 code,
-                client_id: G_CLIENT_ID,
-                client_secret: G_CLIENT_SECRET,
-                redirect_uri: "https://yt-manager-pro.vercel.app/api/auth",
-                grant_type: "authorization_code",
+                client_id: "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com",
+                client_secret: process.env.G_CLIENT_SECRET, // <--- Kunci rahasia dari Vercel
+                redirect_uri: `https://${req.headers.host}/api/auth`,
+                grant_type: 'authorization_code',
             }),
         });
 
-        const tokenData = await tokenResponse.json();
+        const tokens = await tokenRes.json();
+        if (tokens.error) throw new Error(tokens.error_description);
 
-        if (tokenData.error) {
-            throw new Error(`Google Token Error: ${tokenData.error_description || tokenData.error}`);
-        }
-
-        // 2. Ambil Email User
-        const userResponse = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-            headers: { Authorization: `Bearer ${tokenData.access_token}` },
+        // 2. AMBIL DATA USER (GMAIL)
+        const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { Authorization: `Bearer ${tokens.access_token}` },
         });
-        const userData = await userResponse.json();
+        const user = await userRes.json();
 
-        // 3. Simpan ke Supabase (Gudang Data Abadi)
-        const { error: dbError } = await supabase
-            .from('yt_accounts')
-            .upsert({ 
-                gmail: userData.email, 
-                refresh_token: tokenData.refresh_token, 
-                access_token: tokenData.access_token,
-                expires_at: Date.now() + (tokenData.expires_in * 1000)
-            }, { onConflict: 'gmail' });
+        // 3. AMBIL DATA CHANNEL YOUTUBE (NAME, SUBS, THUMBNAIL)
+        const ytRes = await fetch('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true', {
+            headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+        const ytData = await ytRes.json();
+        const channel = ytData.items ? ytData.items[0] : null;
 
-        if (dbError) {
-            throw new Error(`Database Error: ${dbError.message}`);
-        }
+        // 4. SIMPAN SEMUANYA KE SUPABASE (TERMASUK REFRESH TOKEN)
+        const { error } = await supabase.from('yt_accounts').upsert({
+            gmail: user.email,
+            name: channel ? channel.snippet.title : user.name,
+            thumbnail: channel ? channel.snippet.thumbnails.default.url : user.picture,
+            subs: channel ? channel.statistics.subscriberCount : 0,
+            views: channel ? channel.statistics.viewCount : 0,
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token, // <--- INI KUNCI ABADINYA!
+            expires_at: Math.floor(Date.now() / 1000) + tokens.expires_in
+        }, { onConflict: 'gmail' });
 
-        // 4. Berhasil! Balik ke Dashboard
-        return res.redirect('/dashboard.html?status=success');
+        if (error) throw error;
 
+        // 5. BALIK KE DASHBOARD
+        res.redirect('/');
     } catch (err) {
-        console.error("Critical Error:", err.message);
-        return res.status(500).json({ 
-            error: "Internal Server Error", 
-            details: err.message 
-        });
+        res.status(500).send("Error: " + err.message);
     }
 }
