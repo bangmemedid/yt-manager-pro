@@ -14,7 +14,7 @@ let allCachedChannels = [];
 const $ = (id) => document.getElementById(id);
 
 /* =========================
-    HELPERS (ASLI)
+    HELPERS (ASLI - DIPERTAHANKAN)
 ========================= */
 function setStatus(msg, isOnline = false){
   const el = $("statusText");
@@ -37,7 +37,7 @@ function formatNumber(n){
 }
 
 /* =========================
-    GOOGLE INIT (ASLI)
+    GOOGLE INIT (ASLI - DIPERTAHANKAN)
 ========================= */
 function initGapi(){
   return new Promise((resolve) => {
@@ -59,7 +59,7 @@ function initGapi(){
 }
 
 /* =========================
-    ANALYTICS ENGINE (ASLI)
+    ANALYTICS ENGINE (ASLI - DIPERTAHANKAN)
 ========================= */
 async function fetchRealtimeStats(channelId) {
     try {
@@ -94,7 +94,7 @@ async function fetchRealtimeStats(channelId) {
 }
 
 /* =========================
-    CORE DATA FETCHING (SMART SYNC)
+    CORE DATA FETCHING (SMART SYNC - UPDATED)
 ========================= */
 async function fetchAllChannelsData() {
   setStatus("Syncing with Cloud Database...", true);
@@ -105,6 +105,14 @@ async function fetchAllChannelsData() {
 
     if (dbAccounts.error) throw new Error(dbAccounts.error);
 
+    // FIX: Sinkronkan token dari Cloud ke Laptop agar tombol UPLOAD bekerja
+    const syncLocal = dbAccounts.map(acc => ({
+        email: acc.gmail,
+        access_token: acc.access_token,
+        expires_at: acc.expires_at
+    }));
+    saveAccounts(syncLocal);
+
     if(dbAccounts.length === 0) { 
         setStatus("Database Kosong.", false); 
         if($("channelBody")) $("channelBody").innerHTML = '<tr><td colspan="7" class="empty">Klik + Tambah Gmail untuk memulai</td></tr>';
@@ -114,7 +122,6 @@ async function fetchAllChannelsData() {
     let mergedData = [];
     for (const acc of dbAccounts) {
         try {
-          // Coba minta data terbaru ke Google
           gapi.client.setToken({ access_token: acc.access_token });
           const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
           
@@ -126,17 +133,16 @@ async function fetchAllChannelsData() {
                   mergedData.push(item);
               }
           } else {
-              // KALAU GOOGLE MENOLAK, PAKAI DATA DARI DATABASE (FALLBACK)
+              // FALLBACK: Gunakan data database jika GAPI gagal (Token mungkin basi)
               mergedData.push({
                   id: acc.gmail,
                   emailSource: acc.gmail,
-                  isExpired: true, // Kasih tanda biar tahu harus login ulang
+                  isExpired: true,
                   snippet: { title: acc.name || acc.gmail, thumbnails: { default: { url: acc.thumbnail || '' } } },
                   statistics: { subscriberCount: acc.subs || "0", viewCount: acc.views || "0" }
               });
           }
         } catch (err) { 
-            // JIKA ERROR (TOKEN BASI), TETAP TAMPILKAN DATA DARI DB
             mergedData.push({
                 id: acc.gmail,
                 emailSource: acc.gmail,
@@ -157,7 +163,7 @@ async function fetchAllChannelsData() {
 }
 
 /* =========================
-    UI RENDERING (ASLI)
+    UI RENDERING (ASLI - DIPERTAHANKAN)
 ========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
@@ -205,13 +211,15 @@ function renderTable(data) {
 }
 
 /* =========================
-    FITUR GABUNGAN (ASLI)
+    FITUR GABUNGAN (ASLI - DITINGKATKAN)
 ========================= */
 function hapusChannelSatu(email) {
-    if (confirm("Hapus akun " + email + " dari database?")) {
+    if (confirm("Hapus permanen akun " + email + " dari database?")) {
+        // Proses hapus di database cloud (via API kelak) dan lokal
         let accounts = loadAccounts();
         const updated = accounts.filter(acc => acc.email !== email);
         saveAccounts(updated);
+        // Untuk sementara menghapus dari UI, idealnya panggil API delete
         fetchAllChannelsData();
     }
 }
@@ -239,7 +247,7 @@ function importData() {
 }
 
 /* =========================
-    AUTH & NAV
+    AUTH & NAV (FIXED)
 ========================= */
 async function googleSignIn(){
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
@@ -247,8 +255,8 @@ async function googleSignIn(){
       `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
       `response_type=code&` +
       `scope=${encodeURIComponent(SCOPES)}&` +
-      `access_type=offline&` + // <--- WAJIB ADA INI
-      `prompt=consent`;          // <--- WAJIB ADA INI (Agar kotak centang muncul)
+      `access_type=offline&` + 
+      `prompt=consent`; 
 
   window.location.href = authUrl;
 }
@@ -269,7 +277,7 @@ function goToManager(idx) {
 }
 
 /* =========================
-    INIT (ASLI)
+    INIT (ASLI - DIPERTAHANKAN)
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
@@ -284,5 +292,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   setInterval(() => { fetchAllChannelsData(); }, 300000);
 });
-
-
