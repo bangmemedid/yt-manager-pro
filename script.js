@@ -105,8 +105,9 @@ async function fetchAllChannelsData() {
 
     if (dbAccounts.error) throw new Error(dbAccounts.error);
 
+    // Sinkronkan ke localStorage agar fitur Import/Export tetap jalan
     const syncLocal = dbAccounts.map(acc => ({
-        email: acc.gmail,
+        email: acc.gmail, // Disesuaikan dengan nama kolom di Supabase Abang
         access_token: acc.access_token,
         expires_at: acc.expires_at
     }));
@@ -121,14 +122,16 @@ async function fetchAllChannelsData() {
     let mergedData = [];
     for (const acc of dbAccounts) {
         try {
+          // Gunakan bensin terbaru dari database untuk GAPI
           gapi.client.setToken({ access_token: acc.access_token });
           const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
           
           if(res.result.items) {
               for(let item of res.result.items) {
+                  // Jalankan mesin Analytics asli Abang (Jam-jaman)
                   item.realtime = await fetchRealtimeStats(item.id);
                   item.isExpired = false;
-                  item.emailSource = acc.gmail;
+                  item.emailSource = acc.gmail; // Pakai gmail dari DB
                   mergedData.push(item);
               }
           }
@@ -195,25 +198,19 @@ function renderTable(data) {
 }
 
 /* =========================
-    FITUR DATABASE DELETE (BARU)
+    FITUR GABUNGAN (ASLI)
 ========================= */
-async function hapusChannelSatu(email) {
-    if (confirm("Hapus akun " + email + " dari database Cloud?")) {
-        setStatus("Menghapus dari Cloud...", true);
-        try {
-            // Menghapus dari Supabase via API
-            const res = await fetch(`/api/get-stats?deleteEmail=${email}`, { method: 'DELETE' });
-            if (res.ok) {
-                alert("Berhasil dihapus dari Cloud!");
-                fetchAllChannelsData(); // Refresh data
-            }
-        } catch (e) { alert("Gagal menghapus dari database."); }
+function hapusChannelSatu(email) {
+    if (confirm("Hapus akun " + email + " dari database?")) {
+        // Karena ini versi gabungan, kita filter lokal saja. 
+        // Jika ingin hapus permanen di DB, butuh API DELETE khusus.
+        let accounts = loadAccounts();
+        const updated = accounts.filter(acc => acc.email !== email);
+        saveAccounts(updated);
+        fetchAllChannelsData();
     }
 }
 
-/* =========================
-    EXPORT/IMPORT & SIGN IN
-========================= */
 function exportData() {
     const data = localStorage.getItem(STORE_KEY);
     if (!data) return;
@@ -236,6 +233,9 @@ function importData() {
     }
 }
 
+/* =========================
+    AUTH & NAV
+========================= */
 async function googleSignIn(){
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
       `client_id=${CLIENT_ID}&` +
@@ -252,19 +252,19 @@ function goToManager(idx) {
     const ch = allCachedChannels[idx];
     if (!ch || ch.isExpired) return;
     const accounts = loadAccounts();
-    const targetAcc = accounts.find(a => a.email === ch.emailSource);
+    const targetAcc = accounts.find(a => a.email === ch.emailSource) || accounts[0];
     const sessionData = { 
         channelId: ch.id, 
         title: ch.snippet.title, 
         img: ch.snippet.thumbnails.default.url, 
-        token: targetAcc ? targetAcc.access_token : ""
+        token: targetAcc.access_token 
     };
     sessionStorage.setItem("active_manager_data", JSON.stringify(sessionData));
     window.open('manager.html', '_blank');
 }
 
 /* =========================
-    INIT
+    INIT (ASLI)
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
@@ -274,7 +274,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if($("btnExportData")) $("btnExportData").onclick = exportData;
   if($("btnImportData")) $("btnImportData").onclick = importData;
   if($("btnOwnerLogout")) $("btnOwnerLogout").onclick = () => { window.location.href="login.html"; };
-  if($("btnLocalLogout")) $("btnLocalLogout").onclick = () => { if(confirm("Hapus semua akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
+  if($("btnLocalLogout")) $("btnLocalLogout").onclick = () => { if(confirm("Hapus akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
   if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
   
   // Auto Sync setiap 5 menit agar tetap abadi
