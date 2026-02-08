@@ -94,10 +94,10 @@ async function fetchRealtimeStats(channelId) {
 }
 
 /* =========================
-    CORE DATA FETCHING (DATABASE SYNC)
+    CORE DATA FETCHING (SYNC DATABASE CLOUD)
 ========================= */
 async function fetchAllChannelsData() {
-  setStatus("Syncing with Cloud...", true);
+  setStatus("Syncing with Cloud Database...", true);
   
   try {
     const response = await fetch('/api/get-stats');
@@ -105,7 +105,7 @@ async function fetchAllChannelsData() {
 
     if (dbAccounts.error) throw new Error(dbAccounts.error);
 
-    // Sinkronkan ke localStorage agar fitur Import/Export tetap jalan
+    // Tetap sinkronkan ke localStorage agar fitur Export/Import Abang tidak rusak
     const syncLocal = dbAccounts.map(acc => ({
         email: acc.gmail,
         access_token: acc.access_token,
@@ -122,11 +122,13 @@ async function fetchAllChannelsData() {
     let mergedData = [];
     for (const acc of dbAccounts) {
         try {
+          // Inilah "Mesin Pemroses" yang kemarin hilang:
           gapi.client.setToken({ access_token: acc.access_token });
           const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
           
           if(res.result.items) {
               for(let item of res.result.items) {
+                  // Jalankan mesin Analytics asli Abang
                   item.realtime = await fetchRealtimeStats(item.id);
                   item.isExpired = false;
                   item.emailSource = acc.gmail;
@@ -141,7 +143,7 @@ async function fetchAllChannelsData() {
 
   } catch (err) {
     console.error("Sync Error:", err);
-    setStatus("Database Offline.", false);
+    setStatus("Database Offline. Pakai Data Lokal...", false);
     const localData = loadAccounts();
     if (localData.length > 0) renderTable(allCachedChannels);
   }
