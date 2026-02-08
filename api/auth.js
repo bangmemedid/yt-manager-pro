@@ -57,19 +57,17 @@ export default async function handler(req, res) {
 
         if (error) throw error;
 
-    
-// Hapus baris redirect lama, ganti dengan ini:
-res.setHeader('Content-Type', 'text/html');
-res.write(`
-    <html>
-        <body>
-            <script>
-                // Simpan tanda login sukses di browser
-                localStorage.setItem('isLoggedIn', 'true');
-                // Paksa pindah ke dashboard
-                window.location.href = '/dashboard.html';
-            </script>
-        </body>
-    </html>
+// Pastikan tidak ada res.redirect atau res.write lain di bawahnya!
+return res.status(200).send(`
+  <html>
+    <head>
+      <meta http-equiv="refresh" content="0; url=https://yt-manager-pro.vercel.app/dashboard.html">
+    </head>
+    <body>
+      <p>Login Sukses! Mengalihkan ke Dashboard...</p>
+      <script>
+        window.location.replace("https://yt-manager-pro.vercel.app/dashboard.html");
+      </script>
+    </body>
+  </html>
 `);
-res.end();
