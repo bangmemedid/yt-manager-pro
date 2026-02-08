@@ -13,7 +13,7 @@ let allCachedChannels = [];
 const $ = (id) => document.getElementById(id);
 
 /* =========================
-    HELPERS
+    HELPERS (ASLI)
 ========================= */
 function setStatus(msg, isOnline = false){
   const el = $("statusText");
@@ -36,7 +36,7 @@ function formatNumber(n){
 }
 
 /* =========================
-    GOOGLE INIT
+    GOOGLE INIT (ASLI)
 ========================= */
 function initGapi(){
   return new Promise((resolve) => {
@@ -58,7 +58,7 @@ function initGapi(){
 }
 
 /* =========================
-    ANALYTICS ENGINE (ANTI-NOL)
+    ANALYTICS ENGINE (ASLI - ANTI-NOL)
 ========================= */
 async function fetchRealtimeStats(channelId) {
     try {
@@ -93,28 +93,28 @@ async function fetchRealtimeStats(channelId) {
 }
 
 /* =========================
-    CORE DATA FETCHING (KONEKSI DATABASE)
+    CORE DATA FETCHING (DATABASE SYNC)
 ========================= */
 async function fetchAllChannelsData() {
-  setStatus("Syncing with Cloud Database...", true);
+  setStatus("Syncing with Database...", true);
   
   try {
-    // 1. Ambil data akun terbaru dari API Backend kita (get-stats.js urus Refresh Token)
+    // Memanggil Backend API untuk cek bensin (Refresh Token)
     const response = await fetch('/api/get-stats');
     const dbAccounts = await response.json();
 
     if (dbAccounts.error) throw new Error(dbAccounts.error);
 
-    // 2. Simpan balik ke localStorage agar fitur Import/Export tetap jalan
-    const syncData = dbAccounts.map(acc => ({
+    // Sinkronkan ke localStorage agar fitur Import/Export tetap jalan
+    const syncLocal = dbAccounts.map(acc => ({
         email: acc.gmail,
-        access_token: acc.access_token, // Token yang sudah di-refresh otomatis oleh API
+        access_token: acc.access_token,
         expires_at: acc.expires_at
     }));
-    saveAccounts(syncData);
+    saveAccounts(syncLocal);
 
     if(dbAccounts.length === 0) { 
-        setStatus("Belum ada akun.", false); 
+        setStatus("Belum ada akun di Database.", false); 
         if($("channelBody")) $("channelBody").innerHTML = '<tr><td colspan="7" class="empty">Klik + Tambah Gmail untuk memulai</td></tr>';
         return; 
     }
@@ -122,32 +122,36 @@ async function fetchAllChannelsData() {
     let mergedData = [];
     for (const acc of dbAccounts) {
         try {
-          // Set token untuk GAPI agar Analytics bisa jalan
+          // Gunakan bensin terbaru dari database untuk GAPI
           gapi.client.setToken({ access_token: acc.access_token });
           const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
           
           if(res.result.items) {
               for(let item of res.result.items) {
+                  // Jalankan mesin Analytics asli Abang
                   item.realtime = await fetchRealtimeStats(item.id);
                   item.isExpired = false;
                   item.emailSource = acc.gmail;
                   mergedData.push(item);
               }
           }
-        } catch (err) { console.error("Error GAPI for " + acc.gmail, err); }
+        } catch (err) { console.error("GAPI Error for " + acc.gmail, err); }
     }
     
     allCachedChannels = mergedData;
     renderTable(mergedData);
 
   } catch (err) {
-    console.error("Database Sync Error:", err);
+    console.error("Sync Error:", err);
     setStatus("Database Offline. Re-logging...", false);
+    // Jika database gagal, coba tampilkan data lokal yang ada saja
+    const localData = loadAccounts();
+    if (localData.length > 0) renderTable(allCachedChannels);
   }
 }
 
 /* =========================
-    UI RENDERING (TETAP SAMA)
+    UI RENDERING (ASLI)
 ========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
@@ -195,15 +199,13 @@ function renderTable(data) {
 }
 
 /* =========================
-    FITUR GABUNGAN (HAPUS, EXPORT, IMPORT)
+    FITUR GABUNGAN (ASLI)
 ========================= */
 function hapusChannelSatu(email) {
     if (confirm("Hapus akun " + email + " dari database?")) {
-        // Hapus Lokal
         let accounts = loadAccounts();
         const updated = accounts.filter(acc => acc.email !== email);
         saveAccounts(updated);
-        // Catatan: Idealnya tambahkan API hapus ke database di sini
         fetchAllChannelsData();
     }
 }
@@ -236,7 +238,7 @@ function importData() {
 }
 
 /* =========================
-    AUTH & NAV (REDIRECT KE API/AUTH)
+    AUTH & NAV (MENUJU API/AUTH)
 ========================= */
 async function googleSignIn(){
   const REDIRECT_URI = window.location.origin + "/api/auth";
@@ -267,7 +269,7 @@ function goToManager(idx) {
 }
 
 /* =========================
-    INIT
+    INIT (ASLI)
 ========================= */
 document.addEventListener("DOMContentLoaded", async () => {
   await initGapi();
@@ -280,6 +282,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if($("btnLocalLogout")) $("btnLocalLogout").onclick = () => { if(confirm("Hapus akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
   if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
   
-  // Auto Sync setiap 5 menit
+  // Auto Sync setiap 5 menit agar tetap abadi
   setInterval(() => { fetchAllChannelsData(); }, 300000);
 });
