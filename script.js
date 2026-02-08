@@ -149,7 +149,7 @@ async function fetchAllChannelsData() {
 }
 
 /* =========================
-    UI RENDERING
+    UI RENDERING (FINAL CLOUD SYNC)
 ========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
@@ -160,28 +160,40 @@ function renderTable(data) {
   tbody.innerHTML = "";
   let tSubs = 0, tViews = 0, tReal = 0;
 
-  const filtered = data.filter(i => (i.snippet.title || "").toLowerCase().includes(search));
+  // Filter berdasarkan nama channel dari database (item.name)
+  const filtered = data.filter(i => (i.name || "").toLowerCase().includes(search));
+  
   filtered.forEach((item, index) => {
-    const s = item.statistics;
-    const r = item.realtime || { m60:0, h48:0 };
-    const isExpired = item.isExpired;
+    // Sesuaikan data dari Supabase agar bisa dibaca fungsi render
+    const s = { 
+        subscriberCount: item.subs || "0", 
+        viewCount: item.views || "0" 
+    };
+    const r = item.realtime || { m60: 0, h48: 0 };
+    const isExpired = false; // Akun dari DB selalu kita anggap aktif (auto-refresh)
     
-    if (!isExpired) { tSubs += Number(s.subscriberCount); tViews += Number(s.viewCount); tReal += r.h48; }
+    // Hitung Total Statistik
+    tSubs += Number(s.subscriberCount); 
+    tViews += Number(s.viewCount); 
+    tReal += Number(r.h48 || 0);
 
-    const statusBtn = isExpired 
-      ? `<span style="background:#ef4444; color:white; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:bold;">EXPIRED</span>`
-      : `<button onclick="goToManager(${index})" style="background:rgba(34,211,238,0.1); color:#22d3ee; padding:6px 12px; border-radius:6px; font-size:10px; font-weight:bold; border:1px solid #22d3ee; cursor:pointer;">UPLOAD</button>`;
+    const statusBtn = `<button onclick="goToManager(${index})" style="background:rgba(34,211,238,0.1); color:#22d3ee; padding:6px 12px; border-radius:6px; font-size:10px; font-weight:bold; border:1px solid #22d3ee; cursor:pointer;">UPLOAD</button>`;
 
     tbody.innerHTML += `
       <tr>
-        <td><div style="display:flex;align-items:center;gap:10px;"><img src="${item.snippet.thumbnails.default.url || ''}" style="width:24px;border-radius:50%"><b>${item.snippet.title}</b></div></td>
-        <td>${isExpired ? '---' : formatNumber(s.subscriberCount)}</td>
-        <td>${isExpired ? '---' : formatNumber(s.viewCount)}</td>
-        <td style="color:#22d3ee;font-weight:700">${isExpired ? '---' : formatNumber(r.m60)}</td>
-        <td style="color:#fbbf24;font-weight:700">${isExpired ? '---' : formatNumber(r.h48)}</td>
+        <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <img src="${item.thumbnail || ''}" style="width:24px;border-radius:50%">
+                <b>${item.name}</b>
+            </div>
+        </td>
+        <td>${formatNumber(s.subscriberCount)}</td>
+        <td>${formatNumber(s.viewCount)}</td>
+        <td style="color:#22d3ee;font-weight:700">${formatNumber(r.m60)}</td>
+        <td style="color:#fbbf24;font-weight:700">${formatNumber(r.h48)}</td>
         <td>${statusBtn}</td>
         <td style="text-align:center;">
-            <button onclick="hapusChannelSatu('${item.emailSource}')" style="background:transparent; border:none; color:#ef4444; cursor:pointer;">
+            <button onclick="hapusChannelSatu('${item.gmail}')" style="background:transparent; border:none; color:#ef4444; cursor:pointer;">
                 <i class="fas fa-trash-alt"></i>
             </button>
         </td>
@@ -192,7 +204,7 @@ function renderTable(data) {
   if($("totalSubs")) $("totalSubs").textContent = formatNumber(tSubs);
   if($("totalViews")) $("totalViews").textContent = formatNumber(tViews);
   if($("totalRealtime")) $("totalRealtime").textContent = formatNumber(tReal);
-  if($("lastUpdate")) $("lastUpdate").textContent = new Date().toLocaleTimeString() + " (Auto-Sync)";
+  if($("lastUpdate")) $("lastUpdate").textContent = new Date().toLocaleTimeString() + " (Cloud Sync)";
   setStatus("Dashboard Aktif", true);
 }
 
@@ -277,3 +289,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   // AUTO SYNC TIAP 5 MENIT AGAR TETAP ABADI
   setInterval(() => { fetchAllChannelsData(); }, 300000);
 });
+
