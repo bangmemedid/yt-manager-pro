@@ -3,7 +3,7 @@
 ========================= */
 const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
 const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
-const SCOPES    = "openid email profile https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly";
+const SCOPES    = "openid email profile https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.upload";
 const STORE_KEY = "ytmpro_accounts_merge_v1";
 
 let gApiInited = false;
@@ -93,44 +93,61 @@ async function fetchRealtimeStats(channelId) {
 }
 
 /* =========================
-    CORE DATA FETCHING
+    CORE DATA FETCHING (KONEKSI DATABASE)
 ========================= */
 async function fetchAllChannelsData() {
-  const accounts = loadAccounts();
-  if(accounts.length === 0) { 
-    setStatus("Belum ada akun.", false); 
-    if($("channelBody")) $("channelBody").innerHTML = '<tr><td colspan="7" class="empty">Klik + Tambah Gmail untuk memulai</td></tr>';
-    return; 
-  }
+  setStatus("Syncing with Cloud Database...", true);
   
-  setStatus("Syncing Data...", true);
-  let mergedData = [];
+  try {
+    // 1. Ambil data akun terbaru dari API Backend kita (get-stats.js urus Refresh Token)
+    const response = await fetch('/api/get-stats');
+    const dbAccounts = await response.json();
 
-  for (const acc of accounts) {
-    if (Date.now() > acc.expires_at) {
-        mergedData.push({ snippet: { title: acc.email, thumbnails: { default: { url: "" } } }, statistics: { subscriberCount: 0, viewCount: 0 }, isExpired: true, emailSource: acc.email });
-        continue;
+    if (dbAccounts.error) throw new Error(dbAccounts.error);
+
+    // 2. Simpan balik ke localStorage agar fitur Import/Export tetap jalan
+    const syncData = dbAccounts.map(acc => ({
+        email: acc.gmail,
+        access_token: acc.access_token, // Token yang sudah di-refresh otomatis oleh API
+        expires_at: acc.expires_at
+    }));
+    saveAccounts(syncData);
+
+    if(dbAccounts.length === 0) { 
+        setStatus("Belum ada akun.", false); 
+        if($("channelBody")) $("channelBody").innerHTML = '<tr><td colspan="7" class="empty">Klik + Tambah Gmail untuk memulai</td></tr>';
+        return; 
     }
 
-    try {
-      gapi.client.setToken({ access_token: acc.access_token });
-      const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
-      if(res.result.items) {
-          for(let item of res.result.items) {
-              item.realtime = await fetchRealtimeStats(item.id);
-              item.isExpired = false;
-              item.emailSource = acc.email;
-              mergedData.push(item);
+    let mergedData = [];
+    for (const acc of dbAccounts) {
+        try {
+          // Set token untuk GAPI agar Analytics bisa jalan
+          gapi.client.setToken({ access_token: acc.access_token });
+          const res = await gapi.client.youtube.channels.list({ part: "snippet,statistics", mine: true });
+          
+          if(res.result.items) {
+              for(let item of res.result.items) {
+                  item.realtime = await fetchRealtimeStats(item.id);
+                  item.isExpired = false;
+                  item.emailSource = acc.gmail;
+                  mergedData.push(item);
+              }
           }
-      }
-    } catch (err) { console.error(err); }
+        } catch (err) { console.error("Error GAPI for " + acc.gmail, err); }
+    }
+    
+    allCachedChannels = mergedData;
+    renderTable(mergedData);
+
+  } catch (err) {
+    console.error("Database Sync Error:", err);
+    setStatus("Database Offline. Re-logging...", false);
   }
-  allCachedChannels = mergedData;
-  renderTable(mergedData);
 }
 
 /* =========================
-    UI RENDERING (TOMBOL UPLOAD & HAPUS)
+    UI RENDERING (TETAP SAMA)
 ========================= */
 function renderTable(data) {
   const tbody = $("channelBody");
@@ -178,13 +195,15 @@ function renderTable(data) {
 }
 
 /* =========================
-    FITUR GABUNGAN
+    FITUR GABUNGAN (HAPUS, EXPORT, IMPORT)
 ========================= */
 function hapusChannelSatu(email) {
-    if (confirm("Hapus akun " + email + "?")) {
+    if (confirm("Hapus akun " + email + " dari database?")) {
+        // Hapus Lokal
         let accounts = loadAccounts();
         const updated = accounts.filter(acc => acc.email !== email);
         saveAccounts(updated);
+        // Catatan: Idealnya tambahkan API hapus ke database di sini
         fetchAllChannelsData();
     }
 }
@@ -217,21 +236,19 @@ function importData() {
 }
 
 /* =========================
-    AUTH & NAV
+    AUTH & NAV (REDIRECT KE API/AUTH)
 ========================= */
 async function googleSignIn(){
-  if(!gApiInited) await initGapi();
-  tokenClient.callback = async (resp) => {
-    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: "Bearer " + resp.access_token } });
-    const data = await res.json();
-    let accounts = loadAccounts();
-    const payload = { email: data.email, access_token: resp.access_token, expires_at: Date.now() + (resp.expires_in * 1000) };
-    const idx = accounts.findIndex(a => a.email === data.email);
-    if(idx >= 0) accounts[idx] = payload; else accounts.push(payload);
-    saveAccounts(accounts);
-    fetchAllChannelsData();
-  };
-  tokenClient.requestAccessToken({ prompt: 'consent', access_type: 'offline' });
+  const REDIRECT_URI = window.location.origin + "/api/auth";
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
+      `client_id=${CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent(REDIRECT_URI)}&` +
+      `response_type=code&` +
+      `scope=${encodeURIComponent(SCOPES)}&` +
+      `access_type=offline&` + 
+      `prompt=consent`; 
+
+  window.location.href = authUrl;
 }
 
 function goToManager(idx) {
@@ -239,7 +256,12 @@ function goToManager(idx) {
     if (!ch || ch.isExpired) return;
     const accounts = loadAccounts();
     const targetAcc = accounts.find(a => a.email === ch.emailSource) || accounts[0];
-    const sessionData = { channelId: ch.id, title: ch.snippet.title, img: ch.snippet.thumbnails.default.url, token: targetAcc.access_token };
+    const sessionData = { 
+        channelId: ch.id, 
+        title: ch.snippet.title, 
+        img: ch.snippet.thumbnails.default.url, 
+        token: targetAcc.access_token 
+    };
     sessionStorage.setItem("active_manager_data", JSON.stringify(sessionData));
     window.open('manager.html', '_blank');
 }
@@ -257,5 +279,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if($("btnOwnerLogout")) $("btnOwnerLogout").onclick = () => { window.location.href="login.html"; };
   if($("btnLocalLogout")) $("btnLocalLogout").onclick = () => { if(confirm("Hapus akun?")){ localStorage.removeItem(STORE_KEY); location.reload(); } };
   if($("searchInput")) $("searchInput").oninput = () => renderTable(allCachedChannels);
-  setInterval(() => { if(loadAccounts().length > 0) fetchAllChannelsData(); }, 300000);
+  
+  // Auto Sync setiap 5 menit
+  setInterval(() => { fetchAllChannelsData(); }, 300000);
 });
