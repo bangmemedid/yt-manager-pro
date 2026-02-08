@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = "https://yeejuntixygygszxnxit.supabase.co"; 
 const SUPABASE_KEY = "sb_secret_Gn_6dMyCrhF3V1DMF9AhUg_ulRQ1Oo7"; 
 const G_CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
-const G_CLIENT_SECRET = "GOCSPX-qB8_GvD-U0F-L2e0I1XUC";
+const G_CLIENT_SECRET = "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";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
