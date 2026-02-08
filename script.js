@@ -2,6 +2,7 @@
     CONFIG & GLOBAL VARIABLES
 ========================= */
 const CLIENT_ID = "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com";
+const REDIRECT_URI = "https://yt-manager-pro.vercel.app/api/auth";
 const API_KEY   = "AIzaSyDNT_iVn2c9kY3M6DQOcODBFNwAs-e_qA4";
 const SCOPES    = "openid email profile https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/youtube.upload";
 const STORE_KEY = "ytmpro_accounts_merge_v1";
@@ -285,3 +286,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Auto Sync setiap 5 menit agar tetap abadi
   setInterval(() => { fetchAllChannelsData(); }, 300000);
 });
+
