@@ -14,7 +14,7 @@ export default async function handler(req, res) {
             body: new URLSearchParams({
                 code,
                 client_id: "262964938761-4e41cgkbud489toac5midmamoecb3jrq.apps.googleusercontent.com",
-                client_secret: process.env.G_CLIENT_SECRET, 
+                client_secret: process.env.G_CLIENT_SECRET,
                 redirect_uri: `https://${req.headers.host}/api/auth`,
                 grant_type: 'authorization_code',
             }),
@@ -55,19 +55,32 @@ export default async function handler(req, res) {
         const { error } = await supabase.from('yt_accounts').upsert(payload, { onConflict: 'gmail' });
         if (error) throw error;
 
-        // 6. SOLUSI REDIRECT (PAKSA PINDAH TANPA MEMBAL)
-        // Kita gunakan res.write + res.end agar Vercel mengirimkan HTML murni ke browser
+        // 6. SOLUSI REDIRECT (PAKSA PINDAH KE DASHBOARD)
+        // Gunakan URL absolut dan set localStorage untuk memastikan akses
+        const baseUrl = `https://${req.headers.host}`;
         res.setHeader('Content-Type', 'text/html');
         res.write(`
+            <!DOCTYPE html>
             <html>
                 <head>
-                    <title>Redirecting...</title>
-                    <meta http-equiv="refresh" content="0;url=/dashboard.html">
+                    <title>Login Berhasil - Redirecting...</title>
+                    <meta http-equiv="refresh" content="1;url=${baseUrl}/dashboard.html">
                 </head>
-                <body>
+                <body style="background:#0f172a;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+                    <div style="text-align:center;">
+                        <h2>✅ Login Berhasil!</h2>
+                        <p>Mengalihkan ke Dashboard...</p>
+                    </div>
                     <script>
-                        // Cara paling ampuh pindah halaman tanpa membal
-                        window.location.href = "/dashboard.html";
+                        // Set flag login dan redirect
+                        localStorage.setItem("owner_logged_in", "true");
+                        localStorage.setItem("owner_name", "${user.name || user.email}");
+                        localStorage.setItem("last_login", "${new Date().toISOString()}");
+                        
+                        // Redirect dengan delay kecil untuk memastikan localStorage tersimpan
+                        setTimeout(function() {
+                            window.location.replace("${baseUrl}/dashboard.html");
+                        }, 500);
                     </script>
                 </body>
             </html>
