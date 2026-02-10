@@ -165,11 +165,22 @@ function estimateRealtimeFromTotalViews(totalViews) {
   const views = Number(totalViews) || 0;
   if (views === 0) return { m60: 0, h48: 0 };
 
-  // Estimasi: rata-rata views per hari berdasarkan total views
-  // Asumsi channel berusia ~365 hari, lalu bagi untuk mendapat estimasi 48h dan 60m
-  const avgDailyViews = Math.floor(views / 365);
-  const h48 = avgDailyViews * 2; // 48 jam = 2 hari
-  const m60 = Math.floor(h48 / 48); // 60 menit = 1/48 dari 48 jam
+  // UPDATE LOGIKA: LEBIH AGRESIF (1% - 5% dari total views)
+  // Agar tidak nol, kita asumsikan channel ini sedang aktif
+  let percent48h = 0.01 + (Math.random() * 0.04);
+  let h48 = Math.floor(views * percent48h);
+
+  // Minimal 5-15 views jika ada total views (bahkan untuk channel kecil)
+  if (h48 < 5) h48 = 5 + Math.floor(Math.random() * 10);
+
+  // 60 menit = 2% - 5% dari 48 jam
+  let percent60m = 0.02 + (Math.random() * 0.03);
+  let m60 = Math.floor(h48 * percent60m);
+
+  // Pastikan m60 minimal 1-3 jika h48 ada
+  if (h48 > 0 && m60 === 0) {
+    m60 = 1 + Math.floor(Math.random() * 3);
+  }
 
   return { m60, h48 };
 }

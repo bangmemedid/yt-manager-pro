@@ -1,6 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,22 +11,22 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <script>
-    <script>
     // Versi Satpam yang Lebih Ramah
     const isOwnerLogged = localStorage.getItem("owner_logged_in");
     const ownerName = localStorage.getItem("owner_name") || "Member Premium";
-    
+
     // Jika Abang baru saja balik dari Google Login, kita kasih izin otomatis
     if (window.location.href.includes("api/auth") || isOwnerLogged === "true") {
-       localStorage.setItem("owner_logged_in", "true");
+      localStorage.setItem("owner_logged_in", "true");
     } else {
-       // Hanya tendang jika benar-benar tidak ada akses
-       // window.location.href = "login.html"; // Matikan dulu sementara untuk tes
+      // Hanya tendang jika benar-benar tidak ada akses
+      // window.location.href = "login.html"; // Matikan dulu sementara untuk tes
     }
-    
-    window.checkAccess = function(userEmail) { return true; };
+
+    window.checkAccess = function (userEmail) { return true; };
   </script>
 
   <div class="bg-glow"></div>
@@ -45,29 +45,30 @@
 
       <nav class="side-nav">
         <a class="side-link active" href="index.html">
-          <span class="dot"></span> 
+          <span class="dot"></span>
           <i class="fas fa-chart-pie" style="margin-right:8px; width:16px;"></i> Dashboard
         </a>
         <a class="side-link" href="#channel">
-          <span class="dot" style="opacity:.35"></span> 
+          <span class="dot" style="opacity:.35"></span>
           <i class="fas fa-list" style="margin-right:8px; width:16px;"></i> Channel List
         </a>
         <a class="side-link" href="privacy.html">
-          <span class="dot" style="opacity:.35"></span> 
+          <span class="dot" style="opacity:.35"></span>
           <i class="fas fa-user-shield" style="margin-right:8px; width:16px;"></i> Privacy Policy
         </a>
         <a class="side-link" href="terms.html">
-          <span class="dot" style="opacity:.35"></span> 
+          <span class="dot" style="opacity:.35"></span>
           <i class="fas fa-file-alt" style="margin-right:8px; width:16px;"></i> Terms of Service
         </a>
-        
+
         <div style="padding: 0 20px; margin-top: 15px;">
-            <button id="btnRefreshData" class="btn success" style="width:100%; font-size: 12px; height: 38px;">
-              <i class="fas fa-sync-alt"></i> Refresh Data
-            </button>
-            <button id="btnLocalLogout" class="btn primary" style="width: 100%; margin-top: 8px; font-size: 11px; height: 38px;">
-              Hapus Akun Lokal
-            </button>
+          <button id="btnRefreshData" class="btn success" style="width:100%; font-size: 12px; height: 38px;">
+            <i class="fas fa-sync-alt"></i> Refresh Data
+          </button>
+          <button id="btnLocalLogout" class="btn primary"
+            style="width: 100%; margin-top: 8px; font-size: 11px; height: 38px;">
+            Hapus Akun Lokal
+          </button>
         </div>
       </nav>
 
@@ -84,9 +85,11 @@
       <div class="topbar">
         <div>
           <h1 class="page-title">Dashboard</h1>
-          <div id="statusIndicator" class="status-badge" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-             <span class="status-dot" style="width:10px; height:10px; background:#ef4444; border-radius:50%; display:inline-block;"></span>
-             <div id="statusText" class="page-sub" style="margin-top:0;">Status: Memuat...</div>
+          <div id="statusIndicator" class="status-badge"
+            style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <span class="status-dot"
+              style="width:10px; height:10px; background:#ef4444; border-radius:50%; display:inline-block;"></span>
+            <div id="statusText" class="page-sub" style="margin-top:0;">Status: Memuat...</div>
           </div>
         </div>
 
@@ -100,9 +103,18 @@
       </div>
 
       <div class="stats-wrapper">
-        <div class="stat-card"><div class="label">Total Channel</div><div class="value" id="totalChannel">0</div></div>
-        <div class="stat-card"><div class="label">Total Subscribers</div><div class="value" id="totalSubs">0</div></div>
-        <div class="stat-card"><div class="label">Total Views</div><div class="value" id="totalViews">0</div></div>
+        <div class="stat-card">
+          <div class="label">Total Channel</div>
+          <div class="value" id="totalChannel">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total Subscribers</div>
+          <div class="value" id="totalSubs">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Total Views</div>
+          <div class="value" id="totalViews">0</div>
+        </div>
         <div class="stat-card highlight">
           <div class="label">Realtime (48 Jam)</div>
           <div class="value" id="totalRealtime">0</div>
@@ -114,25 +126,36 @@
         <div class="panel-head" style="flex-wrap: wrap; gap: 10px;">
           <div class="panel-title">Daftar Channel</div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-             <button onclick="exportData()" class="btn ghost" style="font-size: 11px; border: 1px solid #22d3ee; padding: 8px 12px;">
-                <i class="fas fa-copy"></i> Salin Data
-             </button>
-             <button onclick="importData()" class="btn ghost" style="font-size: 11px; border: 1px solid #22d3ee; padding: 8px 12px;">
-                <i class="fas fa-file-import"></i> Tempel Data
-             </button>
-             <button id="btnExportData" class="btn success" style="font-size: 11px; padding: 8px 12px;">
-                <i class="fas fa-file-excel"></i> Excel
-             </button>
+            <button onclick="exportData()" class="btn ghost"
+              style="font-size: 11px; border: 1px solid #22d3ee; padding: 8px 12px;">
+              <i class="fas fa-copy"></i> Salin Data
+            </button>
+            <button onclick="importData()" class="btn ghost"
+              style="font-size: 11px; border: 1px solid #22d3ee; padding: 8px 12px;">
+              <i class="fas fa-file-import"></i> Tempel Data
+            </button>
+            <button id="btnExportData" class="btn success" style="font-size: 11px; padding: 8px 12px;">
+              <i class="fas fa-file-excel"></i> Excel
+            </button>
           </div>
         </div>
 
         <div class="table-wrap">
           <table class="channel-table">
             <thead>
-              <tr><th>Channel</th><th>Subs</th><th>Views</th><th style="color:#22d3ee">60m</th><th style="color:#fbbf24">48h</th><th>Status</th></tr>
+              <tr>
+                <th>Channel</th>
+                <th>Subs</th>
+                <th>Views</th>
+                <th style="color:#22d3ee">60m</th>
+                <th style="color:#fbbf24">48h</th>
+                <th>Status</th>
+              </tr>
             </thead>
             <tbody id="channelBody">
-              <tr><td colspan="6" class="empty">Memuat data...</td></tr>
+              <tr>
+                <td colspan="6" class="empty">Memuat data...</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -140,9 +163,12 @@
     </main>
   </div>
 
-  <div id="detailModal" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
-    <div class="modal-content" style="background: #0f172a; border:1px solid rgba(255,255,255,0.1); width:90%; max-width:500px; border-radius:24px; padding:25px; position:relative; color:white;">
-      <button onclick="closeModal()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:white; font-size:24px;">&times;</button>
+  <div id="detailModal" class="modal-overlay"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(5px);">
+    <div class="modal-content"
+      style="background: #0f172a; border:1px solid rgba(255,255,255,0.1); width:90%; max-width:500px; border-radius:24px; padding:25px; position:relative; color:white;">
+      <button onclick="closeModal()"
+        style="position:absolute; top:15px; right:20px; background:none; border:none; color:white; font-size:24px;">&times;</button>
       <div id="modalBodyContent"></div>
     </div>
   </div>
@@ -158,6 +184,5 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="script.js" defer></script>
 </body>
+
 </html>
-
-

@@ -64,12 +64,13 @@ export default async function handler(req, res) {
             <html>
                 <head>
                     <title>Login Berhasil - Redirecting...</title>
-                    <meta http-equiv="refresh" content="1;url=${baseUrl}/dashboard.html">
+                    <meta http-equiv="refresh" content="1;url=${baseUrl}/dashboard.html?login=success">
                 </head>
                 <body style="background:#0f172a;color:white;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
                     <div style="text-align:center;">
-                        <h2>✅ Login Berhasil!</h2>
-                        <p>Mengalihkan ke Dashboard...</p>
+                        <h2>✅ Login Berhasil! (v2)</h2>
+                        <p>Mengalihkan ke Dashboard... Mohon tunggu.</p>
+                        <p style="font-size:12px; color:#aaa;">Jika tidak dialihkan otomatis, <a href="${baseUrl}/dashboard.html?login=success" style="color:#22d3ee">klik di sini</a></p>
                     </div>
                     <script>
                         // Set flag login dan redirect
@@ -79,7 +80,7 @@ export default async function handler(req, res) {
                         
                         // Redirect dengan delay kecil untuk memastikan localStorage tersimpan
                         setTimeout(function() {
-                            window.location.replace("${baseUrl}/dashboard.html");
+                            window.location.replace("${baseUrl}/dashboard.html?login=success");
                         }, 500);
                     </script>
                 </body>
